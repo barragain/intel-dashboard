@@ -59,7 +59,7 @@ export async function GET() {
   }
 
   try {
-    const text = await searchAndAnalyze(PROMPT, 1500)
+    const text = await searchAndAnalyze(PROMPT, 1000)
     const parsed = parseJson<Omit<RiskData, 'updatedAt'>>(text)
 
     const data: RiskData = {

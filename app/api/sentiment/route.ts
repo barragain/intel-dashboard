@@ -64,7 +64,7 @@ export async function GET() {
   }
 
   try {
-    const text = await searchAndAnalyze(PROMPT, 3000)
+    const text = await searchAndAnalyze(PROMPT, 1000)
     const parsed = parseJson<Omit<SentimentData, 'updatedAt'>>(text)
 
     const data: SentimentData = {

@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const MODEL = process.env.INTEL_MODEL ?? 'claude-sonnet-4-6'
+const MODEL = process.env.INTEL_MODEL ?? 'claude-haiku-4-5-20251001'
 
 type AnyMessage = {
   content: Anthropic.ContentBlock[]
