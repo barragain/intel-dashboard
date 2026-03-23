@@ -10,6 +10,7 @@ type AnyMessage = {
 export async function searchAndAnalyze(
   prompt: string,
   maxTokens = 2500,
+  maxSearches = Infinity,
 ): Promise<string> {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error('ANTHROPIC_API_KEY_MISSING')
@@ -26,6 +27,8 @@ export async function searchAndAnalyze(
   const create = client.messages.create.bind(client.messages) as (
     params: unknown
   ) => Promise<AnyMessage>
+
+  let searchesUsed = 0
 
   for (let turn = 0; turn < 8; turn++) {
     const response = await create({
@@ -47,16 +50,27 @@ export async function searchAndAnalyze(
     if (response.stop_reason === 'tool_use') {
       messages.push({ role: 'assistant', content: response.content })
 
-      const toolResults: Anthropic.ToolResultBlockParam[] = response.content
-        .filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use')
-        .map((b) => ({
-          type: 'tool_result' as const,
-          tool_use_id: b.id,
-          content: '',
-        }))
+      const toolUseBlocks = response.content.filter(
+        (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
+      )
+      searchesUsed += toolUseBlocks.length
+
+      const toolResults: Anthropic.ToolResultBlockParam[] = toolUseBlocks.map((b) => ({
+        type: 'tool_result' as const,
+        tool_use_id: b.id,
+        content: '',
+      }))
 
       if (toolResults.length > 0) {
         messages.push({ role: 'user', content: toolResults })
+      }
+
+      // If we've hit the search limit, tell the model to stop searching and answer now
+      if (searchesUsed >= maxSearches) {
+        messages.push({
+          role: 'user',
+          content: 'You have used the maximum number of web searches allowed. Return the final JSON answer now based on what you have found.',
+        })
       }
     } else {
       return text
