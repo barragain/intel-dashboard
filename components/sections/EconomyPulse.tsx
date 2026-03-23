@@ -18,14 +18,15 @@ const CHANGE_COLORS = {
   neutral: 'text-intel-muted',
 }
 
-const DIR_LABELS: Record<string, { en: string; fr: string }> = {
-  improving: { en: 'Improving', fr: 'En amélioration' },
-  stable: { en: 'Stable', fr: 'Stable' },
-  deteriorating: { en: 'Deteriorating', fr: 'En détérioration' },
+const DIR_TKEYS: Record<string, 'improving' | 'stable2' | 'deteriorating'> = {
+  improving: 'improving',
+  stable: 'stable2',
+  deteriorating: 'deteriorating',
 }
 
-function EconomyCardComponent({ card, lang }: { card: EconomyCard; lang: string }) {
-  const dirLabel = DIR_LABELS[card.direction]?.[lang as 'en' | 'fr'] ?? card.direction
+function EconomyCardComponent({ card, t }: { card: EconomyCard; t: ReturnType<typeof useLanguage>['t'] }) {
+  const dirKey = DIR_TKEYS[card.direction]
+  const dirLabel = dirKey ? t[dirKey] : card.direction
   const statusColor = STATUS_COLORS[card.status]
 
   return (
@@ -162,7 +163,7 @@ export default function EconomyPulse() {
           {!loading && economies.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 animate-in">
               {economies.map((card) => (
-                <EconomyCardComponent key={card.id} card={card} lang={language} />
+                <EconomyCardComponent key={card.id} card={card} t={t} />
               ))}
             </div>
           )}

@@ -28,8 +28,7 @@ const STATUS_CONFIG = {
     glowClass: 'risk-glow-stable',
     shadowClass: 'shadow-glow-stable',
     dotColor: 'bg-risk-stable',
-    label: 'STABLE',
-    fr: 'STABLE',
+    tKey: 'stable' as const,
   },
   WATCH: {
     color: 'text-risk-watch',
@@ -37,8 +36,7 @@ const STATUS_CONFIG = {
     glowClass: 'risk-glow-watch',
     shadowClass: 'shadow-glow-watch',
     dotColor: 'bg-risk-watch',
-    label: 'WATCH',
-    fr: 'VIGILANCE',
+    tKey: 'watch' as const,
   },
   WORRIED: {
     color: 'text-risk-worried',
@@ -46,8 +44,7 @@ const STATUS_CONFIG = {
     glowClass: 'risk-glow-worried',
     shadowClass: 'shadow-glow-worried',
     dotColor: 'bg-risk-worried',
-    label: 'WORRIED',
-    fr: 'ALERTE',
+    tKey: 'worried' as const,
   },
 } as const
 
@@ -70,7 +67,7 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
     setError(null)
     setNeedsApiKey(false)
     try {
-      const res = await fetch('/api/risk')
+      const res = await fetch(`/api/risk?lang=${language}`)
       const json = await res.json()
       if (!res.ok) {
         if (json.needsApiKey) {
@@ -101,7 +98,7 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
 
   const status = data?.status ?? 'WATCH'
   const cfg = STATUS_CONFIG[status]
-  const statusLabel = language === 'fr' ? cfg.fr : cfg.label
+  const statusLabel = t[cfg.tKey]
 
   return (
     <section aria-labelledby="risk-title" className="pt-6">

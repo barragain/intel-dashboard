@@ -17,7 +17,8 @@ const TTL: Record<string, number> = {
 export function getCached(key: string): unknown | null {
   const entry = store.get(key)
   if (!entry) return null
-  const ttl = TTL[key] ?? 15 * 60 * 1000
+  const baseKey = key.replace(/_(en|fr)$/, '')
+  const ttl = TTL[baseKey] ?? TTL[key] ?? 15 * 60 * 1000
   if (Date.now() - entry.timestamp > ttl) {
     store.delete(key)
     return null

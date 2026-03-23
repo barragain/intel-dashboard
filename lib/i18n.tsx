@@ -22,6 +22,9 @@ const translations = {
     loadDataDesc: 'AI-powered — uses Gemini with live web search',
     loadDataEst: 'Est. 15–30 seconds',
     dataFrom: 'Data from',
+    expertQuotes: 'Expert Quotes',
+    newsSources: 'News Sources',
+    sevenDayChange: '7d',
 
     // Sections
     section1Title: 'Personal Risk Meter',
@@ -71,6 +74,7 @@ const translations = {
     conflictStable: 'Stable',
     deEscalating: 'De-escalating',
     whyItMatters: 'Why it matters to you',
+    currentDetails: 'Current details',
     keyImpact: 'Key impact',
     overallAssessment: 'Overall assessment',
 
@@ -92,6 +96,11 @@ const translations = {
     assets: 'Assets to consider',
     caveat: 'Important caveat',
     profitCalc: 'Profit Calculator',
+    calculateProfit: 'Calculate profit',
+    percentYearEst: '%/yr est.',
+    sourceTypeCommunity: 'Community',
+    sourceTypeInstitutional: 'Institutional',
+    sourceTypePrediction: 'Prediction Mkt',
     calcAmount: 'Investment (USD)',
     calcMonths: 'Time (months)',
     calcConservative: 'Conservative',
@@ -143,9 +152,12 @@ const translations = {
     rateLimited: 'Limite de débit atteinte — attendez une minute et réessayez',
     configureKey: 'Configurer la clé API',
     loadData: 'Charger les données',
-    loadDataDesc: 'Propulsé par IA — utilise Claude avec recherche web en direct',
+    loadDataDesc: 'Propulsé par IA — utilise Gemini avec recherche web en direct',
     loadDataEst: 'Env. 15–30 secondes',
     dataFrom: 'Données du',
+    expertQuotes: "Citations d'Experts",
+    newsSources: "Sources d'Actualités",
+    sevenDayChange: '7j',
 
     // Sections
     section1Title: 'Indicateur de Risque',
@@ -195,6 +207,7 @@ const translations = {
     conflictStable: 'Stable',
     deEscalating: 'En désescalade',
     whyItMatters: 'Pourquoi cela vous concerne',
+    currentDetails: 'Détails actuels',
     keyImpact: 'Impact principal',
     overallAssessment: 'Évaluation globale',
 
@@ -224,6 +237,11 @@ const translations = {
     calcProjected: 'Valeur projetée',
     calcReturn: 'Rendement net',
     calcDisclaimer: "Basé sur les rendements historiques. Pas un conseil financier.",
+    calculateProfit: 'Calculer le profit',
+    percentYearEst: '%/an est.',
+    sourceTypeCommunity: 'Communauté',
+    sourceTypeInstitutional: 'Institutionnel',
+    sourceTypePrediction: 'Marché Préd.',
 
     // Crypto
     fearGreed: 'Indice Peur & Avidité',

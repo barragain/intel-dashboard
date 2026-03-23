@@ -10,7 +10,7 @@ type AnyGenerateParams = {
   tools?: unknown[]
 }
 
-export async function searchAndAnalyze(prompt: string): Promise<string> {
+export async function searchAndAnalyze(prompt: string, lang = 'en'): Promise<string> {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY_MISSING')
   }
@@ -23,8 +23,12 @@ export async function searchAndAnalyze(prompt: string): Promise<string> {
   const model = getModel({ model: 'gemini-2.5-flash' })
 
   try {
+    const fullPrompt = lang === 'fr'
+      ? `${prompt}\n\nRespond entirely in French. All content, summaries, quotes, and labels must be in French.`
+      : prompt
+
     const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
       tools: [{ googleSearch: {} }],
     })
     const text = result.response.text()

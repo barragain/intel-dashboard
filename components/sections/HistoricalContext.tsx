@@ -7,19 +7,19 @@ import type { HistoricalData, HistoricalParallel, ExpertPrediction } from '@/lib
 import { AlertTriangle, RefreshCw, KeyRound, Clock, BookOpen, Sparkles } from 'lucide-react'
 import StatusBadge from '@/components/ui/StatusBadge'
 
-const SENTIMENT_CONFIG: Record<string, { label: { en: string; fr: string }; color: string }> = {
-  optimistic: { label: { en: 'Optimistic', fr: 'Optimiste' }, color: 'text-trend-up' },
-  pessimistic: { label: { en: 'Pessimistic', fr: 'Pessimiste' }, color: 'text-trend-down' },
-  neutral: { label: { en: 'Neutral', fr: 'Neutre' }, color: 'text-intel-muted' },
+const SENTIMENT_CONFIG: Record<string, { tKey: 'optimistic' | 'pessimistic' | 'neutral'; color: string }> = {
+  optimistic: { tKey: 'optimistic', color: 'text-trend-up' },
+  pessimistic: { tKey: 'pessimistic', color: 'text-trend-down' },
+  neutral: { tKey: 'neutral', color: 'text-intel-muted' },
 }
 
-const CONFIDENCE_CONFIG: Record<string, { label: { en: string; fr: string }; variant: 'low' | 'medium' | 'high' }> = {
-  high: { label: { en: 'High conf.', fr: 'Haute conf.' }, variant: 'low' },
-  medium: { label: { en: 'Medium conf.', fr: 'Conf. moy.' }, variant: 'medium' },
-  low: { label: { en: 'Low conf.', fr: 'Faible conf.' }, variant: 'high' },
+const CONFIDENCE_CONFIG: Record<string, { tKey: 'confidenceHigh' | 'confidenceMedium' | 'confidenceLow'; variant: 'low' | 'medium' | 'high' }> = {
+  high: { tKey: 'confidenceHigh', variant: 'low' },
+  medium: { tKey: 'confidenceMedium', variant: 'medium' },
+  low: { tKey: 'confidenceLow', variant: 'high' },
 }
 
-function ParallelCard({ parallel, lang }: { parallel: HistoricalParallel; lang: string }) {
+function ParallelCard({ parallel, t }: { parallel: HistoricalParallel; t: ReturnType<typeof useLanguage>['t'] }) {
   const [expanded, setExpanded] = useState(false)
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border overflow-hidden">
@@ -48,13 +48,13 @@ function ParallelCard({ parallel, lang }: { parallel: HistoricalParallel; lang: 
         <div className="px-4 pb-4 space-y-3 border-t border-intel-border/50 animate-in">
           <div className="pt-3">
             <span className="text-[10px] font-mono text-intel-muted uppercase tracking-wider block mb-1.5">
-              {lang === 'fr' ? 'Ce qui s\'est passé' : 'What happened'}
+              {t.whatHappened}
             </span>
             <p className="text-xs text-intel-secondary leading-relaxed">{parallel.whatHappened}</p>
           </div>
           <div className="bg-intel-bg rounded border border-intel-gold/20 px-3 py-2.5">
             <span className="text-[10px] font-mono text-intel-gold uppercase tracking-wider block mb-1">
-              {lang === 'fr' ? 'Ce que cela signifie pour vous' : 'What this means for you'}
+              {t.personalImplication}
             </span>
             <p className="text-xs text-intel-secondary leading-relaxed">{parallel.personalImplication}</p>
           </div>
@@ -64,11 +64,11 @@ function ParallelCard({ parallel, lang }: { parallel: HistoricalParallel; lang: 
   )
 }
 
-function PredictionCard({ prediction, lang }: { prediction: ExpertPrediction; lang: string }) {
+function PredictionCard({ prediction, t }: { prediction: ExpertPrediction; t: ReturnType<typeof useLanguage>['t'] }) {
   const sentCfg = SENTIMENT_CONFIG[prediction.sentiment]
   const confCfg = CONFIDENCE_CONFIG[prediction.confidence]
-  const sentLabel = sentCfg?.label[lang as 'en' | 'fr'] ?? prediction.sentiment
-  const confLabel = confCfg?.label[lang as 'en' | 'fr'] ?? prediction.confidence
+  const sentLabel = sentCfg ? t[sentCfg.tKey] : prediction.sentiment
+  const confLabel = confCfg ? t[confCfg.tKey] : prediction.confidence
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border p-4">
@@ -102,7 +102,7 @@ export default function HistoricalContext({ autoLoadDelay }: { autoLoadDelay?: n
     setError(null)
     setNeedsApiKey(false)
     try {
-      const res = await fetch('/api/historical')
+      const res = await fetch(`/api/historical?lang=${language}`)
       const json = await res.json()
       if (!res.ok) {
         if (json.needsApiKey) { setNeedsApiKey(true); setError(t.noApiKey) }
@@ -210,7 +210,7 @@ export default function HistoricalContext({ autoLoadDelay }: { autoLoadDelay?: n
                 </h3>
                 <div className="space-y-3">
                   {data.parallels.map((p) => (
-                    <ParallelCard key={p.id} parallel={p} lang={language} />
+                    <ParallelCard key={p.id} parallel={p} t={t} />
                   ))}
                 </div>
               </div>
@@ -222,7 +222,7 @@ export default function HistoricalContext({ autoLoadDelay }: { autoLoadDelay?: n
                 </h3>
                 <div className="space-y-3">
                   {data.predictions.map((p, i) => (
-                    <PredictionCard key={i} prediction={p} lang={language} />
+                    <PredictionCard key={i} prediction={p} t={t} />
                   ))}
                 </div>
               </div>

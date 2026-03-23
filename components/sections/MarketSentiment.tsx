@@ -7,29 +7,22 @@ import type { SentimentData, InvestmentOpportunity } from '@/lib/types'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { AlertTriangle, RefreshCw, KeyRound, Calculator, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 
-const MOOD_LABELS: Record<string, { en: string; fr: string }> = {
-  bullish: { en: 'Bullish', fr: 'Haussier' },
-  bearish: { en: 'Bearish', fr: 'Baissier' },
-  neutral: { en: 'Neutral', fr: 'Neutre' },
-  fearful: { en: 'Fearful', fr: 'Craintif' },
+const MOOD_TKEYS: Record<string, 'bullish' | 'bearish' | 'neutral' | 'fearful'> = {
+  bullish: 'bullish', bearish: 'bearish', neutral: 'neutral', fearful: 'fearful',
 }
 
-const SOURCE_TYPE_LABELS: Record<string, string> = {
-  community: 'Community',
-  institutional: 'Institutional',
-  prediction: 'Prediction Mkt',
+const SOURCE_TYPE_TKEYS: Record<string, 'sourceTypeCommunity' | 'sourceTypeInstitutional' | 'sourceTypePrediction'> = {
+  community: 'sourceTypeCommunity',
+  institutional: 'sourceTypeInstitutional',
+  prediction: 'sourceTypePrediction',
 }
 
-const RISK_LABELS: Record<string, { en: string; fr: string }> = {
-  low: { en: 'Low Risk', fr: 'Risque Faible' },
-  medium: { en: 'Medium Risk', fr: 'Risque Moyen' },
-  high: { en: 'High Risk', fr: 'Risque Élevé' },
+const RISK_TKEYS: Record<string, 'riskLow' | 'riskMedium' | 'riskHigh'> = {
+  low: 'riskLow', medium: 'riskMedium', high: 'riskHigh',
 }
 
-const HORIZON_LABELS: Record<string, { en: string; fr: string }> = {
-  short: { en: 'Short < 6mo', fr: 'Court < 6 mois' },
-  medium: { en: 'Medium 6–18mo', fr: 'Moyen 6–18 mois' },
-  long: { en: 'Long 2+ yr', fr: 'Long 2+ ans' },
+const HORIZON_TKEYS: Record<string, 'horizonShort' | 'horizonMedium' | 'horizonLong'> = {
+  short: 'horizonShort', medium: 'horizonMedium', long: 'horizonLong',
 }
 
 function calcProjection(principal: number, annualReturn: number, volatility: number, months: number) {
@@ -50,27 +43,19 @@ function fmtReturn(principal: number, projected: number): string {
   return `${sign}${pct.toFixed(1)}%`
 }
 
-function ProfitCalc({ opp, lang }: { opp: InvestmentOpportunity; lang: string }) {
+function ProfitCalc({ opp, t }: { opp: InvestmentOpportunity; t: ReturnType<typeof useLanguage>['t'] }) {
   const [amount, setAmount] = useState(1000)
   const [months, setMonths] = useState(12)
   const result = calcProjection(amount, opp.expectedAnnualReturn, opp.volatility, months)
-  const t_calc = {
-    amount: lang === 'fr' ? 'Investissement (USD)' : 'Investment (USD)',
-    months: lang === 'fr' ? 'Durée (mois)' : 'Duration (months)',
-    conservative: lang === 'fr' ? 'Conservateur' : 'Conservative',
-    expected: lang === 'fr' ? 'Attendu' : 'Expected',
-    optimistic: lang === 'fr' ? 'Optimiste' : 'Optimistic',
-    disclaimer: lang === 'fr' ? 'Basé sur rendements historiques. Pas un conseil financier.' : 'Based on historical asset class returns. Not financial advice.',
-  }
   return (
     <div className="mt-3 pt-3 border-t border-intel-border/50 space-y-3">
       <div className="flex items-center gap-2 text-[10px] font-mono text-intel-gold uppercase tracking-wider">
         <Calculator size={11} />
-        {lang === 'fr' ? 'Calculateur de Profit' : 'Profit Calculator'}
+        {t.profitCalc}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-[10px] font-mono text-intel-muted block mb-1">{t_calc.amount}</label>
+          <label className="text-[10px] font-mono text-intel-muted block mb-1">{t.calcAmount}</label>
           <input
             type="number"
             value={amount}
@@ -83,7 +68,7 @@ function ProfitCalc({ opp, lang }: { opp: InvestmentOpportunity; lang: string })
         </div>
         <div>
           <label className="text-[10px] font-mono text-intel-muted block mb-1">
-            {t_calc.months}: <span className="text-intel-gold">{months}</span>
+            {t.calcMonths}: <span className="text-intel-gold">{months}</span>
           </label>
           <input
             type="range"
@@ -97,9 +82,9 @@ function ProfitCalc({ opp, lang }: { opp: InvestmentOpportunity; lang: string })
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: t_calc.conservative, value: result.conservative, color: 'text-trend-down' },
-          { label: t_calc.expected, value: result.expected, color: 'text-intel-text' },
-          { label: t_calc.optimistic, value: result.optimistic, color: 'text-trend-up' },
+          { label: t.calcConservative, value: result.conservative, color: 'text-trend-down' },
+          { label: t.calcExpected, value: result.expected, color: 'text-intel-text' },
+          { label: t.calcOptimistic, value: result.optimistic, color: 'text-trend-up' },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-intel-bg rounded border border-intel-border p-2 text-center">
             <span className="text-[10px] font-mono text-intel-muted block">{label}</span>
@@ -108,15 +93,17 @@ function ProfitCalc({ opp, lang }: { opp: InvestmentOpportunity; lang: string })
           </div>
         ))}
       </div>
-      <p className="text-[10px] text-intel-dim italic">{t_calc.disclaimer}</p>
+      <p className="text-[10px] text-intel-dim italic">{t.calcDisclaimer}</p>
     </div>
   )
 }
 
-function OpportunityCard({ opp, lang }: { opp: InvestmentOpportunity; lang: string }) {
+function OpportunityCard({ opp, t }: { opp: InvestmentOpportunity; t: ReturnType<typeof useLanguage>['t'] }) {
   const [showCalc, setShowCalc] = useState(false)
-  const riskLabel = RISK_LABELS[opp.riskLevel]?.[lang as 'en' | 'fr'] ?? opp.riskLevel
-  const horizonLabel = HORIZON_LABELS[opp.timeHorizon]?.[lang as 'en' | 'fr'] ?? opp.timeHorizon
+  const riskKey = RISK_TKEYS[opp.riskLevel]
+  const horizonKey = HORIZON_TKEYS[opp.timeHorizon]
+  const riskLabel = riskKey ? t[riskKey] : opp.riskLevel
+  const horizonLabel = horizonKey ? t[horizonKey] : opp.timeHorizon
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border overflow-hidden">
@@ -132,7 +119,7 @@ function OpportunityCard({ opp, lang }: { opp: InvestmentOpportunity; lang: stri
             {horizonLabel}
           </span>
           <span className="text-[10px] font-mono text-intel-gold border border-intel-gold/30 rounded px-1.5 py-0.5">
-            ~{(opp.expectedAnnualReturn * 100).toFixed(0)}%/yr est.
+            ~{(opp.expectedAnnualReturn * 100).toFixed(0)}{t.percentYearEst}
           </span>
         </div>
         <p className="text-xs text-intel-secondary leading-relaxed mb-2">{opp.thesis}</p>
@@ -156,11 +143,11 @@ function OpportunityCard({ opp, lang }: { opp: InvestmentOpportunity; lang: stri
           className="mt-3 flex items-center gap-1 text-[11px] font-mono text-intel-gold hover:text-intel-gold-bright transition-colors"
         >
           <Calculator size={11} />
-          {lang === 'fr' ? 'Calculer le profit' : 'Calculate profit'}
+          {t.calculateProfit}
           {showCalc ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
         </button>
 
-        {showCalc && <ProfitCalc opp={opp} lang={lang} />}
+        {showCalc && <ProfitCalc opp={opp} t={t} />}
       </div>
     </div>
   )
@@ -178,7 +165,7 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
     setError(null)
     setNeedsApiKey(false)
     try {
-      const res = await fetch('/api/sentiment')
+      const res = await fetch(`/api/sentiment?lang=${language}`)
       const json = await res.json()
       if (!res.ok) {
         if (json.needsApiKey) { setNeedsApiKey(true); setError(t.noApiKey) }
@@ -200,7 +187,8 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
     return () => clearTimeout(timer)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const moodLabel = data ? (MOOD_LABELS[data.overallMood]?.[language] ?? data.overallMood) : ''
+  const moodTKey = data ? MOOD_TKEYS[data.overallMood] : undefined
+  const moodLabel = moodTKey ? t[moodTKey] : (data?.overallMood ?? '')
 
   return (
     <section aria-labelledby="sentiment-title">
@@ -294,11 +282,11 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-intel-text">{item.source}</span>
                           <span className="text-[10px] font-mono text-intel-dim border border-intel-border rounded px-1 py-0.5">
-                            {SOURCE_TYPE_LABELS[item.sourceType] ?? item.sourceType}
+                            {t[SOURCE_TYPE_TKEYS[item.sourceType]] ?? item.sourceType}
                           </span>
                         </div>
                         <StatusBadge
-                          status={MOOD_LABELS[item.mood]?.[language] ?? item.mood}
+                          status={t[MOOD_TKEYS[item.mood]] ?? item.mood}
                           variant={item.mood}
                           size="sm"
                         />
@@ -316,7 +304,7 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
                 </h3>
                 <div className="space-y-3">
                   {data.opportunities.map((opp) => (
-                    <OpportunityCard key={opp.id} opp={opp} lang={language} />
+                    <OpportunityCard key={opp.id} opp={opp} t={t} />
                   ))}
                 </div>
               </div>

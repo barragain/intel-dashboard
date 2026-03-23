@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getCached, setCached } from '@/lib/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
+import { getLang } from '@/lib/lang'
 import type { HistoricalData } from '@/lib/types'
 
 const PROMPT = `You are a financial historian and analyst. Today: ${new Date().toDateString()}.
@@ -42,8 +44,10 @@ Include 3 historical parallels (consider: 2008 crisis, 2020 COVID, 1970s oil sho
 Include 2–3 real expert quotes from economists or institutional analysts found via search — exact words, not paraphrased.
 Include 2–3 real news article titles with their publication and date.`
 
-export async function GET() {
-  const cached = getCached('historical')
+export async function GET(request: NextRequest) {
+  const lang = getLang(request)
+  const cacheKey = `historical_${lang}`
+  const cached = getCached(cacheKey)
   if (cached) return NextResponse.json(cached)
 
   if (!process.env.GEMINI_API_KEY) {
@@ -54,7 +58,7 @@ export async function GET() {
   }
 
   try {
-    const text = await searchAndAnalyze(PROMPT)
+    const text = await searchAndAnalyze(PROMPT, lang)
     const parsed = parseJson<Omit<HistoricalData, 'updatedAt'>>(text)
 
     const data: HistoricalData = {
@@ -62,7 +66,7 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
     }
 
-    setCached('historical', data)
+    setCached(cacheKey, data)
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

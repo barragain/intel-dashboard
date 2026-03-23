@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getCached, setCached } from '@/lib/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
+import { getLang } from '@/lib/lang'
 import type { SentimentData } from '@/lib/types'
 
 const PROMPT = `You are a market sentiment analyst. Today: ${new Date().toDateString()}.
@@ -45,8 +47,10 @@ Include 5 sentiment items (mix of community, institutional, prediction market) a
 Include 2–3 real expert quotes from analysts, fund managers, or economists found via search — exact words, not paraphrased.
 Include 2–3 real news article titles with their publication and date.`
 
-export async function GET() {
-  const cached = getCached('sentiment')
+export async function GET(request: NextRequest) {
+  const lang = getLang(request)
+  const cacheKey = `sentiment_${lang}`
+  const cached = getCached(cacheKey)
   if (cached) return NextResponse.json(cached)
 
   if (!process.env.GEMINI_API_KEY) {
@@ -57,7 +61,7 @@ export async function GET() {
   }
 
   try {
-    const text = await searchAndAnalyze(PROMPT)
+    const text = await searchAndAnalyze(PROMPT, lang)
     const parsed = parseJson<Omit<SentimentData, 'updatedAt'>>(text)
 
     const data: SentimentData = {
@@ -65,7 +69,7 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
     }
 
-    setCached('sentiment', data)
+    setCached(cacheKey, data)
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

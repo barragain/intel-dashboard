@@ -7,11 +7,11 @@ import { AlertTriangle, RefreshCw } from 'lucide-react'
 import TrendArrow from '@/components/ui/TrendArrow'
 
 const FG_CONFIG = [
-  { max: 24, label: 'Extreme Fear', fr: 'Peur Extrême', color: 'text-risk-worried', bg: 'bg-risk-worried-bg border-risk-worried-border' },
-  { max: 44, label: 'Fear', fr: 'Peur', color: 'text-trend-down', bg: 'bg-risk-worried-bg border-risk-worried-border' },
-  { max: 55, label: 'Neutral', fr: 'Neutre', color: 'text-intel-muted', bg: 'bg-intel-elevated border-intel-border' },
-  { max: 74, label: 'Greed', fr: 'Avidité', color: 'text-trend-up', bg: 'bg-risk-stable-bg border-risk-stable-border' },
-  { max: 100, label: 'Extreme Greed', fr: 'Avidité Extrême', color: 'text-risk-stable', bg: 'bg-risk-stable-bg border-risk-stable-border' },
+  { max: 24, tKey: 'extremeFear' as const, color: 'text-risk-worried', bg: 'bg-risk-worried-bg border-risk-worried-border' },
+  { max: 44, tKey: 'fear' as const, color: 'text-trend-down', bg: 'bg-risk-worried-bg border-risk-worried-border' },
+  { max: 55, tKey: 'cryptoNeutral' as const, color: 'text-intel-muted', bg: 'bg-intel-elevated border-intel-border' },
+  { max: 74, tKey: 'greed' as const, color: 'text-trend-up', bg: 'bg-risk-stable-bg border-risk-stable-border' },
+  { max: 100, tKey: 'extremeGreed' as const, color: 'text-risk-stable', bg: 'bg-risk-stable-bg border-risk-stable-border' },
 ]
 
 function getFgConfig(score: number) {
@@ -59,7 +59,7 @@ export default function CryptoSignal() {
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fgCfg = data ? getFgConfig(data.fearGreedIndex) : null
-  const fgLabel = language === 'fr' ? fgCfg?.fr : fgCfg?.label
+  const fgLabel = fgCfg ? t[fgCfg.tKey] : ''
 
   return (
     <section aria-labelledby="crypto-title">

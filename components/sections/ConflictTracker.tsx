@@ -7,10 +7,10 @@ import type { ConflictsData, Conflict } from '@/lib/types'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { AlertTriangle, RefreshCw, KeyRound, Sparkles } from 'lucide-react'
 
-const STATUS_LABELS: Record<string, { en: string; fr: string }> = {
-  escalating: { en: 'Escalating', fr: 'En escalade' },
-  stable: { en: 'Stable', fr: 'Stable' },
-  'de-escalating': { en: 'De-escalating', fr: 'En désescalade' },
+const STATUS_TKEYS: Record<string, 'escalating' | 'conflictStable' | 'deEscalating'> = {
+  escalating: 'escalating',
+  stable: 'conflictStable',
+  'de-escalating': 'deEscalating',
 }
 
 const STATUS_DOT_COLORS: Record<string, string> = {
@@ -19,9 +19,10 @@ const STATUS_DOT_COLORS: Record<string, string> = {
   'de-escalating': 'bg-risk-stable',
 }
 
-function ConflictCard({ conflict, lang }: { conflict: Conflict; lang: string }) {
+function ConflictCard({ conflict, t }: { conflict: Conflict; t: ReturnType<typeof useLanguage>['t'] }) {
   const [expanded, setExpanded] = useState(false)
-  const statusLabel = STATUS_LABELS[conflict.status]?.[lang as 'en' | 'fr'] ?? conflict.status
+  const tKey = STATUS_TKEYS[conflict.status]
+  const statusLabel = tKey ? t[tKey] : conflict.status
   const dotColor = STATUS_DOT_COLORS[conflict.status] ?? 'bg-intel-muted'
 
   return (
@@ -47,19 +48,19 @@ function ConflictCard({ conflict, lang }: { conflict: Conflict; lang: string }) 
         <div className="px-4 pb-4 pt-1 space-y-2.5 border-t border-intel-border/50 bg-intel-elevated/30 animate-in">
           <div>
             <span className="text-[10px] font-mono text-intel-gold uppercase tracking-wider block mb-1">
-              {lang === 'fr' ? 'Pourquoi cela vous concerne' : 'Why it matters to you'}
+              {t.whyItMatters}
             </span>
             <p className="text-xs text-intel-secondary leading-relaxed">{conflict.relevance}</p>
           </div>
           <div>
             <span className="text-[10px] font-mono text-intel-muted uppercase tracking-wider block mb-1">
-              {lang === 'fr' ? 'Détails actuels' : 'Current details'}
+              {t.currentDetails}
             </span>
             <p className="text-xs text-intel-secondary leading-relaxed">{conflict.details}</p>
           </div>
           <div className="flex items-center gap-2 pt-1">
             <span className="text-[10px] font-mono text-intel-muted uppercase tracking-wider">
-              {lang === 'fr' ? 'Impact' : 'Key impact'}:
+              {t.keyImpact}:
             </span>
             <span className="text-[11px] font-mono text-intel-gold">{conflict.keyImpact}</span>
           </div>
@@ -87,7 +88,7 @@ export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: num
     setError(null)
     setNeedsApiKey(false)
     try {
-      const res = await fetch('/api/conflicts')
+      const res = await fetch(`/api/conflicts?lang=${language}`)
       const json = await res.json()
       if (!res.ok) {
         if (json.needsApiKey) { setNeedsApiKey(true); setError(t.noApiKey) }
@@ -170,7 +171,7 @@ export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: num
                 {data.overallAssessment}
               </p>
               {data.conflicts.map((conflict) => (
-                <ConflictCard key={conflict.id} conflict={conflict} lang={language} />
+                <ConflictCard key={conflict.id} conflict={conflict} t={t} />
               ))}
               <div className="flex items-center justify-end gap-2 pt-1">
                 <span className="text-[11px] font-mono text-intel-dim">

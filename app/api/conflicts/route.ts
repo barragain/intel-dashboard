@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getCached, setCached } from '@/lib/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
+import { getLang } from '@/lib/lang'
 import type { ConflictsData } from '@/lib/types'
 
 const PROMPT = `You are a geopolitical analyst. Today: ${new Date().toDateString()}.
@@ -35,8 +37,10 @@ Include 4 conflicts. Cite specific recent events or data points.
 Include 2–3 real expert quotes (officials, analysts, military/government sources) found via search — exact words, not paraphrased.
 Include 2–3 real news article titles with their publication and date.`
 
-export async function GET() {
-  const cached = getCached('conflicts')
+export async function GET(request: NextRequest) {
+  const lang = getLang(request)
+  const cacheKey = `conflicts_${lang}`
+  const cached = getCached(cacheKey)
   if (cached) return NextResponse.json(cached)
 
   if (!process.env.GEMINI_API_KEY) {
@@ -47,7 +51,7 @@ export async function GET() {
   }
 
   try {
-    const text = await searchAndAnalyze(PROMPT)
+    const text = await searchAndAnalyze(PROMPT, lang)
     const parsed = parseJson<Omit<ConflictsData, 'updatedAt'>>(text)
 
     const data: ConflictsData = {
@@ -55,7 +59,7 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
     }
 
-    setCached('conflicts', data)
+    setCached(cacheKey, data)
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
