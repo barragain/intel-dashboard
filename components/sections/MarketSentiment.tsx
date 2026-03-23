@@ -154,33 +154,39 @@ function OpportunityCard({ opp, t }: { opp: InvestmentOpportunity; t: ReturnType
 }
 
 function PredictionMarketCard({ market }: { market: PredictionMarket }) {
-  const pct = Math.round(market.probability * 100)
-  // Color the bar and number by how extreme the probability is — not by direction,
-  // since "70% chance of recession" is bearish but "70% chance of rate cut" might be bullish.
-  // We just show the raw number clearly.
-  const barColor =
-    pct >= 70 ? 'bg-trend-down' : pct <= 30 ? 'bg-trend-up' : 'bg-risk-watch'
-  const numColor =
-    pct >= 70 ? 'text-trend-down' : pct <= 30 ? 'text-trend-up' : 'text-risk-watch'
+  const yesPct = Math.round(market.probability * 100)
+  const noPct = 100 - yesPct
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border p-3">
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <p className="text-sm text-intel-text leading-snug flex-1">{market.question}</p>
-        <span className={`text-2xl font-mono font-black tabular-nums flex-shrink-0 ${numColor}`}>
-          {pct}%
-        </span>
+      {/* Question */}
+      <p className="text-sm text-intel-text leading-snug mb-3">{market.question}</p>
+
+      {/* YES / NO split numbers */}
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] font-mono font-bold text-risk-stable uppercase tracking-widest">YES</span>
+          <span className="text-2xl font-mono font-black tabular-nums text-risk-stable">{yesPct}%</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-2xl font-mono font-black tabular-nums text-trend-down">{noPct}%</span>
+          <span className="text-[11px] font-mono font-bold text-trend-down uppercase tracking-widest">NO</span>
+        </div>
       </div>
-      {/* Probability bar */}
-      <div className="h-1.5 bg-intel-border rounded-full overflow-hidden mb-2">
+
+      {/* Split bar: green = YES portion, red = NO portion */}
+      <div className="h-1.5 rounded-full overflow-hidden mb-2.5 flex">
         <div
-          className={`h-full rounded-full transition-all duration-700 ${barColor}`}
-          style={{ width: `${pct}%` }}
+          className="h-full bg-risk-stable transition-all duration-700"
+          style={{ width: `${yesPct}%` }}
         />
+        <div className="h-full bg-trend-down flex-1" />
       </div>
+
+      {/* Source badge */}
       <div className="flex items-center justify-between">
         <span
-          className={`text-[13px] font-mono border rounded px-1.5 py-0.5 ${
+          className={`text-[11px] font-mono border rounded px-1.5 py-0.5 ${
             market.source === 'polymarket'
               ? 'text-intel-gold border-intel-gold/30'
               : 'text-intel-muted border-intel-border'
@@ -188,7 +194,16 @@ function PredictionMarketCard({ market }: { market: PredictionMarket }) {
         >
           {market.source === 'polymarket' ? 'Polymarket' : 'Kalshi'}
         </span>
-        <span className="text-[13px] font-mono text-intel-dim">chance of YES</span>
+        {market.url && (
+          <a
+            href={market.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-mono text-intel-dim hover:text-intel-gold transition-colors"
+          >
+            view →
+          </a>
+        )}
       </div>
     </div>
   )
@@ -392,20 +407,27 @@ export default function MarketSentiment() {
             </div>
           )}
 
-          {/* Reddit posts */}
-          {data?.redditPosts && data.redditPosts.length > 0 && (() => {
-            const displayPosts = selectDisplayPosts(data.redditPosts!)
-            if (displayPosts.length === 0) return null
+          {/* Reddit posts — always shown when data is loaded */}
+          {data && (() => {
+            const displayPosts = data.redditPosts ? selectDisplayPosts(data.redditPosts) : []
             return (
               <div className="mt-6 border-t border-intel-border pt-6 animate-in">
                 <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-4">
                   {t.redditSentiment}
                 </h3>
-                <div className="space-y-3">
-                  {displayPosts.map((post) => (
-                    <RedditPostCard key={post.id} post={post} />
-                  ))}
-                </div>
+                {displayPosts.length > 0 ? (
+                  <div className="space-y-3">
+                    {displayPosts.map((post) => (
+                      <RedditPostCard key={post.id} post={post} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 py-4 px-3 bg-intel-elevated rounded-lg border border-intel-border">
+                    <span className="text-[13px] font-mono text-intel-muted">
+                      Reddit data unavailable — add <code className="text-intel-gold">APIFY_API_KEY</code> to <code className="text-intel-gold">.env.local</code> to enable community sentiment.
+                    </span>
+                  </div>
+                )}
               </div>
             )
           })()}

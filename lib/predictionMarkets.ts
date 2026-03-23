@@ -100,7 +100,7 @@ async function fetchKalshi(): Promise<{ markets: PredictionMarket[]; error?: str
       return { markets: [], error: msg }
     }
 
-    const url = `https://trading-api.kalshi.com${path}?status=open&limit=50&sort=liquidity`
+    const url = `https://api.elections.kalshi.com${path}?status=open&limit=50&sort=liquidity`
     const res = await fetch(url, {
       headers: {
         Accept: 'application/json',
