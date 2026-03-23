@@ -291,7 +291,7 @@ export default function MarketSentiment() {
 
   useEffect(() => {
     load()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const moodTKey = data ? MOOD_TKEYS[data.overallMood] : undefined
   const moodLabel = moodTKey ? t[moodTKey] : (data?.overallMood ?? '')

@@ -102,7 +102,7 @@ export default function RiskMeter() {
 
   useEffect(() => {
     load()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const status = data?.status ?? 'WATCH'
   const cfg = STATUS_CONFIG[status]

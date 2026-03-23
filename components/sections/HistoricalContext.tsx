@@ -120,7 +120,7 @@ export default function HistoricalContext() {
 
   useEffect(() => {
     load()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section aria-labelledby="historical-title">

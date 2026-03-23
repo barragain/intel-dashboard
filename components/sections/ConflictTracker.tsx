@@ -118,7 +118,7 @@ export default function ConflictTracker() {
 
   useEffect(() => {
     load()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function load() {
     setLoading(true)
