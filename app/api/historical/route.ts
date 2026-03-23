@@ -61,6 +61,9 @@ export async function GET() {
     if (msg === 'ANTHROPIC_API_KEY_MISSING') {
       return NextResponse.json({ error: msg, needsApiKey: true }, { status: 503 })
     }
+    if (msg === 'RATE_LIMIT_EXCEEDED') {
+      return NextResponse.json({ error: msg, rateLimited: true }, { status: 429 })
+    }
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

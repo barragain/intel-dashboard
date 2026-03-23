@@ -106,6 +106,7 @@ export default function HistoricalContext({ autoLoadDelay }: { autoLoadDelay?: n
       const json = await res.json()
       if (!res.ok) {
         if (json.needsApiKey) { setNeedsApiKey(true); setError(t.noApiKey) }
+        else if (json.rateLimited) { setError(t.rateLimited) }
         else setError(json.error ?? t.error)
         return
       }

@@ -31,12 +31,19 @@ export async function searchAndAnalyze(
   let searchesUsed = 0
 
   for (let turn = 0; turn < 2; turn++) {
-    const response = await create({
-      model: MODEL,
-      max_tokens: maxTokens,
-      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-      messages,
-    })
+    let response: AnyMessage
+    try {
+      response = await create({
+        model: MODEL,
+        max_tokens: maxTokens,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages,
+      })
+    } catch (err) {
+      const status = (err as { status?: number }).status
+      if (status === 429) throw new Error('RATE_LIMIT_EXCEEDED')
+      throw err
+    }
 
     const text = response.content
       .filter((b): b is Anthropic.TextBlock => b.type === 'text')

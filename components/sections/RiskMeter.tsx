@@ -76,6 +76,8 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
         if (json.needsApiKey) {
           setNeedsApiKey(true)
           setError(t.noApiKey)
+        } else if (json.rateLimited) {
+          setError(t.rateLimited)
         } else {
           setError(json.error ?? t.error)
         }
