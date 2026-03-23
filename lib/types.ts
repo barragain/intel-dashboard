@@ -115,7 +115,7 @@ export interface PredictionMarket {
   id: string
   question: string
   probability: number // 0–1, represents "Yes" probability
-  source: 'polymarket' | 'kalshi'
+  source: 'polymarket'
   volume?: number
   url?: string
 }
@@ -127,7 +127,6 @@ export interface SentimentData {
   redditPosts?: RedditPost[]
   predictionMarkets?: PredictionMarket[]
   predictionMarketsAnalysis?: string
-  kalshiError?: string
   quotes: Quote[]
   sources: NewsSource[]
   updatedAt: string

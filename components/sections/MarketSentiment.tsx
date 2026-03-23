@@ -185,14 +185,8 @@ function PredictionMarketCard({ market }: { market: PredictionMarket }) {
 
       {/* Source badge */}
       <div className="flex items-center justify-between">
-        <span
-          className={`text-[11px] font-mono border rounded px-1.5 py-0.5 ${
-            market.source === 'polymarket'
-              ? 'text-intel-gold border-intel-gold/30'
-              : 'text-intel-muted border-intel-border'
-          }`}
-        >
-          {market.source === 'polymarket' ? 'Polymarket' : 'Kalshi'}
+        <span className="text-[11px] font-mono border rounded px-1.5 py-0.5 text-intel-gold border-intel-gold/30">
+          Polymarket
         </span>
         {market.url && (
           <a
@@ -457,13 +451,6 @@ export default function MarketSentiment() {
                 </div>
               )}
 
-              {/* Kalshi debug error — only shown when keys are set but auth fails */}
-              {data.kalshiError && (
-                <div className="mt-2 flex items-start gap-2 px-3 py-2 bg-risk-worried-bg border border-risk-worried-border rounded text-[12px] font-mono text-risk-worried">
-                  <span className="flex-shrink-0">Kalshi:</span>
-                  <span className="break-all">{data.kalshiError}</span>
-                </div>
-              )}
             </div>
           )}
 

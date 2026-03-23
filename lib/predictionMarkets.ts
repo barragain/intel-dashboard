@@ -1,4 +1,3 @@
-import { createSign } from 'crypto'
 import type { PredictionMarket } from './types'
 
 // Tightly scoped to global-impact markets
@@ -11,7 +10,6 @@ const FALLBACK_RE =
 
 export interface PredictionMarketsResult {
   markets: PredictionMarket[]
-  kalshiError?: string
 }
 
 async function fetchPolymarket(): Promise<PredictionMarket[]> {
@@ -72,89 +70,9 @@ async function fetchPolymarket(): Promise<PredictionMarket[]> {
   }
 }
 
-async function fetchKalshi(): Promise<{ markets: PredictionMarket[]; error?: string }> {
-  const keyId = process.env.KALSHI_API_KEY_ID
-  const rawKey = process.env.KALSHI_PRIVATE_KEY
-
-  if (!keyId && !rawKey) return { markets: [] } // silently skip if neither is configured
-  if (!keyId) return { markets: [], error: 'KALSHI_API_KEY_ID not set' }
-  if (!rawKey) return { markets: [], error: 'KALSHI_PRIVATE_KEY not set' }
-
-  try {
-    // Env vars store newlines as literal \n — normalize to real newlines
-    const privateKey = rawKey.replace(/\\n/g, '\n')
-    const timestamp = Date.now().toString()
-    const method = 'GET'
-    const path = '/trade-api/v2/markets'
-
-    // Kalshi RS256 signature: timestamp + keyId + METHOD + /path (no query string)
-    let signature: string
-    try {
-      const signer = createSign('SHA256')
-      signer.update(timestamp + keyId + method + path)
-      signer.end()
-      signature = signer.sign(privateKey, 'base64')
-    } catch (signErr) {
-      const msg = `RSA signing failed — check KALSHI_PRIVATE_KEY format: ${signErr instanceof Error ? signErr.message : signErr}`
-      console.warn('[Kalshi]', msg)
-      return { markets: [], error: msg }
-    }
-
-    const url = `https://api.elections.kalshi.com${path}?status=open&limit=50&sort=liquidity`
-    const res = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        'KALSHI-ACCESS-KEY': keyId,
-        'KALSHI-ACCESS-TIMESTAMP': timestamp,
-        'KALSHI-ACCESS-SIGNATURE': signature,
-      },
-      signal: AbortSignal.timeout(10_000),
-    })
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => '')
-      const msg = `HTTP ${res.status} — ${body.slice(0, 300)}`
-      console.warn('[Kalshi] API error:', msg)
-      return { markets: [], error: msg }
-    }
-
-    const json = await res.json()
-    const raw: any[] = json.markets ?? []
-
-    const markets = raw
-      .filter((m) => {
-        const q = String(m.title ?? m.question ?? '')
-        return q.length > 0 && (PRIMARY_RE.test(q) || FALLBACK_RE.test(q))
-      })
-      .slice(0, 6)
-      .map((m): PredictionMarket => {
-        const rawPrice = Number(m.yes_bid ?? m.last_price ?? m.yes_ask ?? 0)
-        const probability = rawPrice > 1 ? rawPrice / 100 : rawPrice
-        return {
-          id: String(m.ticker ?? m.id ?? Math.random()),
-          question: String(m.title ?? m.question ?? ''),
-          probability,
-          source: 'kalshi',
-          volume: Number(m.volume ?? m.open_interest ?? 0),
-          url: m.ticker ? `https://kalshi.com/markets/${m.ticker}` : undefined,
-        }
-      })
-      .filter((m) => m.question.length > 0 && m.probability > 0.01 && m.probability < 0.99)
-
-    return { markets }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.warn('[Kalshi] fetch failed:', msg)
-    return { markets: [], error: msg }
-  }
-}
-
 export async function fetchPredictionMarkets(): Promise<PredictionMarketsResult> {
-  const [poly, kalshiResult] = await Promise.all([fetchPolymarket(), fetchKalshi()])
-  const markets = [...poly, ...kalshiResult.markets]
-    .sort((a, b) => (b.volume ?? 0) - (a.volume ?? 0))
-    .slice(0, 5)
-  return { markets, kalshiError: kalshiResult.error }
+  const markets = await fetchPolymarket()
+  return { markets: markets.slice(0, 5) }
 }
 
 export function buildPredictionContext(markets: PredictionMarket[]): string {

@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Fetch Reddit + prediction markets in parallel
-    const [redditPosts, { markets: predictionMarkets, kalshiError }] = await Promise.all([
+    const [redditPosts, { markets: predictionMarkets }] = await Promise.all([
       fetchRedditPosts(),
       fetchPredictionMarkets(),
     ])
@@ -84,13 +84,12 @@ export async function GET(request: NextRequest) {
       buildPredictionContext(predictionMarkets)
 
     const text = await searchAndAnalyze(fullPrompt, lang)
-    const parsed = parseJson<Omit<SentimentData, 'updatedAt' | 'redditPosts' | 'predictionMarkets' | 'kalshiError'>>(text)
+    const parsed = parseJson<Omit<SentimentData, 'updatedAt' | 'redditPosts' | 'predictionMarkets'>>(text)
 
     const data: SentimentData = {
       ...parsed,
       redditPosts,
       predictionMarkets,
-      kalshiError,
       updatedAt: new Date().toISOString(),
     }
 
