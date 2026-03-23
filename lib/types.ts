@@ -126,6 +126,8 @@ export interface SentimentData {
   opportunities: InvestmentOpportunity[]
   redditPosts?: RedditPost[]
   predictionMarkets?: PredictionMarket[]
+  predictionMarketsAnalysis?: string
+  kalshiError?: string
   quotes: Quote[]
   sources: NewsSource[]
   updatedAt: string

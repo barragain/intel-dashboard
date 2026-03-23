@@ -422,6 +422,26 @@ export default function MarketSentiment() {
                   <PredictionMarketCard key={market.id} market={market} />
                 ))}
               </div>
+
+              {/* "What this means" Gemini analysis */}
+              {data.predictionMarketsAnalysis && (
+                <div className="mt-3 bg-intel-elevated rounded-lg border border-intel-gold/20 px-4 py-3">
+                  <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider block mb-1.5">
+                    {t.whatThisMeans}
+                  </span>
+                  <p className="text-sm text-intel-secondary leading-relaxed">
+                    {data.predictionMarketsAnalysis}
+                  </p>
+                </div>
+              )}
+
+              {/* Kalshi debug error — only shown when keys are set but auth fails */}
+              {data.kalshiError && (
+                <div className="mt-2 flex items-start gap-2 px-3 py-2 bg-risk-worried-bg border border-risk-worried-border rounded text-[12px] font-mono text-risk-worried">
+                  <span className="flex-shrink-0">Kalshi:</span>
+                  <span className="break-all">{data.kalshiError}</span>
+                </div>
+              )}
             </div>
           )}
 

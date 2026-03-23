@@ -45,6 +45,7 @@ Return ONLY this JSON:
       "caveat": "<1 sentence: the main thing that could make this go badly>"
     }
   ],
+  "predictionMarketsAnalysis": "<ONLY include this field if prediction market data was provided above. Write 2-3 plain English sentences explaining what these specific market probabilities mean collectively for the current global situation. Be concrete: name the percentages and say what they imply. Example format: 'Markets are pricing in a 67% chance of X. Combined with Y odds of Z, investors are clearly expecting...' Omit this field entirely if no prediction market data was provided.>",
   "quotes": [
     { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date found via search>" }
   ],
@@ -71,23 +72,25 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch Reddit + prediction markets in parallel — both gracefully return [] on failure
-    const [redditPosts, predictionMarkets] = await Promise.all([
+    // Fetch Reddit + prediction markets in parallel
+    const [redditPosts, { markets: predictionMarkets, kalshiError }] = await Promise.all([
       fetchRedditPosts(),
       fetchPredictionMarkets(),
     ])
+
     const fullPrompt =
       PROMPT +
       buildRedditContext(redditPosts) +
       buildPredictionContext(predictionMarkets)
 
     const text = await searchAndAnalyze(fullPrompt, lang)
-    const parsed = parseJson<Omit<SentimentData, 'updatedAt' | 'redditPosts' | 'predictionMarkets'>>(text)
+    const parsed = parseJson<Omit<SentimentData, 'updatedAt' | 'redditPosts' | 'predictionMarkets' | 'kalshiError'>>(text)
 
     const data: SentimentData = {
       ...parsed,
       redditPosts,
       predictionMarkets,
+      kalshiError,
       updatedAt: new Date().toISOString(),
     }
 
