@@ -30,7 +30,7 @@ export async function searchAndAnalyze(
 
   let searchesUsed = 0
 
-  for (let turn = 0; turn < 8; turn++) {
+  for (let turn = 0; turn < 3; turn++) {
     const response = await create({
       model: MODEL,
       max_tokens: maxTokens,
