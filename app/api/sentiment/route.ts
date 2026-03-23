@@ -5,34 +5,42 @@ import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
 import type { SentimentData } from '@/lib/types'
 
-const PROMPT = `You are a market sentiment analyst. Today: ${new Date().toDateString()}.
+const PROMPT = `You are helping someone new to investing understand what the market mood is right now and whether it's a good time to put money to work. Today: ${new Date().toDateString()}.
 
-User: Taiwan-based, new investor, works in content production (ad-budget dependent), considering moving to France, interested in global equities/ETFs/crypto.
+About this person: lives in Taiwan, completely new to investing (no experience), income depends on ad budgets at a content production company, planning to move to France, interested in global stocks, ETFs, and crypto.
 
-Search the web for: current investor sentiment, analyst forecasts from major banks, prediction market odds (recession, rate cuts), and investment opportunities relevant to Taiwan/Europe exposure.
+Search the web for: how investors are feeling right now (scared or confident?), what major banks and analysts are actually saying about the next 6-12 months, prediction market odds on recession or interest rate changes, and investment options that make sense for someone with Taiwan and Europe exposure.
+
+WRITING RULES — follow these strictly:
+- Plain English only. Write like you're explaining to a smart friend who just asked "so, should I put money in the market right now?"
+- Banned phrases: risk-off, risk-on, hawkish, dovish, yield curve, price-to-earnings multiples, macro headwinds, liquidity, alpha, beta, portfolio rebalancing, de-risking, sector rotation. Say what you mean in plain words.
+- Be direct. "Most investors are nervous right now because the US economy might slow down" not "sentiment indicators reflect elevated uncertainty amid recessionary concerns."
+- For investment ideas: say clearly what it is and why you'd consider buying it now. What are you betting on? What actually goes wrong if it doesn't work?
+- Don't make anything sound safer or riskier than it actually is. If returns are uncertain, say so.
+- Short sentences.
 
 Return ONLY this JSON:
 {
   "overallMood": "bullish"|"neutral"|"bearish"|"fearful",
   "items": [
     {
-      "source": "<name>",
+      "source": "<name of source, analyst, or community>",
       "sourceType": "community"|"institutional"|"prediction",
       "mood": "bullish"|"neutral"|"bearish"|"fearful",
-      "summary": "<1-2 sentences of current view>"
+      "summary": "<1-2 plain sentences: what does this source actually think will happen and why — be specific about what they expect>"
     }
   ],
   "opportunities": [
     {
       "id": "<string>",
-      "title": "<short title>",
-      "thesis": "<2-3 sentences why this is an opportunity now>",
+      "title": "<plain title describing what this is — not financial code>",
+      "thesis": "<2-3 plain sentences: why this is worth considering right now, what you're betting on, what could go wrong>",
       "riskLevel": "low"|"medium"|"high",
       "timeHorizon": "short"|"medium"|"long",
-      "assets": ["<ETF, stock, or sector, max 4>"],
-      "expectedAnnualReturn": <decimal e.g. 0.10>,
+      "assets": ["<actual ETF ticker or company name, max 4>"],
+      "expectedAnnualReturn": <decimal e.g. 0.10 for 10% per year>,
       "volatility": <decimal e.g. 0.15>,
-      "caveat": "<1 sentence risk caveat>"
+      "caveat": "<1 sentence: the main thing that could make this go badly>"
     }
   ],
   "quotes": [
@@ -43,9 +51,9 @@ Return ONLY this JSON:
   ]
 }
 
-Include 5 sentiment items (mix of community, institutional, prediction market) and 3 investment opportunities. Use realistic historical return/volatility figures.
-Include 2–3 real expert quotes from analysts, fund managers, or economists found via search — exact words, not paraphrased.
-Include 2–3 real news article titles with their publication and date.`
+Include 5 sentiment items (mix: 2 from community/Reddit/retail investors, 2 from major banks or institutional analysts, 1 from a prediction market). Include 3 investment ideas with realistic return and volatility numbers based on actual historical asset class performance.
+Include 2–3 real expert quotes from analysts, fund managers, or economists found via search — exact words only.
+Include 2–3 real news article headlines with publication and date.`
 
 export async function GET(request: NextRequest) {
   const lang = getLang(request)

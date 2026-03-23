@@ -5,26 +5,34 @@ import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
 import type { ConflictsData } from '@/lib/types'
 
-const PROMPT = `You are a geopolitical analyst. Today: ${new Date().toDateString()}.
+const PROMPT = `You are helping someone understand what's happening in the world right now and how it could affect their life. Today: ${new Date().toDateString()}.
 
-User: lives in Taiwan, works at content production company (job tied to ad budgets), girlfriend at ASUS Taiwan, planning to move to France.
+About this person: lives in Taiwan, income depends on ad budgets at a content production company (if companies cut ad spending, this person's job is at risk), girlfriend works at ASUS Taiwan, planning to move to France.
 
-Search the web for current status of: Taiwan Strait tensions, US trade/tariff policy affecting Taiwan, Middle East oil supply, Russia-Ukraine and EU energy.
+Search the web for what's happening right now with: Taiwan Strait (Chinese military activity, US-China political moves), US trade and tariff policy (especially anything hitting Taiwan or tech companies), Middle East (oil supply, Iran, shipping), Russia-Ukraine (energy prices, how it affects Europe and France).
+
+WRITING RULES — follow these strictly:
+- Plain English only. No jargon.
+- Banned phrases: geopolitical tensions, escalation dynamics, flashpoint, strategic competition, destabilizing factors, risk factors, macro environment, heightened uncertainty. Just say what's actually happening.
+- Be specific. "China sent 36 warplanes near Taiwan on Monday" not "increased military activity near Taiwan." Use real events, real numbers, real dates.
+- Connect to this person's actual life. "This matters to you because oil going up means your clients have less money for ads" not "energy price increases may impact consumer discretionary spending."
+- If something is getting worse, say so and say what it could lead to in simple terms.
+- Short sentences.
 
 Return ONLY this JSON:
 {
   "conflicts": [
     {
       "id": "string",
-      "name": "conflict name",
-      "location": "region",
-      "relevance": "1 sentence: why this matters to this specific user",
+      "name": "<conflict name>",
+      "location": "<region or country>",
+      "relevance": "<1 plain-English sentence: why this specifically affects this person — their job, their savings, their move to France, their safety>",
       "status": "escalating"|"stable"|"de-escalating",
-      "keyImpact": "primary impact: e.g. oil prices, job security, supply chains",
-      "details": "2 sentences of current specific facts"
+      "keyImpact": "<what it actually affects in plain terms: oil prices, tech supply chains, job security, cost of living>",
+      "details": "<2 sentences of specific current facts — real events, real numbers where available>"
     }
   ],
-  "overallAssessment": "2-sentence combined risk summary and personal implication",
+  "overallAssessment": "<2 plain-English sentences: what the overall picture looks like right now and what this person should be paying attention to>",
   "quotes": [
     { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date found via search>" }
   ],
@@ -33,9 +41,9 @@ Return ONLY this JSON:
   ]
 }
 
-Include 4 conflicts. Cite specific recent events or data points.
-Include 2–3 real expert quotes (officials, analysts, military/government sources) found via search — exact words, not paraphrased.
-Include 2–3 real news article titles with their publication and date.`
+Include 4 conflicts. Use real recent events with specific details.
+Include 2–3 real expert quotes from officials, analysts, or military/government sources found via search — exact words only.
+Include 2–3 real news article headlines with publication and date.`
 
 export async function GET(request: NextRequest) {
   const lang = getLang(request)
