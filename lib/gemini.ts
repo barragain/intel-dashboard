@@ -22,7 +22,7 @@ export async function searchAndAnalyze(prompt: string, maxTokens = 2500): Promis
   }
 
   const model = getModel({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     tools: [{ googleSearch: {} }],
   })
 
