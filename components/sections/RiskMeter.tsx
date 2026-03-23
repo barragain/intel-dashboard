@@ -10,12 +10,6 @@ import Tooltip from '@/components/ui/Tooltip'
 function SectionHeader({ label, subtitle }: { label: string; subtitle: string }) {
   return (
     <div className="px-6 pt-6 pb-4 border-b border-intel-border">
-      <div className="flex items-center gap-2 mb-0.5">
-        <div className="w-1.5 h-1.5 rounded-full bg-intel-gold" />
-        <span className="text-[13px] font-mono text-intel-gold tracking-[0.2em] uppercase">
-          Section 01
-        </span>
-      </div>
       <h2 className="font-display font-bold text-xl text-intel-text">{label}</h2>
       <p className="text-[13px] text-intel-muted mt-0.5">{subtitle}</p>
     </div>

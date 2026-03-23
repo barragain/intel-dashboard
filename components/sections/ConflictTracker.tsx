@@ -68,16 +68,16 @@ function ConflictCard({ conflict, t }: { conflict: Conflict; t: ReturnType<typeo
       {expanded && (
         <div className="px-4 pb-4 pt-1 space-y-2.5 border-t border-intel-border/50 bg-intel-elevated/30 animate-in rounded-b-lg">
           <div>
-            <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider block mb-1">
-              {t.whyItMatters}
-            </span>
-            <p className="text-sm text-intel-secondary leading-relaxed">{conflict.relevance}</p>
-          </div>
-          <div>
             <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wider block mb-1">
               {t.currentDetails}
             </span>
             <p className="text-sm text-intel-secondary leading-relaxed">{conflict.details}</p>
+          </div>
+          <div>
+            <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider block mb-1">
+              {t.whyItMatters}
+            </span>
+            <p className="text-sm text-intel-secondary leading-relaxed">{conflict.relevance}</p>
           </div>
           <div className="flex items-center gap-2 pt-1">
             <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wider">
@@ -146,10 +146,6 @@ export default function ConflictTracker() {
       <div className="bg-intel-surface border border-intel-border rounded-xl overflow-hidden h-full">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-intel-border">
-          <div className="flex items-center gap-2 mb-0.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-intel-gold" />
-            <span className="text-[13px] font-mono text-intel-gold tracking-[0.2em] uppercase">Section 03</span>
-          </div>
           <h2 className="font-display font-bold text-xl text-intel-text" id="conflict-title">
             {t.section3Title}
           </h2>

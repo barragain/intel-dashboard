@@ -203,33 +203,50 @@ function PredictionMarketCard({ market }: { market: PredictionMarket }) {
   )
 }
 
-function selectDisplayPosts(posts: RedditPost[]): RedditPost[] {
-  const bySub = new Map<string, RedditPost>()
+const BEARISH_RE = /\b(bear|crash|fall|fell|drop|decline|recession|fear|sell|loss|cut|weak|bubble|collapse|plunge|dump|warn|crisis|down\s+\d|correction|tanking|tank)\b/i
+const BULLISH_RE = /\b(bull|rally|rise|rose|gain|surge|soar|record|high|optimistic|buy|recover|growth|boom|up\s+\d|moon|breakout|outperform|strong)\b/i
+
+function postSentiment(title: string): 'bullish' | 'bearish' | 'neutral' {
+  if (BEARISH_RE.test(title)) return 'bearish'
+  if (BULLISH_RE.test(title)) return 'bullish'
+  return 'neutral'
+}
+
+const SENTIMENT_STYLES: Record<string, string> = {
+  bullish: 'text-risk-stable border-risk-stable/40',
+  bearish: 'text-trend-down border-trend-down/40',
+  neutral: 'text-intel-muted border-intel-border',
+}
+
+function groupPostsBySub(posts: RedditPost[]): Map<string, RedditPost[]> {
+  const bySub = new Map<string, RedditPost[]>()
   for (const post of posts) {
-    const existing = bySub.get(post.subreddit)
-    if (!existing || post.score > existing.score) bySub.set(post.subreddit, post)
+    const key = post.subreddit.toLowerCase()
+    if (!bySub.has(key)) bySub.set(key, [])
+    bySub.get(key)!.push(post)
   }
-  return Array.from(bySub.values()).slice(0, 3)
+  for (const [key, group] of bySub) {
+    bySub.set(key, group.sort((a, b) => b.score - a.score).slice(0, 5))
+  }
+  return bySub
 }
 
 function RedditPostCard({ post }: { post: RedditPost }) {
   const [expanded, setExpanded] = useState(false)
   const displayComments = post.topComments.slice(0, 2)
+  const sentiment = postSentiment(post.title)
 
   return (
-    <div className="bg-intel-elevated rounded-lg border border-intel-border overflow-hidden">
+    <div className="border-b border-intel-border/40 last:border-b-0">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-3 text-left hover:bg-intel-elevated/70 transition-colors"
+        className="w-full py-2.5 px-0 text-left hover:opacity-80 transition-opacity"
         aria-expanded={expanded}
       >
-        <div className="flex items-start gap-3">
-          <span className="text-[13px] font-mono text-intel-gold border border-intel-gold/30 rounded px-1.5 py-0.5 flex-shrink-0 mt-0.5">
-            r/{post.subreddit}
-          </span>
+        <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
             <p className="text-sm text-intel-text leading-snug">{post.title}</p>
-            <div className="flex items-center gap-3 mt-1.5">
+            <div className="flex items-center gap-3 mt-1">
               <span className="flex items-center gap-1 text-[13px] font-mono text-intel-muted">
                 <ArrowUp size={11} />
                 {post.score.toLocaleString()}
@@ -240,21 +257,24 @@ function RedditPostCard({ post }: { post: RedditPost }) {
                   {post.numComments.toLocaleString()}
                 </span>
               )}
+              <span className={`text-[11px] font-mono border rounded px-1.5 py-0.5 uppercase tracking-wider ${SENTIMENT_STYLES[sentiment]}`}>
+                {sentiment}
+              </span>
             </div>
           </div>
           {displayComments.length > 0 && (
             expanded
-              ? <ChevronUp size={13} className="text-intel-muted flex-shrink-0 mt-1" />
-              : <ChevronDown size={13} className="text-intel-muted flex-shrink-0 mt-1" />
+              ? <ChevronUp size={12} className="text-intel-muted flex-shrink-0 mt-1" />
+              : <ChevronDown size={12} className="text-intel-muted flex-shrink-0 mt-1" />
           )}
         </div>
       </button>
 
       {expanded && displayComments.length > 0 && (
-        <div className="px-3 pb-3 space-y-2.5 border-t border-intel-border/40 animate-in">
+        <div className="pb-2.5 space-y-2 pl-3 animate-in">
           {displayComments.map((comment) => (
-            <div key={comment.id} className="pt-2.5 pl-3 border-l-2 border-intel-border">
-              <div className="flex items-center gap-2 mb-1">
+            <div key={comment.id} className="pl-3 border-l-2 border-intel-border">
+              <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-[13px] font-mono text-intel-gold">u/{comment.author}</span>
                 <span className="flex items-center gap-0.5 text-[13px] font-mono text-intel-dim">
                   <ArrowUp size={10} />
@@ -311,10 +331,6 @@ export default function MarketSentiment() {
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-intel-border flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-intel-gold" />
-              <span className="text-[13px] font-mono text-intel-gold tracking-[0.2em] uppercase">Section 04</span>
-            </div>
             <h2 className="font-display font-bold text-xl text-intel-text" id="sentiment-title">
               {t.section4Title}
             </h2>
@@ -401,26 +417,36 @@ export default function MarketSentiment() {
             </div>
           )}
 
-          {/* Reddit posts — always shown when data is loaded */}
+          {/* Reddit posts — grouped by community */}
           {data && (() => {
-            const displayPosts = data.redditPosts ? selectDisplayPosts(data.redditPosts) : []
+            const grouped: Map<string, RedditPost[]> = data.redditPosts ? groupPostsBySub(data.redditPosts) : new Map()
             return (
               <div className="mt-6 border-t border-intel-border pt-6 animate-in">
                 <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-4">
                   {t.redditSentiment}
                 </h3>
-                {displayPosts.length > 0 ? (
-                  <div className="space-y-3">
-                    {displayPosts.map((post) => (
-                      <RedditPostCard key={post.id} post={post} />
+                {grouped.size > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Array.from(grouped.entries()).map(([sub, posts]) => (
+                      <div key={sub} className="bg-intel-elevated rounded-lg border border-intel-border p-3">
+                        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-intel-border/50">
+                          <span className="text-[13px] font-mono text-intel-gold border border-intel-gold/30 rounded px-1.5 py-0.5">
+                            r/{sub}
+                          </span>
+                          <span className="text-[11px] font-mono text-intel-dim">{posts.length} posts</span>
+                        </div>
+                        <div>
+                          {posts.map((post) => (
+                            <RedditPostCard key={post.id} post={post} />
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 py-4 px-3 bg-intel-elevated rounded-lg border border-intel-border">
-                    <span className="text-[13px] font-mono text-intel-muted">
-                      Reddit data unavailable — add <code className="text-intel-gold">APIFY_API_KEY</code> to <code className="text-intel-gold">.env.local</code> to enable community sentiment.
-                    </span>
-                  </div>
+                  <p className="text-[13px] font-mono text-intel-muted py-3">
+                    Reddit data unavailable — retrying on next refresh.
+                  </p>
                 )}
               </div>
             )

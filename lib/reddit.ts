@@ -1,6 +1,9 @@
 import type { RedditPost, RedditComment } from './types'
 
-const SUBREDDITS = ['investing', 'wallstreetbets', 'economics']
+const SUBREDDITS = [
+  'investing', 'stocks', 'wallstreetbets', 'CryptoCurrency',
+  'geopolitics', 'worldnews', 'MacroEconomics', 'taiwan', 'france', 'europe',
+]
 const POSTS_PER_SUB = 5
 const COMMENTS_PER_POST = 3
 const TIMEOUT_MS = 90_000
@@ -106,12 +109,17 @@ export function buildRedditContext(posts: RedditPost[]): string {
   return lines.join('\n')
 }
 
-/** Pick the top post by score from each subreddit — returns up to 3 for display */
-export function selectDisplayPosts(posts: RedditPost[]): RedditPost[] {
-  const bySub = new Map<string, RedditPost>()
+/** Group posts by subreddit, top 5 per sub, ordered by score */
+export function groupPostsBySub(posts: RedditPost[]): Map<string, RedditPost[]> {
+  const bySub = new Map<string, RedditPost[]>()
   for (const post of posts) {
-    const existing = bySub.get(post.subreddit)
-    if (!existing || post.score > existing.score) bySub.set(post.subreddit, post)
+    const key = post.subreddit.toLowerCase()
+    if (!bySub.has(key)) bySub.set(key, [])
+    bySub.get(key)!.push(post)
   }
-  return Array.from(bySub.values()).slice(0, 3)
+  // Sort each group by score descending, cap at 5
+  for (const [key, group] of bySub) {
+    bySub.set(key, group.sort((a, b) => b.score - a.score).slice(0, 5))
+  }
+  return bySub
 }

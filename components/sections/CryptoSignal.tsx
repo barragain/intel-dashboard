@@ -150,10 +150,6 @@ export default function CryptoSignal() {
       <div className="bg-intel-surface border border-intel-border rounded-xl overflow-hidden h-full">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-intel-border">
-          <div className="flex items-center gap-2 mb-0.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-intel-gold" />
-            <span className="text-[13px] font-mono text-intel-gold tracking-[0.2em] uppercase">Section 05</span>
-          </div>
           <h2 className="font-display font-bold text-xl text-intel-text" id="crypto-title">
             {t.section5Title}
           </h2>
