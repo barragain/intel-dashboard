@@ -7,6 +7,29 @@ import TrendArrow from '@/components/ui/TrendArrow'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import Tooltip from '@/components/ui/Tooltip'
 
+// Map economy IDs to ISO 3166-1 alpha-2 codes for flag-icons
+const FLAG_ISO: Record<string, string> = {
+  us: 'us',
+  taiwan: 'tw',
+  france: 'fr',
+  paraguay: 'py',
+}
+
+function FlagIcon({ id }: { id: string }) {
+  const code = FLAG_ISO[id]
+  if (!code) {
+    // Global / no country flag — render the globe emoji (renders fine on all platforms)
+    return <span className="text-base leading-none" aria-hidden="true">🌐</span>
+  }
+  return (
+    <span
+      className={`fi fi-${code}`}
+      style={{ width: '1.25em', height: '0.94em', display: 'inline-block', borderRadius: '2px' }}
+      aria-hidden="true"
+    />
+  )
+}
+
 const STATUS_COLORS = {
   green: 'text-trend-up border-risk-stable',
   yellow: 'text-risk-watch border-risk-watch',
@@ -61,7 +84,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
       <Tooltip text={cardTip} width="lg" position="bottom" align="left" display="block">
         <div className="w-full px-4 py-3 border-b border-intel-border flex items-center justify-between cursor-default hover:bg-intel-elevated/60 transition-colors rounded-t-lg">
           <div className="flex items-center gap-2">
-            <span className="text-base" aria-hidden="true">{card.emoji}</span>
+            <FlagIcon id={card.id} />
             <span className="text-sm font-display font-semibold text-intel-text">{card.name}</span>
           </div>
           <div className="flex items-center gap-2">
