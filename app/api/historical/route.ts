@@ -5,18 +5,16 @@ import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
 import type { HistoricalData } from '@/lib/types'
 
-const PROMPT = `You are helping someone understand how today's situation compares to things that happened before in history, and what experts think is coming next. Today: ${new Date().toDateString()}.
+const PROMPT = `You are a financial historian and analyst helping a general audience understand how today's situation compares to historical events, and what experts think is coming next. Today: ${new Date().toDateString()}.
 
-About this person: lives in Taiwan, works in content production (income tied to ad budgets), girlfriend works at ASUS Taiwan, starting to invest for the first time, planning to move to France, worried about Taiwan Strait tensions.
-
-Search the web for: what's happening in the global economy right now, and what recent public predictions major institutions have made.
+Search the web for: what is happening in the global economy right now, and what recent public predictions major institutions have made.
 
 WRITING RULES — follow these strictly:
 - Plain English only. Write for someone who knows nothing about financial history.
 - When you describe a historical event, focus on what happened to regular people: did they lose jobs? Did prices double? Did savings get wiped out? How long did it last? Was it a rough year or a rough decade?
-- Connect past to present clearly: say what's similar and what's different. Don't just list events — explain why the comparison is useful.
-- For predictions: say what the institution thinks will happen, when, and why. Be specific. "Goldman Sachs thinks there's a 35% chance of a US recession by end of 2025 because consumer spending is slowing" not "Goldman maintains a cautious outlook given prevailing macroeconomic conditions."
-- If experts disagree, say so. Don't smooth everything into consensus.
+- Connect past to present clearly: say what is similar and what is different. Do not just list events — explain why the comparison is useful.
+- For predictions: say what the institution thinks will happen, when, and why. Be specific. "Goldman Sachs thinks there is a 35% chance of a US recession by end of 2025 because consumer spending is slowing" not "Goldman maintains a cautious outlook given prevailing macroeconomic conditions."
+- If experts disagree, say so. Do not smooth everything into consensus.
 - Banned phrases: macroeconomic parallels, structural similarities, recessionary pressures, normalization, tightening cycle, soft landing, hard landing, elevated volatility, uncertainty environment. Say the actual thing.
 - Short sentences.
 
@@ -29,7 +27,7 @@ Return ONLY this JSON:
       "historicalEvent": "<event name>",
       "period": "<year or range>",
       "whatHappened": "<2 sentences: what actually happened to markets, jobs, and prices back then — be specific with numbers and timeframes>",
-      "personalImplication": "<1-2 sentences: what this history lesson means for this person's job security, savings, investment timing, and France move>"
+      "personalImplication": "<1-2 sentences: what this history lesson means for investors in Asian markets and Europe, and for people in tech or media industries>"
     }
   ],
   "predictions": [

@@ -5,6 +5,7 @@ import { useLanguage } from '@/lib/i18n'
 import type { EconomiesData, EconomyCard } from '@/lib/types'
 import TrendArrow from '@/components/ui/TrendArrow'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
+import Tooltip from '@/components/ui/Tooltip'
 
 const STATUS_COLORS = {
   green: 'text-trend-up border-risk-stable',
@@ -24,32 +25,67 @@ const DIR_TKEYS: Record<string, 'improving' | 'stable2' | 'deteriorating'> = {
   deteriorating: 'deteriorating',
 }
 
-function EconomyCardComponent({ card, t }: { card: EconomyCard; t: ReturnType<typeof useLanguage>['t'] }) {
+type T = ReturnType<typeof useLanguage>['t']
+
+function getMetricTips(t: T): Record<string, string> {
+  return {
+    'VIX':       t.metricVIX,
+    'DXY':       t.metricDXY,
+    'S&P 500':   t.metricSP500,
+    'Gold (oz)': t.metricGold,
+    'Oil WTI':   t.metricOilWTI,
+    'TAIEX':     t.metricTAIEX,
+    'TWD/USD':   t.metricTWDUSD,
+    'CAC 40':    t.metricCAC40,
+    'EUR/USD':   t.metricEURUSD,
+    'PYG/USD':   t.metricPYGUSD,
+  }
+}
+
+// Extract the first sentence as a one-liner for the card hover tooltip
+function firstSentence(text: string): string {
+  const m = text.match(/^[^.!?]+[.!?]/)
+  return m ? m[0] : text
+}
+
+function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
   const dirKey = DIR_TKEYS[card.direction]
   const dirLabel = dirKey ? t[dirKey] : card.direction
   const statusColor = STATUS_COLORS[card.status]
+  const cardTip = firstSentence(card.summary)
+  const metricTips = getMetricTips(t)
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
-      {/* Card header */}
-      <div className="px-4 py-3 border-b border-intel-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-base" aria-hidden="true">{card.emoji}</span>
-          <span className="text-sm font-display font-semibold text-intel-text">{card.name}</span>
+      {/* Card header — hover shows one-liner summary tooltip */}
+      <Tooltip text={cardTip} width="lg" position="bottom" align="left" display="block">
+        <div className="w-full px-4 py-3 border-b border-intel-border flex items-center justify-between cursor-default hover:bg-intel-elevated/60 transition-colors rounded-t-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-base" aria-hidden="true">{card.emoji}</span>
+            <span className="text-sm font-display font-semibold text-intel-text">{card.name}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`text-[13px] font-mono uppercase border rounded px-1.5 py-0.5 ${statusColor}`}>
+              {dirLabel}
+            </span>
+            <TrendArrow direction={card.direction} />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-[13px] font-mono uppercase border rounded px-1.5 py-0.5 ${statusColor}`}>
-            {dirLabel}
-          </span>
-          <TrendArrow direction={card.direction} />
-        </div>
-      </div>
+      </Tooltip>
 
-      {/* Indicators */}
+      {/* Indicators — metric label has tooltip explaining what it measures */}
       <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2 border-b border-intel-border">
         {card.indicators.map((ind, i) => (
           <div key={i} className="flex flex-col">
-            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide">{ind.label}</span>
+            {metricTips[ind.label] ? (
+              <Tooltip text={metricTips[ind.label]} width="md" position="top" align="left">
+                <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">
+                  {ind.label}
+                </span>
+              </Tooltip>
+            ) : (
+              <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide">{ind.label}</span>
+            )}
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-sm font-mono font-semibold text-intel-text tabular-nums">
                 {ind.value}
@@ -130,14 +166,9 @@ export default function EconomyPulse() {
             <p className="text-sm text-intel-muted mt-0.5">{t.section2Subtitle}</p>
           </div>
           {data && (
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] font-mono text-intel-dim">
-                {new Date(data.updatedAt).toLocaleTimeString()}
-              </span>
-              <button onClick={load} className="text-intel-dim hover:text-intel-gold transition-colors" aria-label={t.retry}>
-                <RefreshCw size={11} />
-              </button>
-            </div>
+            <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
+              {new Date(data.updatedAt).toLocaleTimeString()}
+            </span>
           )}
         </div>
 

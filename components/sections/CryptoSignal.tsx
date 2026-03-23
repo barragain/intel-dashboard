@@ -5,6 +5,15 @@ import { useLanguage } from '@/lib/i18n'
 import type { CryptoData } from '@/lib/types'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import TrendArrow from '@/components/ui/TrendArrow'
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from 'recharts'
 
 const FG_CONFIG = [
   { max: 24, tKey: 'extremeFear' as const, color: 'text-risk-worried', bg: 'bg-risk-worried-bg border-risk-worried-border' },
@@ -16,6 +25,81 @@ const FG_CONFIG = [
 
 function getFgConfig(score: number) {
   return FG_CONFIG.find((c) => score <= c.max) ?? FG_CONFIG[FG_CONFIG.length - 1]
+}
+
+interface SparkPoint { value: number; timestamp: number }
+
+function fgFillColor(value: number): string {
+  if (value <= 24) return '#EF4444'
+  if (value <= 44) return '#F87171'
+  if (value <= 55) return '#F59E0B'
+  if (value <= 74) return '#4ADE80'
+  return '#22C55E'
+}
+
+function FearGreedSparkline({ history, label }: { history: SparkPoint[]; label: string }) {
+  if (!history || history.length === 0) return null
+
+  // API returns newest-first — reverse to chronological order
+  const data = [...history].reverse().map((d) => ({
+    value: d.value,
+    date: new Date(d.timestamp * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  }))
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null
+    const val = payload[0].value as number
+    return (
+      <div className="bg-intel-elevated border border-intel-border rounded px-2.5 py-1.5 text-[13px] font-mono">
+        <div className="text-intel-muted">{label}</div>
+        <div style={{ color: fgFillColor(val) }} className="font-bold">{val}/100</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-intel-elevated rounded-lg border border-intel-border p-3">
+      <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wider block mb-2">
+        {label}
+      </span>
+      <ResponsiveContainer width="100%" height={80}>
+        <AreaChart data={data} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+          <defs>
+            <linearGradient id="fgGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
+              <stop offset="50%" stopColor="#F59E0B" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="#EF4444" stopOpacity={0.05} />
+            </linearGradient>
+          </defs>
+          <XAxis
+            dataKey="date"
+            tick={{ fontSize: 10, fill: '#6B7280', fontFamily: 'monospace' }}
+            tickLine={false}
+            axisLine={false}
+            interval={6}
+          />
+          <YAxis
+            domain={[0, 100]}
+            tick={{ fontSize: 10, fill: '#6B7280', fontFamily: 'monospace' }}
+            tickLine={false}
+            axisLine={false}
+            ticks={[0, 25, 50, 75, 100]}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <ReferenceLine y={50} stroke="#27272A" strokeDasharray="3 3" />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke="#C8A96E"
+            strokeWidth={1.5}
+            fill="url(#fgGradient)"
+            dot={false}
+            activeDot={{ r: 3, fill: '#C8A96E', stroke: '#09090B', strokeWidth: 2 }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  )
 }
 
 function fmtPrice(n: number): string {
@@ -153,6 +237,11 @@ export default function CryptoSignal() {
                 </div>
               </div>
 
+              {/* Fear & Greed 30-day sparkline */}
+              {data.fearGreedHistory && data.fearGreedHistory.length > 1 && (
+                <FearGreedSparkline history={data.fearGreedHistory} label={t.thirtyDayHistory} />
+              )}
+
               {/* Macro signal */}
               <div>
                 <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider block mb-1.5">
@@ -171,13 +260,10 @@ export default function CryptoSignal() {
                 <p className="text-sm text-intel-secondary leading-relaxed">{data.interpretation}</p>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <span className="text-[13px] font-mono text-intel-dim">
+              <div className="flex items-center justify-end pt-1">
+                <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
                   {t.lastUpdated}: {new Date(data.updatedAt).toLocaleTimeString()}
                 </span>
-                <button onClick={load} className="text-intel-dim hover:text-intel-gold transition-colors" aria-label={t.retry}>
-                  <RefreshCw size={11} />
-                </button>
               </div>
             </div>
           )}

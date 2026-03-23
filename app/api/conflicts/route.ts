@@ -5,18 +5,16 @@ import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
 import type { ConflictsData } from '@/lib/types'
 
-const PROMPT = `You are helping someone understand what's happening in the world right now and how it could affect their life. Today: ${new Date().toDateString()}.
+const PROMPT = `You are a geopolitical and financial analyst explaining active conflicts and tensions to a general audience. Today: ${new Date().toDateString()}.
 
-About this person: lives in Taiwan, income depends on ad budgets at a content production company (if companies cut ad spending, this person's job is at risk), girlfriend works at ASUS Taiwan, planning to move to France.
-
-Search the web for what's happening right now with: Taiwan Strait (Chinese military activity, US-China political moves), US trade and tariff policy (especially anything hitting Taiwan or tech companies), Middle East (oil supply, Iran, shipping), Russia-Ukraine (energy prices, how it affects Europe and France).
+Search the web for what is happening right now with: Taiwan Strait (Chinese military activity, US-China political moves), US trade and tariff policy (especially anything affecting Taiwan or tech companies), Middle East (oil supply, Iran, shipping), Russia-Ukraine (energy prices, how it affects Europe).
 
 WRITING RULES — follow these strictly:
 - Plain English only. No jargon.
-- Banned phrases: geopolitical tensions, escalation dynamics, flashpoint, strategic competition, destabilizing factors, risk factors, macro environment, heightened uncertainty. Just say what's actually happening.
+- Banned phrases: geopolitical tensions, escalation dynamics, flashpoint, strategic competition, destabilizing factors, risk factors, macro environment, heightened uncertainty. Say what is actually happening.
 - Be specific. "China sent 36 warplanes near Taiwan on Monday" not "increased military activity near Taiwan." Use real events, real numbers, real dates.
-- Connect to this person's actual life. "This matters to you because oil going up means your clients have less money for ads" not "energy price increases may impact consumer discretionary spending."
-- If something is getting worse, say so and say what it could lead to in simple terms.
+- Connect to real-world impact. "Oil rising means higher fuel and shipping costs globally" not "energy price increases may impact consumer discretionary spending."
+- If something is getting worse, say so and explain what it could lead to in simple terms.
 - Short sentences.
 
 Return ONLY this JSON:
@@ -26,10 +24,11 @@ Return ONLY this JSON:
       "id": "string",
       "name": "<conflict name>",
       "location": "<region or country>",
-      "relevance": "<1 plain-English sentence: why this specifically affects this person — their job, their savings, their move to France, their safety>",
+      "relevance": "<1 plain-English sentence: why this matters to investors, workers in the tech or media industries, and people in Taiwan or Europe>",
       "status": "escalating"|"stable"|"de-escalating",
-      "keyImpact": "<what it actually affects in plain terms: oil prices, tech supply chains, job security, cost of living>",
-      "details": "<2 sentences of specific current facts — real events, real numbers where available>"
+      "keyImpact": "<what it actually affects in plain terms: oil prices, tech supply chains, job markets, cost of living>",
+      "details": "<2 sentences of specific current facts — real events, real numbers where available>",
+      "headlines": ["<exact headline of a real article you found via search about this conflict, with publication name and date>", "<second headline if available>"]
     }
   ],
   "overallAssessment": "<2 plain-English sentences: what the overall picture looks like right now and what this person should be paying attention to>",

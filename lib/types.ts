@@ -6,6 +6,7 @@ export interface RiskDriver {
   name: string
   impact: 'positive' | 'negative' | 'neutral'
   detail: string
+  whyItMatters?: string // 2-sentence hover explanation
 }
 
 export interface RiskData {
@@ -57,6 +58,7 @@ export interface Conflict {
   status: ConflictStatus
   keyImpact: string
   details: string
+  headlines?: string[] // 1-2 real news headlines from search grounding
 }
 
 export interface ConflictsData {
@@ -148,6 +150,7 @@ export interface CryptoData {
   totalMarketCapChange24h: number
   fearGreedIndex: number
   fearGreedLabel: string
+  fearGreedHistory: { value: number; timestamp: number }[]
   interpretation: string
   macroSignal: string
   updatedAt: string

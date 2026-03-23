@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useLanguage } from '@/lib/i18n'
 import { fmtTimestamp } from '@/lib/utils'
 import type { RiskData } from '@/lib/types'
-import { AlertTriangle, RefreshCw, KeyRound, Sparkles } from 'lucide-react'
+import { AlertTriangle, RefreshCw, KeyRound } from 'lucide-react'
+import Tooltip from '@/components/ui/Tooltip'
 
 function SectionHeader({ label, subtitle }: { label: string; subtitle: string }) {
   return (
@@ -63,10 +64,10 @@ const LEGEND = [
   { tKey: 'worried' as const, dotColor: 'bg-risk-worried', range: '67–100' },
 ]
 
-export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number }) {
+export default function RiskMeter() {
   const { t, language } = useLanguage()
   const [data, setData] = useState<RiskData | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [needsApiKey, setNeedsApiKey] = useState(false)
   const [visible, setVisible] = useState(false)
@@ -100,9 +101,7 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
   }
 
   useEffect(() => {
-    if (autoLoadDelay === undefined) return
-    const timer = setTimeout(load, autoLoadDelay)
-    return () => clearTimeout(timer)
+    load()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const status = data?.status ?? 'WATCH'
@@ -119,31 +118,28 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
         <SectionHeader label={t.section1Title} subtitle={t.section1Subtitle} />
 
         <div className="p-6">
-          {/* Idle — not yet loaded */}
-          {!loading && !data && !error && !needsApiKey && (
-            <div className="flex flex-col items-center justify-center py-14 gap-5 text-center">
-              <div className="w-12 h-12 rounded-full bg-intel-elevated border border-intel-border flex items-center justify-center">
-                <Sparkles size={20} className="text-intel-gold" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-intel-muted">{t.loadDataDesc}</p>
-                <p className="text-[13px] font-mono text-intel-dim">{t.loadDataEst}</p>
-              </div>
-              <button
-                onClick={load}
-                className="flex items-center gap-2 text-sm font-mono font-medium text-intel-bg bg-intel-gold px-5 py-2 rounded hover:bg-intel-gold-bright transition-colors"
-              >
-                <Sparkles size={13} />
-                {t.loadData}
-              </button>
-            </div>
-          )}
-
-          {/* Loading spinner */}
+          {/* Loading skeleton */}
           {loading && (
-            <div className="flex flex-col items-center justify-center py-16 gap-4">
-              <div className="w-16 h-16 rounded-full border-2 border-intel-border border-t-intel-gold animate-spin" />
-              <span className="text-sm text-intel-muted font-mono">{t.loading}</span>
+            <div className="space-y-4">
+              {/* Big status block skeleton */}
+              <div className="rounded-lg border border-intel-border bg-intel-elevated/40 p-8 md:p-12 flex flex-col items-center gap-4">
+                <div className="h-3 w-24 rounded shimmer" />
+                <div className="h-20 w-64 rounded-lg shimmer" />
+                <div className="h-8 w-20 rounded shimmer" />
+                <div className="h-4 w-96 max-w-full rounded shimmer" />
+                <div className="flex gap-5">
+                  <div className="h-3 w-20 rounded shimmer" />
+                  <div className="h-3 w-20 rounded shimmer" />
+                  <div className="h-3 w-20 rounded shimmer" />
+                </div>
+              </div>
+              {/* Drivers skeleton */}
+              <div className="h-3 w-24 rounded shimmer" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-20 rounded-lg shimmer" aria-hidden="true" />
+                ))}
+              </div>
             </div>
           )}
 
@@ -254,7 +250,19 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     {data.drivers.map((driver, i) => (
-                      <div key={i} className="bg-intel-elevated rounded-lg border border-intel-border p-3">
+                      <div
+                        key={i}
+                        className="relative bg-intel-elevated rounded-lg border border-intel-border p-3 transition-colors duration-150 hover:border-intel-gold/30 hover:bg-intel-elevated/80 group"
+                      >
+                        {/* Hover tooltip with whyItMatters */}
+                        {driver.whyItMatters && (
+                          <div className="absolute bottom-full left-0 right-0 mb-2 z-50 pointer-events-none opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200">
+                            <div className="mx-1 px-3 py-2.5 bg-[#111114] border border-[#27272A] rounded-lg text-[13px] leading-relaxed text-zinc-300 shadow-xl shadow-black/40">
+                              {driver.whyItMatters}
+                              <span className="absolute top-full left-6 border-[5px] border-transparent border-t-[#27272A]" aria-hidden="true" />
+                            </div>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-sm font-medium text-intel-text">{driver.name}</span>
                           <span className={`text-[13px] font-mono uppercase ${DRIVER_IMPACT_CLASSES[driver.impact]}`}>
@@ -262,25 +270,20 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
                           </span>
                         </div>
                         <p className="text-[13px] text-intel-muted leading-relaxed">{driver.detail}</p>
+                        {driver.whyItMatters && (
+                          <span className="absolute top-2 right-2 text-[10px] text-intel-dim group-hover:text-intel-gold/60 transition-colors" aria-hidden="true">?</span>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Timestamp + refresh */}
-              <div className="mt-4 flex items-center justify-end gap-2">
-                <span className="text-[13px] font-mono text-intel-dim">
+              {/* Timestamp */}
+              <div className="mt-4 flex items-center justify-end">
+                <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
                   {t.dataFrom} {fmtTimestamp(data.updatedAt)}
                 </span>
-                <button
-                  onClick={load}
-                  className="text-intel-dim hover:text-intel-gold transition-colors"
-                  aria-label={t.retry}
-                  title={new Date(data.updatedAt).toLocaleString()}
-                >
-                  <RefreshCw size={11} />
-                </button>
               </div>
             </div>
           )}

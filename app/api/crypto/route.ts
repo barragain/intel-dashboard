@@ -3,7 +3,7 @@ import { getCached, setCached } from '@/lib/cache'
 import type { CryptoData } from '@/lib/types'
 
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3'
-const FEAR_GREED_URL = 'https://api.alternative.me/fng/?limit=1'
+const FEAR_GREED_URL = 'https://api.alternative.me/fng/?limit=30'
 
 function fearGreedLabel(score: number): string {
   if (score <= 24) return 'Extreme Fear'
@@ -86,9 +86,14 @@ export async function GET() {
 
     // Parse fear & greed
     let fearGreedIndex = 50
+    let fearGreedHistory: CryptoData['fearGreedHistory'] = []
     if (fngRes.status === 'fulfilled' && fngRes.value.ok) {
       const fng = await fngRes.value.json()
       fearGreedIndex = parseInt(fng?.data?.[0]?.value ?? '50', 10)
+      fearGreedHistory = (fng?.data ?? []).map((d: any) => ({
+        value: parseInt(d.value, 10),
+        timestamp: parseInt(d.timestamp, 10),
+      }))
     }
 
     const btcChange7d = assets.find((a) => a.id === 'bitcoin')?.priceChange7d ?? 0
@@ -99,6 +104,7 @@ export async function GET() {
       totalMarketCapChange24h,
       fearGreedIndex,
       fearGreedLabel: fearGreedLabel(fearGreedIndex),
+      fearGreedHistory,
       interpretation: buildInterpretation(fearGreedIndex, btcChange7d, totalMarketCapChange24h),
       macroSignal: macroSignal(fearGreedIndex),
       updatedAt: new Date().toISOString(),

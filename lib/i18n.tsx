@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react'
 
-export type Language = 'en' | 'fr'
+export type Language = 'en' | 'fr' | 'es'
 
 const translations = {
   en: {
@@ -80,6 +80,8 @@ const translations = {
     currentDetails: 'Current details',
     keyImpact: 'Key impact',
     overallAssessment: 'Overall assessment',
+    supportingHeadlines: 'Supporting headlines',
+    latestHeadline: 'Latest',
 
     // Sentiment
     bullish: 'Bullish',
@@ -127,6 +129,7 @@ const translations = {
     weekChange: '7d Change',
     macroSignal: 'Macro Signal',
     cryptoInterpretation: 'What crypto is signaling',
+    thirtyDayHistory: '30-Day History',
 
     // Historical
     historicalParallels: 'Historical Parallels',
@@ -142,7 +145,20 @@ const translations = {
     confidenceHigh: 'High confidence',
     confidenceMedium: 'Medium confidence',
     confidenceLow: 'Low confidence',
+
+    // Metric tooltips (Economy Pulse)
+    metricVIX: 'Measures how nervous the US stock market is right now. Higher = more fear, lower = more calm.',
+    metricDXY: 'Tracks the US dollar against major currencies. Higher = stronger dollar, which tightens financial conditions worldwide.',
+    metricSP500: 'Index of the 500 biggest US companies. When it rises, US stocks are doing well overall.',
+    metricGold: 'Price of gold per ounce in USD. Rises when investors are scared and want a safe place to park money.',
+    metricOilWTI: 'US benchmark crude oil price. Higher oil raises costs for shipping, manufacturing, and everyday life globally.',
+    metricTAIEX: "Taiwan's main stock market index. Tracks how Taiwan's economy and tech sector are performing.",
+    metricTWDUSD: 'How many Taiwanese dollars equal one US dollar. A higher number means the TWD is weaker vs the dollar.',
+    metricCAC40: "France's top 40 companies by market cap. Rises and falls with the French and broader EU economy.",
+    metricEURUSD: 'How many US dollars one euro buys. Higher = stronger euro. Relevant for anyone earning or spending in European markets.',
+    metricPYGUSD: "How many Paraguayan guaraníes equal one US dollar. Tracks Paraguay's currency stability.",
   },
+
   fr: {
     // App
     appName: 'INTEL',
@@ -176,7 +192,7 @@ const translations = {
     section5Title: 'Signal Crypto',
     section5Subtitle: "Ce que la crypto signale sur l'appétit au risque",
     section6Title: 'Contexte Historique',
-    section6Subtitle: 'Parallèles et prédictions d\'experts',
+    section6Subtitle: "Parallèles et prédictions d'experts",
 
     // Risk levels
     stable: 'STABLE',
@@ -218,6 +234,8 @@ const translations = {
     currentDetails: 'Détails actuels',
     keyImpact: 'Impact principal',
     overallAssessment: 'Évaluation globale',
+    supportingHeadlines: "Titres d'appui",
+    latestHeadline: 'Récent',
 
     // Sentiment
     bullish: 'Haussier',
@@ -239,6 +257,11 @@ const translations = {
     assets: 'Actifs à considérer',
     caveat: 'Mise en garde',
     profitCalc: 'Calculateur de Profit',
+    calculateProfit: 'Calculer le profit',
+    percentYearEst: '%/an est.',
+    sourceTypeCommunity: 'Communauté',
+    sourceTypeInstitutional: 'Institutionnel',
+    sourceTypePrediction: 'Marché Préd.',
     calcAmount: 'Investissement (USD)',
     calcMonths: 'Durée (mois)',
     calcConservative: 'Conservateur',
@@ -247,11 +270,6 @@ const translations = {
     calcProjected: 'Valeur projetée',
     calcReturn: 'Rendement net',
     calcDisclaimer: "Basé sur les rendements historiques. Pas un conseil financier.",
-    calculateProfit: 'Calculer le profit',
-    percentYearEst: '%/an est.',
-    sourceTypeCommunity: 'Communauté',
-    sourceTypeInstitutional: 'Institutionnel',
-    sourceTypePrediction: 'Marché Préd.',
 
     // Crypto
     fearGreed: 'Indice Peur & Avidité',
@@ -265,13 +283,14 @@ const translations = {
     weekChange: 'Variation 7j',
     macroSignal: 'Signal Macro',
     cryptoInterpretation: 'Ce que la crypto signale',
+    thirtyDayHistory: 'Historique 30 jours',
 
     // Historical
     historicalParallels: 'Parallèles Historiques',
     expertPredictions: "Prédictions d'Experts",
     currentSituation: 'Situation actuelle',
     historicalEvent: 'Parallèle historique',
-    whatHappened: 'Ce qui s\'est passé',
+    whatHappened: "Ce qui s'est passé",
     personalImplication: 'Ce que cela signifie pour vous',
     source: 'Source',
     timeframe: 'Horizon',
@@ -280,6 +299,172 @@ const translations = {
     confidenceHigh: 'Haute confiance',
     confidenceMedium: 'Confiance moyenne',
     confidenceLow: 'Faible confiance',
+
+    // Metric tooltips
+    metricVIX: "Mesure le niveau de nervosité du marché boursier américain. Plus élevé = plus de peur, plus bas = plus calme.",
+    metricDXY: "Suit le dollar américain par rapport aux principales monnaies. Plus élevé = dollar plus fort, ce qui resserre les conditions financières mondiales.",
+    metricSP500: "Indice des 500 plus grandes entreprises américaines. Quand il monte, les actions américaines vont globalement bien.",
+    metricGold: "Prix de l'or par once en USD. Augmente quand les investisseurs ont peur et cherchent un refuge sûr.",
+    metricOilWTI: "Prix de référence du pétrole brut américain. Un pétrole plus cher augmente les coûts de transport, de fabrication et du quotidien.",
+    metricTAIEX: "Principal indice boursier de Taïwan. Suit la performance de l'économie taïwanaise et du secteur technologique.",
+    metricTWDUSD: "Combien de dollars taïwanais valent un dollar américain. Un nombre plus élevé signifie que le TWD est plus faible.",
+    metricCAC40: "Les 40 premières entreprises françaises par capitalisation boursière. Suit l'économie française et européenne.",
+    metricEURUSD: "Combien de dollars américains achète un euro. Plus élevé = euro plus fort. Pertinent pour ceux qui gagnent ou dépensent en euros.",
+    metricPYGUSD: "Combien de guaranis paraguayens valent un dollar américain. Suit la stabilité monétaire du Paraguay.",
+  },
+
+  es: {
+    // App
+    appName: 'INTEL',
+    appSubtitle: 'Inteligencia Financiera Personal',
+    lastUpdated: 'Actualizado',
+    loading: 'Cargando...',
+    error: 'Error al cargar datos',
+    retry: 'Reintentar',
+    live: 'EN VIVO',
+    noApiKey: 'GEMINI_API_KEY no configurada',
+    noApiKeyDetail: 'Añade tu clave API de Gemini en .env.local para activar el análisis con IA.',
+    rateLimited: 'Límite de solicitudes alcanzado — espera un minuto y vuelve a intentarlo',
+    configureKey: 'Configurar clave API',
+    loadData: 'Cargar datos',
+    loadDataDesc: 'Con IA — usa Gemini con búsqueda web en vivo',
+    loadDataEst: 'Est. 15–30 segundos',
+    dataFrom: 'Datos del',
+    expertQuotes: 'Citas de Expertos',
+    newsSources: 'Fuentes de Noticias',
+    sevenDayChange: '7d',
+
+    // Sections
+    section1Title: 'Medidor de Riesgo',
+    section1Subtitle: '¿Debo estar nervioso ahora?',
+    section2Title: 'Pulso Económico',
+    section2Subtitle: '5 economías en tiempo real',
+    section3Title: 'Rastreador de Conflictos',
+    section3Subtitle: 'Puntos calientes que te afectan',
+    section4Title: 'Sentimiento del Mercado',
+    section4Subtitle: 'Comunidad, instituciones y mercados predictivos',
+    section5Title: 'Señal Cripto',
+    section5Subtitle: 'Lo que la cripto señala sobre el apetito al riesgo global',
+    section6Title: 'Contexto Histórico',
+    section6Subtitle: 'Paralelos y predicciones de expertos',
+
+    // Risk levels
+    stable: 'ESTABLE',
+    watch: 'VIGILAR',
+    worried: 'ALERTA',
+    riskScore: 'Puntuación de Riesgo',
+    keyDrivers: 'Factores Clave',
+    riskSentenceStable: 'La situación es estable',
+    riskSentenceWatch: 'Presta atención',
+    riskSentenceWorried: 'Alerta elevada',
+
+    // Economy
+    improving: 'Mejorando',
+    stable2: 'Estable',
+    deteriorating: 'Deteriorando',
+    gdp: 'Crecimiento PIB',
+    inflation: 'Inflación',
+    unemployment: 'Desempleo',
+    currency: 'vs USD',
+    index: 'Índice',
+    fedRate: 'Tasa Fed',
+    oilPrice: 'Petróleo (WTI)',
+    goldPrice: 'Oro',
+    vix: 'VIX',
+    dxy: 'DXY',
+
+    // Economy names
+    econGlobal: 'Global',
+    econUS: 'Estados Unidos',
+    econTaiwan: 'Taiwán',
+    econFrance: 'Francia',
+    econParaguay: 'Paraguay',
+
+    // Conflicts
+    escalating: 'Escalando',
+    conflictStable: 'Estable',
+    deEscalating: 'Desescalando',
+    whyItMatters: 'Por qué importa',
+    currentDetails: 'Detalles actuales',
+    keyImpact: 'Impacto clave',
+    overallAssessment: 'Evaluación general',
+    supportingHeadlines: 'Titulares de apoyo',
+    latestHeadline: 'Reciente',
+
+    // Sentiment
+    bullish: 'Alcista',
+    neutral: 'Neutral',
+    bearish: 'Bajista',
+    fearful: 'Temeroso',
+    overallMood: 'Sentimiento General',
+    communityVoices: 'Voces Comunitarias e Institucionales',
+    redditSentiment: 'Lo que dice la gente',
+    predictionMarketsTitle: 'Lo que dicen los mercados predictivos',
+    investmentRadar: 'Radar de Inversión',
+    thesis: 'Tesis',
+    riskLow: 'Riesgo Bajo',
+    riskMedium: 'Riesgo Medio',
+    riskHigh: 'Riesgo Alto',
+    horizonShort: 'Corto < 6 meses',
+    horizonMedium: 'Medio 6–18 meses',
+    horizonLong: 'Largo 2+ años',
+    assets: 'Activos a considerar',
+    caveat: 'Advertencia importante',
+    profitCalc: 'Calculadora de Ganancias',
+    calculateProfit: 'Calcular ganancia',
+    percentYearEst: '%/año est.',
+    sourceTypeCommunity: 'Comunidad',
+    sourceTypeInstitutional: 'Institucional',
+    sourceTypePrediction: 'Mercado Pred.',
+    calcAmount: 'Inversión (USD)',
+    calcMonths: 'Tiempo (meses)',
+    calcConservative: 'Conservador',
+    calcExpected: 'Esperado',
+    calcOptimistic: 'Optimista',
+    calcProjected: 'Valor proyectado',
+    calcReturn: 'Rendimiento neto',
+    calcDisclaimer: 'Basado en rendimientos históricos. No es asesoramiento financiero.',
+
+    // Crypto
+    fearGreed: 'Índice Miedo y Codicia',
+    extremeFear: 'Miedo Extremo',
+    fear: 'Miedo',
+    cryptoNeutral: 'Neutral',
+    greed: 'Codicia',
+    extremeGreed: 'Codicia Extrema',
+    totalMarketCap: 'Cap. Total del Mercado',
+    dayChange: 'Cambio 24h',
+    weekChange: 'Cambio 7d',
+    macroSignal: 'Señal Macro',
+    cryptoInterpretation: 'Lo que señala la cripto',
+    thirtyDayHistory: 'Historial de 30 días',
+
+    // Historical
+    historicalParallels: 'Paralelos Históricos',
+    expertPredictions: 'Predicciones de Expertos',
+    currentSituation: 'Situación actual',
+    historicalEvent: 'Paralelo histórico',
+    whatHappened: 'Lo que sucedió',
+    personalImplication: 'Lo que significa para ti',
+    source: 'Fuente',
+    timeframe: 'Horizonte temporal',
+    optimistic: 'Optimista',
+    pessimistic: 'Pesimista',
+    confidenceHigh: 'Alta confianza',
+    confidenceMedium: 'Confianza media',
+    confidenceLow: 'Baja confianza',
+
+    // Metric tooltips
+    metricVIX: 'Mide el nerviosismo del mercado bursátil de EE.UU. Mayor = más miedo, menor = más calma.',
+    metricDXY: 'Rastrea el dólar estadounidense frente a las principales divisas. Mayor = dólar más fuerte, lo que endurece las condiciones financieras globales.',
+    metricSP500: 'Índice de las 500 mayores empresas de EE.UU. Cuando sube, las acciones estadounidenses van bien en general.',
+    metricOilWTI: 'Precio de referencia del crudo estadounidense. El petróleo más caro encarece el transporte, la fabricación y la vida cotidiana.',
+    metricGold: 'Precio del oro por onza en USD. Sube cuando los inversores tienen miedo y buscan un refugio seguro.',
+    metricTAIEX: 'Principal índice bursátil de Taiwán. Refleja el desempeño de la economía taiwanesa y su sector tecnológico.',
+    metricTWDUSD: 'Cuántos dólares taiwaneses equivalen a un dólar estadounidense. Un número mayor significa que el TWD está más débil.',
+    metricCAC40: 'Las 40 mayores empresas de Francia por capitalización. Sube y baja con la economía francesa y de la UE.',
+    metricEURUSD: 'Cuántos dólares estadounidenses compra un euro. Mayor = euro más fuerte. Relevante para quienes ganan o gastan en mercados europeos.',
+    metricPYGUSD: 'Cuántos guaraníes paraguayos equivalen a un dólar estadounidense. Refleja la estabilidad monetaria de Paraguay.',
   },
 } as const
 

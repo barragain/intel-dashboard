@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { useLanguage } from '@/lib/i18n'
 import { Activity } from 'lucide-react'
 
@@ -26,8 +27,8 @@ export default function Header() {
           {/* Live indicator */}
           <div className="hidden sm:flex items-center gap-1.5">
             <div className="relative flex items-center justify-center">
-              <span className="absolute w-2.5 h-2.5 rounded-full bg-risk-stable opacity-30 animate-ping" />
-              <span className="relative w-1.5 h-1.5 rounded-full bg-risk-stable" />
+              <span className="absolute w-2.5 h-2.5 rounded-full bg-risk-stable opacity-25 animate-ping" />
+              <span className="relative w-1.5 h-1.5 rounded-full bg-risk-stable animate-pulse" />
             </div>
             <span className="text-[13px] font-mono text-intel-muted tracking-widest uppercase">
               {t.live}
@@ -38,29 +39,22 @@ export default function Header() {
 
           {/* Language toggle */}
           <div className="flex items-center rounded overflow-hidden border border-intel-border">
-            <button
-              onClick={() => setLanguage('en')}
-              className={`px-2.5 py-1 text-sm font-mono font-medium transition-colors ${
-                language === 'en'
-                  ? 'bg-intel-gold text-intel-bg'
-                  : 'text-intel-muted hover:text-intel-text'
-              }`}
-              aria-pressed={language === 'en'}
-            >
-              EN
-            </button>
-            <div className="w-px h-full bg-intel-border" />
-            <button
-              onClick={() => setLanguage('fr')}
-              className={`px-2.5 py-1 text-sm font-mono font-medium transition-colors ${
-                language === 'fr'
-                  ? 'bg-intel-gold text-intel-bg'
-                  : 'text-intel-muted hover:text-intel-text'
-              }`}
-              aria-pressed={language === 'fr'}
-            >
-              FR
-            </button>
+            {(['en', 'fr', 'es'] as const).map((lang, i) => (
+              <React.Fragment key={lang}>
+                {i > 0 && <div className="w-px h-full bg-intel-border" />}
+                <button
+                  onClick={() => setLanguage(lang)}
+                  className={`px-2.5 py-1 text-sm font-mono font-medium transition-colors ${
+                    language === lang
+                      ? 'bg-intel-gold text-intel-bg'
+                      : 'text-intel-muted hover:text-intel-text'
+                  }`}
+                  aria-pressed={language === lang}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              </React.Fragment>
+            ))}
           </div>
         </div>
       </div>

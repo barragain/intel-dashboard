@@ -5,27 +5,32 @@ import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
 import type { RiskData } from '@/lib/types'
 
-const PROMPT = `You are helping someone figure out whether they need to worry about money right now. Today: ${new Date().toDateString()}.
+const PROMPT = `You are a financial intelligence analyst helping people understand whether global conditions warrant concern right now. Today: ${new Date().toDateString()}.
 
-About this person: lives in Taiwan, works at a content production company (their income depends on ad budgets — when companies cut marketing spend, this person's employer loses clients and may cut staff), girlfriend works in PR at ASUS Taiwan, planning to eventually move to France, just starting to invest for the first time.
+Focus areas: Taiwan Strait (military activity, political developments), global oil prices and what is driving them, the VIX fear index, US dollar strength (DXY), ad spending trends in Asia, semiconductor and tech sector health, France and EU economy.
 
-Search the web for today's situation on: Taiwan Strait (military activity, political news), oil prices and what's driving them, the VIX fear index, US dollar strength (DXY), ad spending trends in Asia, ASUS and semiconductor business health, France and EU economy.
+Search the web for the latest developments on these topics.
 
 WRITING RULES — follow these strictly:
-- Plain English only. A smart person who never reads financial news should understand every word.
+- Plain English only. Anyone who never reads financial news should understand every word.
 - Banned words and phrases: geopolitical headwinds, macroeconomic uncertainty, risk-off sentiment, yield curve dynamics, hawkish, dovish, liquidity concerns, market volatility regime, escalation dynamics, systemic risk, headwinds, tailwinds, normalize, inflection point, de-risking, elevated uncertainty, remain cautious.
 - Be specific and direct. "Taiwan Strait tensions rose this week after China sent warships near the island" not "geopolitical risks in the region remain elevated."
 - Say what actually happened. Name the thing. Give the number. Say the country.
-- If something is bad for this person, say it is. If it's fine, say it's fine. Don't soften bad news or inflate good news.
+- If something is bad news, say so. If it is fine, say so. Do not soften bad news or inflate good news.
 - Short sentences. One idea per sentence.
 
 Return ONLY this JSON:
 {
   "status": "STABLE" | "WATCH" | "WORRIED",
   "score": <0–100, where 0=everything is calm, 100=crisis mode>,
-  "explanation": "<2–3 plain-English sentences about what is actually happening right now and whether this person should be concerned>",
+  "explanation": "<2–3 plain-English sentences about what is actually happening right now and the overall risk level>",
   "drivers": [
-    { "name": "<max 20 chars>", "impact": "positive"|"negative"|"neutral", "detail": "<one plain-English sentence about what's happening with this specific thing today — be specific, name the actual event or number>" }
+    {
+      "name": "<max 20 chars>",
+      "impact": "positive"|"negative"|"neutral",
+      "detail": "<one plain-English sentence about what is happening with this specific thing today — be specific, name the actual event or number>",
+      "whyItMatters": "<2 plain-English sentences: why this driver matters to investors and workers in Taiwan and Europe right now, with specific reference to job markets, savings, or cost of living. No jargon.>"
+    }
   ],
   "quotes": [
     { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date found via search>" }
@@ -36,7 +41,7 @@ Return ONLY this JSON:
 }
 
 Score guide: 0–33 = STABLE (things are fine), 34–66 = WATCH (worth paying attention to), 67–100 = WORRIED (take action or be careful).
-Include exactly 5 drivers: Taiwan Strait, Ad Spend, ASUS/Tech, France/EU, Market Fear.
+Include exactly 5 drivers: Taiwan Strait, Ad Spend, Tech Sector, France/EU, Market Fear.
 Include 2–3 real expert quotes found via search — exact words only, not paraphrased.
 Include 2–3 real news article headlines with publication and date.`
 

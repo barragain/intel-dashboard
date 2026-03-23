@@ -5,7 +5,7 @@ import { useLanguage } from '@/lib/i18n'
 import { fmtTimestamp } from '@/lib/utils'
 import type { ConflictsData, Conflict } from '@/lib/types'
 import StatusBadge from '@/components/ui/StatusBadge'
-import { AlertTriangle, RefreshCw, KeyRound, Sparkles } from 'lucide-react'
+import { AlertTriangle, RefreshCw, KeyRound, Newspaper } from 'lucide-react'
 
 const STATUS_TKEYS: Record<string, 'escalating' | 'conflictStable' | 'deEscalating'> = {
   escalating: 'escalating',
@@ -21,15 +21,33 @@ const STATUS_DOT_COLORS: Record<string, string> = {
 
 function ConflictCard({ conflict, t }: { conflict: Conflict; t: ReturnType<typeof useLanguage>['t'] }) {
   const [expanded, setExpanded] = useState(false)
+  const [hovered, setHovered] = useState(false)
   const tKey = STATUS_TKEYS[conflict.status]
   const statusLabel = tKey ? t[tKey] : conflict.status
   const dotColor = STATUS_DOT_COLORS[conflict.status] ?? 'bg-intel-muted'
+  const firstHeadline = conflict.headlines?.[0]
 
   return (
-    <div className="border border-intel-border rounded-lg overflow-hidden">
+    <div className="border border-intel-border rounded-lg overflow-visible relative">
+      {/* Hover headline preview — shown above the row */}
+      {firstHeadline && hovered && !expanded && (
+        <div className="absolute bottom-full left-0 right-0 mb-2 z-50 pointer-events-none">
+          <div className="mx-1 px-3 py-2 bg-[#111114] border border-[#27272A] rounded-lg shadow-xl shadow-black/40">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Newspaper size={11} className="text-intel-gold flex-shrink-0" />
+              <span className="text-[11px] font-mono text-intel-gold uppercase tracking-wider">{t.latestHeadline}</span>
+            </div>
+            <p className="text-[13px] text-zinc-300 leading-relaxed">{firstHeadline}</p>
+            <span className="absolute top-full left-6 border-[5px] border-transparent border-t-[#27272A]" aria-hidden="true" />
+          </div>
+        </div>
+      )}
+
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-4 py-3 flex items-center justify-between gap-3 hover:bg-intel-elevated/50 transition-colors text-left"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="w-full px-4 py-3 flex items-center justify-between gap-3 hover:bg-intel-elevated/50 transition-colors text-left rounded-lg"
         aria-expanded={expanded}
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -39,13 +57,16 @@ function ConflictCard({ conflict, t }: { conflict: Conflict; t: ReturnType<typeo
             <span className="text-[13px] text-intel-muted">{conflict.location}</span>
           </div>
         </div>
-        <div className="flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {firstHeadline && !expanded && (
+            <Newspaper size={12} className="text-intel-dim" aria-hidden="true" />
+          )}
           <StatusBadge status={statusLabel} variant={conflict.status} size="sm" />
         </div>
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 pt-1 space-y-2.5 border-t border-intel-border/50 bg-intel-elevated/30 animate-in">
+        <div className="px-4 pb-4 pt-1 space-y-2.5 border-t border-intel-border/50 bg-intel-elevated/30 animate-in rounded-b-lg">
           <div>
             <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider block mb-1">
               {t.whyItMatters}
@@ -64,23 +85,39 @@ function ConflictCard({ conflict, t }: { conflict: Conflict; t: ReturnType<typeo
             </span>
             <span className="text-[13px] font-mono text-intel-gold">{conflict.keyImpact}</span>
           </div>
+          {/* Supporting headlines */}
+          {conflict.headlines && conflict.headlines.length > 0 && (
+            <div className="pt-1 border-t border-intel-border/30">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Newspaper size={11} className="text-intel-gold" />
+                <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider">
+                  {t.supportingHeadlines}
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {conflict.headlines.map((h, i) => (
+                  <p key={i} className="text-[13px] text-intel-dim leading-relaxed pl-3 border-l border-intel-border">
+                    {h}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   )
 }
 
-export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: number }) {
+export default function ConflictTracker() {
   const { t, language } = useLanguage()
   const [data, setData] = useState<ConflictsData | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [needsApiKey, setNeedsApiKey] = useState(false)
 
   useEffect(() => {
-    if (autoLoadDelay === undefined) return
-    const timer = setTimeout(load, autoLoadDelay)
-    return () => clearTimeout(timer)
+    load()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function load() {
@@ -120,26 +157,6 @@ export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: num
         </div>
 
         <div className="p-6">
-          {/* Idle */}
-          {!loading && !data && !error && !needsApiKey && (
-            <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
-              <div className="w-10 h-10 rounded-full bg-intel-elevated border border-intel-border flex items-center justify-center">
-                <Sparkles size={16} className="text-intel-gold" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-intel-muted">{t.loadDataDesc}</p>
-                <p className="text-[13px] font-mono text-intel-dim">{t.loadDataEst}</p>
-              </div>
-              <button
-                onClick={load}
-                className="flex items-center gap-2 text-sm font-mono font-medium text-intel-bg bg-intel-gold px-4 py-2 rounded hover:bg-intel-gold-bright transition-colors"
-              >
-                <Sparkles size={13} />
-                {t.loadData}
-              </button>
-            </div>
-          )}
-
           {loading && (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -173,18 +190,10 @@ export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: num
               {data.conflicts.map((conflict) => (
                 <ConflictCard key={conflict.id} conflict={conflict} t={t} />
               ))}
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <span className="text-[13px] font-mono text-intel-dim">
+              <div className="flex items-center justify-end pt-1">
+                <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
                   {t.dataFrom} {fmtTimestamp(data.updatedAt)}
                 </span>
-                <button
-                  onClick={load}
-                  className="text-intel-dim hover:text-intel-gold transition-colors"
-                  aria-label={t.retry}
-                  title={new Date(data.updatedAt).toLocaleString()}
-                >
-                  <RefreshCw size={11} />
-                </button>
               </div>
             </div>
           )}

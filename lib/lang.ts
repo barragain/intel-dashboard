@@ -1,6 +1,10 @@
 import type { NextRequest } from 'next/server'
 
-export function getLang(request: NextRequest): 'en' | 'fr' {
+export type Lang = 'en' | 'fr' | 'es'
+
+export function getLang(request: NextRequest): Lang {
   const lang = request.nextUrl.searchParams.get('lang')
-  return lang === 'fr' ? 'fr' : 'en'
+  if (lang === 'fr') return 'fr'
+  if (lang === 'es') return 'es'
+  return 'en'
 }

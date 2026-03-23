@@ -10,6 +10,11 @@ type AnyGenerateParams = {
   tools?: unknown[]
 }
 
+const LANG_SUFFIX: Record<string, string> = {
+  fr: '\n\nYou must respond entirely in French. Every single word of your response must be in French — all summaries, quotes, labels, explanations, field values, and descriptions. Do not use any English words anywhere in the JSON output.',
+  es: '\n\nYou must respond entirely in Spanish. Every single word of your response must be in Spanish — all summaries, quotes, labels, explanations, field values, and descriptions. Do not use any English words anywhere in the JSON output.',
+}
+
 export async function searchAndAnalyze(prompt: string, lang = 'en'): Promise<string> {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY_MISSING')
@@ -23,9 +28,7 @@ export async function searchAndAnalyze(prompt: string, lang = 'en'): Promise<str
   const model = getModel({ model: 'gemini-2.5-flash' })
 
   try {
-    const fullPrompt = lang === 'fr'
-      ? `${prompt}\n\nRespond entirely in French. All content, summaries, quotes, and labels must be in French.`
-      : prompt
+    const fullPrompt = LANG_SUFFIX[lang] ? `${prompt}${LANG_SUFFIX[lang]}` : prompt
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
