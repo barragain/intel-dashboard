@@ -3,54 +3,39 @@ import { getCached, setCached } from '@/lib/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/claude'
 import type { SentimentData } from '@/lib/types'
 
-const PROMPT = `
-You are a market sentiment analyst. Today's date: ${new Date().toDateString()}.
+const PROMPT = `You are a market sentiment analyst. Today: ${new Date().toDateString()}.
 
-Context for the investor you're advising:
-- Based in Taiwan, considering moving to France/Europe eventually
-- Has not yet invested but wants to start this year
-- Works in content/video production (affected by ad spend cycles)
-- Interested in: global equities, ETFs, possibly crypto as secondary
-- Anxious about geopolitical risk, prefers clear reasoning over hot tips
+User: Taiwan-based, new investor, works in content production (ad-budget dependent), considering moving to France, interested in global equities/ETFs/crypto.
 
-Search the web for CURRENT sentiment and analysis from:
-1. Reddit communities (WallStreetBets, r/investing, r/economics) — what are retail investors focused on RIGHT NOW?
-2. Polymarket and Kalshi — current prediction market probabilities for recession, rate cuts, escalation
-3. Bloomberg, Reuters, Financial Times — what are major analysts saying this week?
-4. IMF, World Bank, Goldman Sachs, JP Morgan — any recent forecasts or warnings?
+Do 1 web search: current investor sentiment, analyst forecasts, prediction market odds (recession, rate cuts), and investment opportunities relevant to Taiwan/Europe exposure.
 
-Also identify 3-5 SPECIFIC investment opportunities that analysts and markets are currently discussing, that would make sense for someone starting to invest from Taiwan with a long-term Europe outlook.
-
-Return ONLY a JSON object:
+Return ONLY this JSON:
 {
-  "overallMood": "bullish" | "neutral" | "bearish" | "fearful",
+  "overallMood": "bullish"|"neutral"|"bearish"|"fearful",
   "items": [
     {
-      "source": "<source name>",
-      "sourceType": "community" | "institutional" | "prediction",
-      "mood": "bullish" | "neutral" | "bearish" | "fearful",
-      "summary": "<1-2 sentences of what this source/community is saying RIGHT NOW>"
+      "source": "<name>",
+      "sourceType": "community"|"institutional"|"prediction",
+      "mood": "bullish"|"neutral"|"bearish"|"fearful",
+      "summary": "<1-2 sentences of current view>"
     }
   ],
   "opportunities": [
     {
       "id": "<string>",
-      "title": "<short opportunity title>",
-      "thesis": "<2-3 sentence plain-language thesis: WHY this is an opportunity now>",
-      "riskLevel": "low" | "medium" | "high",
-      "timeHorizon": "short" | "medium" | "long",
-      "assets": ["<specific ETF, stock, or sector, max 4 items>"],
-      "expectedAnnualReturn": <decimal, e.g. 0.10 for 10%>,
-      "volatility": <standard deviation as decimal, e.g. 0.15 for 15%>,
-      "caveat": "<1 sentence honest risk caveat>"
+      "title": "<short title>",
+      "thesis": "<2-3 sentences why this is an opportunity now>",
+      "riskLevel": "low"|"medium"|"high",
+      "timeHorizon": "short"|"medium"|"long",
+      "assets": ["<ETF, stock, or sector, max 4>"],
+      "expectedAnnualReturn": <decimal e.g. 0.10>,
+      "volatility": <decimal e.g. 0.15>,
+      "caveat": "<1 sentence risk caveat>"
     }
   ]
 }
 
-Include 5-6 sentiment items (mix of community, institutional, prediction market).
-Include 3-4 investment opportunities. Be specific about actual current analyst recommendations.
-For expectedAnnualReturn and volatility, use historical data for the asset class — be realistic and honest.
-`
+Include 5 sentiment items (mix of community, institutional, prediction market) and 3 investment opportunities. Use realistic historical return/volatility figures.`
 
 export async function GET() {
   const cached = getCached('sentiment')
