@@ -7,7 +7,7 @@ const PROMPT = `You are a financial risk analyst. Today: ${new Date().toDateStri
 
 User profile: lives in Taiwan, works at a content production company (revenue tied to ad budgets), girlfriend is PR at ASUS Taiwan, considering moving to France long-term, wants to start investing.
 
-Run up to 3 web searches covering: (1) Taiwan strait tensions + VIX/oil/DXY, (2) APAC ad spend + ASUS/semiconductor health, (3) EU/France economic outlook.
+Run 1 web search covering: Taiwan strait tensions, VIX/oil/DXY, APAC ad spend, ASUS/semiconductor health, EU/France economic outlook.
 
 Return ONLY this JSON:
 {
@@ -34,7 +34,7 @@ export async function GET() {
   }
 
   try {
-    const text = await searchAndAnalyze(PROMPT, 800, 3)
+    const text = await searchAndAnalyze(PROMPT, 800, 1)
     const parsed = parseJson<Omit<RiskData, 'updatedAt'>>(text)
 
     const data: RiskData = {
