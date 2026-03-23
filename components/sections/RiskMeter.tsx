@@ -11,12 +11,12 @@ function SectionHeader({ label, subtitle }: { label: string; subtitle: string })
     <div className="px-6 pt-6 pb-4 border-b border-intel-border">
       <div className="flex items-center gap-2 mb-0.5">
         <div className="w-1.5 h-1.5 rounded-full bg-intel-gold" />
-        <span className="text-[10px] font-mono text-intel-gold tracking-[0.2em] uppercase">
+        <span className="text-[13px] font-mono text-intel-gold tracking-[0.2em] uppercase">
           Section 01
         </span>
       </div>
       <h2 className="font-display font-bold text-xl text-intel-text">{label}</h2>
-      <p className="text-xs text-intel-muted mt-0.5">{subtitle}</p>
+      <p className="text-[13px] text-intel-muted mt-0.5">{subtitle}</p>
     </div>
   )
 }
@@ -29,6 +29,7 @@ const STATUS_CONFIG = {
     shadowClass: 'shadow-glow-stable',
     dotColor: 'bg-risk-stable',
     tKey: 'stable' as const,
+    sentenceTKey: 'riskSentenceStable' as const,
   },
   WATCH: {
     color: 'text-risk-watch',
@@ -37,6 +38,7 @@ const STATUS_CONFIG = {
     shadowClass: 'shadow-glow-watch',
     dotColor: 'bg-risk-watch',
     tKey: 'watch' as const,
+    sentenceTKey: 'riskSentenceWatch' as const,
   },
   WORRIED: {
     color: 'text-risk-worried',
@@ -45,6 +47,7 @@ const STATUS_CONFIG = {
     shadowClass: 'shadow-glow-worried',
     dotColor: 'bg-risk-worried',
     tKey: 'worried' as const,
+    sentenceTKey: 'riskSentenceWorried' as const,
   },
 } as const
 
@@ -53,6 +56,12 @@ const DRIVER_IMPACT_CLASSES = {
   negative: 'text-trend-down',
   neutral: 'text-intel-muted',
 }
+
+const LEGEND = [
+  { tKey: 'stable' as const, dotColor: 'bg-risk-stable', range: '0–33' },
+  { tKey: 'watch' as const, dotColor: 'bg-risk-watch', range: '34–66' },
+  { tKey: 'worried' as const, dotColor: 'bg-risk-worried', range: '67–100' },
+]
 
 export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number }) {
   const { t, language } = useLanguage()
@@ -99,6 +108,10 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
   const status = data?.status ?? 'WATCH'
   const cfg = STATUS_CONFIG[status]
   const statusLabel = t[cfg.tKey]
+  const sentencePrefix = t[cfg.sentenceTKey]
+
+  // Top driver = first negative-impact driver, else first driver
+  const topDriver = data?.drivers?.find(d => d.impact === 'negative') ?? data?.drivers?.[0] ?? null
 
   return (
     <section aria-labelledby="risk-title" className="pt-6">
@@ -113,8 +126,8 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
                 <Sparkles size={20} className="text-intel-gold" />
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-intel-muted">{t.loadDataDesc}</p>
-                <p className="text-[11px] font-mono text-intel-dim">{t.loadDataEst}</p>
+                <p className="text-sm text-intel-muted">{t.loadDataDesc}</p>
+                <p className="text-[13px] font-mono text-intel-dim">{t.loadDataEst}</p>
               </div>
               <button
                 onClick={load}
@@ -142,9 +155,9 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
               </div>
               <div>
                 <p className="text-sm font-medium text-intel-text">{t.noApiKey}</p>
-                <p className="text-xs text-intel-muted mt-1 max-w-sm">{t.noApiKeyDetail}</p>
+                <p className="text-sm text-intel-muted mt-1 max-w-sm">{t.noApiKeyDetail}</p>
               </div>
-              <code className="text-xs font-mono bg-intel-elevated px-3 py-1.5 rounded border border-intel-border text-intel-gold">
+              <code className="text-sm font-mono bg-intel-elevated px-3 py-1.5 rounded border border-intel-border text-intel-gold">
                 GEMINI_API_KEY=AIza...
               </code>
             </div>
@@ -157,7 +170,7 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
               <p className="text-sm text-intel-muted">{error}</p>
               <button
                 onClick={load}
-                className="flex items-center gap-2 text-xs font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors"
+                className="flex items-center gap-2 text-sm font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors"
               >
                 <RefreshCw size={12} />
                 {t.retry}
@@ -174,21 +187,18 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
                   <div className={`w-96 h-96 rounded-full blur-3xl opacity-10 ${cfg.dotColor}`} />
                 </div>
 
-                {/* Score bar */}
+                {/* Score bar — visual framing only */}
                 <div className="relative mb-6">
-                  <div className="flex items-center justify-center gap-3 mb-2">
+                  <div className="flex items-center justify-center gap-4">
                     <div className="flex-1 max-w-48 h-1 bg-intel-border rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-1000 ${cfg.dotColor}`}
                         style={{ width: `${Math.min(100, data.score)}%` }}
                       />
                     </div>
-                    <span className="text-xs font-mono text-intel-muted">
-                      {t.riskScore}: <span className={`${cfg.color} font-bold`}>{data.score}/100</span>
-                    </span>
                     <div className="flex-1 max-w-48 h-1 bg-intel-border rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-1000 ${cfg.dotColor} ml-auto`}
+                        className={`h-full rounded-full transition-all duration-1000 ${cfg.dotColor}`}
                         style={{ width: `${Math.min(100, data.score)}%`, float: 'right' }}
                       />
                     </div>
@@ -208,8 +218,30 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
                   </div>
                 </div>
 
-                {/* Explanation */}
-                <p className="relative mt-8 text-sm md:text-base text-intel-secondary leading-relaxed max-w-2xl mx-auto">
+                {/* Score X/100 */}
+                <div className={`relative mt-3 text-4xl font-mono font-black tabular-nums ${cfg.color} opacity-70`}>
+                  {data.score}/100
+                </div>
+
+                {/* Dynamic sentence from top driver */}
+                {topDriver && (
+                  <p className="relative mt-5 text-base text-intel-secondary leading-relaxed max-w-xl mx-auto italic">
+                    "{sentencePrefix} — {topDriver.detail}"
+                  </p>
+                )}
+
+                {/* Legend */}
+                <div className="relative mt-5 flex items-center justify-center gap-5 flex-wrap">
+                  {LEGEND.map(({ tKey, dotColor, range }) => (
+                    <div key={tKey} className="flex items-center gap-1.5">
+                      <div className={`w-2 h-2 rounded-full ${dotColor} flex-shrink-0`} />
+                      <span className="text-[13px] font-mono text-intel-muted">{t[tKey]} {range}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Full explanation — secondary context */}
+                <p className="relative mt-6 text-sm text-intel-secondary leading-relaxed max-w-2xl mx-auto opacity-80">
                   {data.explanation}
                 </p>
               </div>
@@ -217,19 +249,19 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
               {/* Drivers */}
               {data.drivers && data.drivers.length > 0 && (
                 <div className="mt-6">
-                  <h3 className="text-[10px] font-mono text-intel-muted tracking-[0.2em] uppercase mb-3">
+                  <h3 className="text-[13px] font-mono text-intel-muted tracking-[0.2em] uppercase mb-3">
                     {t.keyDrivers}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     {data.drivers.map((driver, i) => (
                       <div key={i} className="bg-intel-elevated rounded-lg border border-intel-border p-3">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs font-medium text-intel-text">{driver.name}</span>
-                          <span className={`text-[10px] font-mono uppercase ${DRIVER_IMPACT_CLASSES[driver.impact]}`}>
+                          <span className="text-sm font-medium text-intel-text">{driver.name}</span>
+                          <span className={`text-[13px] font-mono uppercase ${DRIVER_IMPACT_CLASSES[driver.impact]}`}>
                             {driver.impact}
                           </span>
                         </div>
-                        <p className="text-[11px] text-intel-muted leading-relaxed">{driver.detail}</p>
+                        <p className="text-[13px] text-intel-muted leading-relaxed">{driver.detail}</p>
                       </div>
                     ))}
                   </div>
@@ -238,7 +270,7 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
 
               {/* Timestamp + refresh */}
               <div className="mt-4 flex items-center justify-end gap-2">
-                <span className="text-[11px] font-mono text-intel-dim">
+                <span className="text-[13px] font-mono text-intel-dim">
                   {t.dataFrom} {fmtTimestamp(data.updatedAt)}
                 </span>
                 <button

@@ -68,12 +68,12 @@ export default function CryptoSignal() {
         <div className="px-6 pt-6 pb-4 border-b border-intel-border">
           <div className="flex items-center gap-2 mb-0.5">
             <div className="w-1.5 h-1.5 rounded-full bg-intel-gold" />
-            <span className="text-[10px] font-mono text-intel-gold tracking-[0.2em] uppercase">Section 05</span>
+            <span className="text-[13px] font-mono text-intel-gold tracking-[0.2em] uppercase">Section 05</span>
           </div>
           <h2 className="font-display font-bold text-xl text-intel-text" id="crypto-title">
             {t.section5Title}
           </h2>
-          <p className="text-xs text-intel-muted mt-0.5">{t.section5Subtitle}</p>
+          <p className="text-sm text-intel-muted mt-0.5">{t.section5Subtitle}</p>
         </div>
 
         <div className="p-6">
@@ -89,7 +89,7 @@ export default function CryptoSignal() {
             <div className="flex flex-col items-center py-8 gap-3">
               <AlertTriangle size={18} className="text-risk-worried" />
               <p className="text-sm text-intel-muted">{error}</p>
-              <button onClick={load} className="flex items-center gap-2 text-xs font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors">
+              <button onClick={load} className="flex items-center gap-2 text-sm font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors">
                 <RefreshCw size={12} /> {t.retry}
               </button>
             </div>
@@ -102,17 +102,17 @@ export default function CryptoSignal() {
                 {data.assets.map((asset) => (
                   <div key={asset.id} className="bg-intel-elevated rounded-lg border border-intel-border p-3">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-mono font-bold text-intel-text">{asset.symbol}</span>
+                      <span className="text-sm font-mono font-bold text-intel-text">{asset.symbol}</span>
                       <TrendArrow direction={asset.priceChange24h >= 0 ? 'up' : 'down'} />
                     </div>
                     <div className="text-base font-mono font-bold text-intel-text tabular-nums">
                       {fmtPrice(asset.price)}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-[11px] font-mono ${asset.priceChange24h >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
+                      <span className={`text-[13px] font-mono ${asset.priceChange24h >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
                         {fmtPct(asset.priceChange24h)} {t.dayChange.split(' ').pop()}
                       </span>
-                      <span className={`text-[11px] font-mono ${asset.priceChange7d >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
+                      <span className={`text-[13px] font-mono ${asset.priceChange7d >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
                         {fmtPct(asset.priceChange7d)} 7d
                       </span>
                     </div>
@@ -123,7 +123,7 @@ export default function CryptoSignal() {
               {/* Market cap */}
               <div className="bg-intel-elevated rounded-lg border border-intel-border p-3 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-mono text-intel-muted uppercase tracking-wider">{t.totalMarketCap}</span>
+                  <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wider">{t.totalMarketCap}</span>
                   <div className="text-sm font-mono font-bold text-intel-text mt-0.5 tabular-nums">
                     {fmtBillions(data.totalMarketCap)}
                   </div>
@@ -136,8 +136,8 @@ export default function CryptoSignal() {
               {/* Fear & Greed */}
               <div className={`rounded-lg border p-4 ${fgCfg.bg}`}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono text-intel-muted uppercase tracking-wider">{t.fearGreed}</span>
-                  <span className={`text-xs font-mono font-bold uppercase ${fgCfg.color}`}>{fgLabel}</span>
+                  <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wider">{t.fearGreed}</span>
+                  <span className={`text-sm font-mono font-bold uppercase ${fgCfg.color}`}>{fgLabel}</span>
                 </div>
                 {/* Gauge bar */}
                 <div className="relative h-2 bg-gradient-to-r from-risk-worried via-risk-watch to-risk-stable rounded-full mb-2">
@@ -146,7 +146,7 @@ export default function CryptoSignal() {
                     style={{ left: `calc(${data.fearGreedIndex}% - 6px)` }}
                   />
                 </div>
-                <div className="flex justify-between text-[9px] font-mono text-intel-dim">
+                <div className="flex justify-between text-[13px] font-mono text-intel-dim">
                   <span>0</span>
                   <span className={`text-3xl font-black font-mono tabular-nums ${fgCfg.color}`}>{data.fearGreedIndex}</span>
                   <span>100</span>
@@ -155,24 +155,24 @@ export default function CryptoSignal() {
 
               {/* Macro signal */}
               <div>
-                <span className="text-[10px] font-mono text-intel-gold uppercase tracking-wider block mb-1.5">
+                <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider block mb-1.5">
                   {t.macroSignal}
                 </span>
-                <p className="text-[11px] font-mono text-intel-secondary leading-relaxed bg-intel-elevated rounded px-3 py-2 border border-intel-border">
+                <p className="text-[13px] font-mono text-intel-secondary leading-relaxed bg-intel-elevated rounded px-3 py-2 border border-intel-border">
                   {data.macroSignal}
                 </p>
               </div>
 
               {/* Interpretation */}
               <div>
-                <span className="text-[10px] font-mono text-intel-muted uppercase tracking-wider block mb-1">
+                <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wider block mb-1">
                   {t.cryptoInterpretation}
                 </span>
-                <p className="text-xs text-intel-secondary leading-relaxed">{data.interpretation}</p>
+                <p className="text-sm text-intel-secondary leading-relaxed">{data.interpretation}</p>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-1">
-                <span className="text-[11px] font-mono text-intel-dim">
+                <span className="text-[13px] font-mono text-intel-dim">
                   {t.lastUpdated}: {new Date(data.updatedAt).toLocaleTimeString()}
                 </span>
                 <button onClick={load} className="text-intel-dim hover:text-intel-gold transition-colors" aria-label={t.retry}>

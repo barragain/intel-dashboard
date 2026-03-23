@@ -36,7 +36,7 @@ function ConflictCard({ conflict, t }: { conflict: Conflict; t: ReturnType<typeo
           <div className={`flex-shrink-0 w-2 h-2 rounded-full ${dotColor} ${conflict.status === 'escalating' ? 'animate-pulse' : ''}`} />
           <div className="min-w-0">
             <span className="text-sm font-medium text-intel-text block truncate">{conflict.name}</span>
-            <span className="text-[11px] text-intel-muted">{conflict.location}</span>
+            <span className="text-[13px] text-intel-muted">{conflict.location}</span>
           </div>
         </div>
         <div className="flex-shrink-0">
@@ -47,22 +47,22 @@ function ConflictCard({ conflict, t }: { conflict: Conflict; t: ReturnType<typeo
       {expanded && (
         <div className="px-4 pb-4 pt-1 space-y-2.5 border-t border-intel-border/50 bg-intel-elevated/30 animate-in">
           <div>
-            <span className="text-[10px] font-mono text-intel-gold uppercase tracking-wider block mb-1">
+            <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider block mb-1">
               {t.whyItMatters}
             </span>
-            <p className="text-xs text-intel-secondary leading-relaxed">{conflict.relevance}</p>
+            <p className="text-sm text-intel-secondary leading-relaxed">{conflict.relevance}</p>
           </div>
           <div>
-            <span className="text-[10px] font-mono text-intel-muted uppercase tracking-wider block mb-1">
+            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wider block mb-1">
               {t.currentDetails}
             </span>
-            <p className="text-xs text-intel-secondary leading-relaxed">{conflict.details}</p>
+            <p className="text-sm text-intel-secondary leading-relaxed">{conflict.details}</p>
           </div>
           <div className="flex items-center gap-2 pt-1">
-            <span className="text-[10px] font-mono text-intel-muted uppercase tracking-wider">
+            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wider">
               {t.keyImpact}:
             </span>
-            <span className="text-[11px] font-mono text-intel-gold">{conflict.keyImpact}</span>
+            <span className="text-[13px] font-mono text-intel-gold">{conflict.keyImpact}</span>
           </div>
         </div>
       )}
@@ -111,12 +111,12 @@ export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: num
         <div className="px-6 pt-6 pb-4 border-b border-intel-border">
           <div className="flex items-center gap-2 mb-0.5">
             <div className="w-1.5 h-1.5 rounded-full bg-intel-gold" />
-            <span className="text-[10px] font-mono text-intel-gold tracking-[0.2em] uppercase">Section 03</span>
+            <span className="text-[13px] font-mono text-intel-gold tracking-[0.2em] uppercase">Section 03</span>
           </div>
           <h2 className="font-display font-bold text-xl text-intel-text" id="conflict-title">
             {t.section3Title}
           </h2>
-          <p className="text-xs text-intel-muted mt-0.5">{t.section3Subtitle}</p>
+          <p className="text-sm text-intel-muted mt-0.5">{t.section3Subtitle}</p>
         </div>
 
         <div className="p-6">
@@ -127,8 +127,8 @@ export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: num
                 <Sparkles size={16} className="text-intel-gold" />
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-intel-muted">{t.loadDataDesc}</p>
-                <p className="text-[11px] font-mono text-intel-dim">{t.loadDataEst}</p>
+                <p className="text-sm text-intel-muted">{t.loadDataDesc}</p>
+                <p className="text-[13px] font-mono text-intel-dim">{t.loadDataEst}</p>
               </div>
               <button
                 onClick={load}
@@ -151,7 +151,7 @@ export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: num
           {!loading && needsApiKey && (
             <div className="flex flex-col items-center py-8 gap-3 text-center">
               <KeyRound size={18} className="text-intel-gold" />
-              <p className="text-xs text-intel-muted max-w-xs">{t.noApiKeyDetail}</p>
+              <p className="text-sm text-intel-muted max-w-xs">{t.noApiKeyDetail}</p>
             </div>
           )}
 
@@ -159,7 +159,7 @@ export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: num
             <div className="flex flex-col items-center py-8 gap-3">
               <AlertTriangle size={18} className="text-risk-worried" />
               <p className="text-sm text-intel-muted">{error}</p>
-              <button onClick={load} className="flex items-center gap-2 text-xs font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors">
+              <button onClick={load} className="flex items-center gap-2 text-sm font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors">
                 <RefreshCw size={12} /> {t.retry}
               </button>
             </div>
@@ -167,14 +167,14 @@ export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: num
 
           {!loading && data && (
             <div className="space-y-3 animate-in">
-              <p className="text-xs text-intel-secondary leading-relaxed pb-2">
+              <p className="text-sm text-intel-secondary leading-relaxed pb-2">
                 {data.overallAssessment}
               </p>
               {data.conflicts.map((conflict) => (
                 <ConflictCard key={conflict.id} conflict={conflict} t={t} />
               ))}
               <div className="flex items-center justify-end gap-2 pt-1">
-                <span className="text-[11px] font-mono text-intel-dim">
+                <span className="text-[13px] font-mono text-intel-dim">
                   {t.dataFrom} {fmtTimestamp(data.updatedAt)}
                 </span>
                 <button

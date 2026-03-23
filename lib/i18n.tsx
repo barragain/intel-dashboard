@@ -46,6 +46,9 @@ const translations = {
     worried: 'WORRIED',
     riskScore: 'Risk Score',
     keyDrivers: 'Key Drivers',
+    riskSentenceStable: 'Conditions look stable',
+    riskSentenceWatch: 'Keep an eye on things',
+    riskSentenceWorried: 'High alert',
 
     // Economy
     improving: 'Improving',
@@ -179,6 +182,9 @@ const translations = {
     worried: 'ALERTE',
     riskScore: 'Score de Risque',
     keyDrivers: 'Facteurs Clés',
+    riskSentenceStable: 'La situation est stable',
+    riskSentenceWatch: 'Restez vigilant',
+    riskSentenceWorried: 'Alerte élevée',
 
     // Economy
     improving: 'En amélioration',

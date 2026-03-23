@@ -38,7 +38,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: ReturnType<ty
           <span className="text-sm font-display font-semibold text-intel-text">{card.name}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-mono uppercase border rounded px-1.5 py-0.5 ${statusColor}`}>
+          <span className={`text-[13px] font-mono uppercase border rounded px-1.5 py-0.5 ${statusColor}`}>
             {dirLabel}
           </span>
           <TrendArrow direction={card.direction} />
@@ -49,13 +49,13 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: ReturnType<ty
       <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2 border-b border-intel-border">
         {card.indicators.map((ind, i) => (
           <div key={i} className="flex flex-col">
-            <span className="text-[10px] font-mono text-intel-muted uppercase tracking-wide">{ind.label}</span>
+            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide">{ind.label}</span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-sm font-mono font-semibold text-intel-text tabular-nums">
                 {ind.value}
               </span>
               {ind.change && (
-                <span className={`text-[11px] font-mono ${CHANGE_COLORS[ind.changeType ?? 'neutral']}`}>
+                <span className={`text-[13px] font-mono ${CHANGE_COLORS[ind.changeType ?? 'neutral']}`}>
                   {ind.change}
                 </span>
               )}
@@ -66,7 +66,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: ReturnType<ty
 
       {/* Summary */}
       <div className="px-4 py-3 flex-1">
-        <p className="text-xs text-intel-secondary leading-relaxed">{card.summary}</p>
+        <p className="text-sm text-intel-secondary leading-relaxed">{card.summary}</p>
       </div>
     </div>
   )
@@ -120,18 +120,18 @@ export default function EconomyPulse() {
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <div className="w-1.5 h-1.5 rounded-full bg-intel-gold" />
-              <span className="text-[10px] font-mono text-intel-gold tracking-[0.2em] uppercase">
+              <span className="text-[13px] font-mono text-intel-gold tracking-[0.2em] uppercase">
                 Section 02
               </span>
             </div>
             <h2 className="font-display font-bold text-xl text-intel-text" id="economy-title">
               {t.section2Title}
             </h2>
-            <p className="text-xs text-intel-muted mt-0.5">{t.section2Subtitle}</p>
+            <p className="text-sm text-intel-muted mt-0.5">{t.section2Subtitle}</p>
           </div>
           {data && (
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono text-intel-dim">
+              <span className="text-[13px] font-mono text-intel-dim">
                 {new Date(data.updatedAt).toLocaleTimeString()}
               </span>
               <button onClick={load} className="text-intel-dim hover:text-intel-gold transition-colors" aria-label={t.retry}>
@@ -154,7 +154,7 @@ export default function EconomyPulse() {
             <div className="flex flex-col items-center py-10 gap-3">
               <AlertTriangle size={18} className="text-risk-worried" />
               <p className="text-sm text-intel-muted">{error}</p>
-              <button onClick={load} className="flex items-center gap-2 text-xs font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors">
+              <button onClick={load} className="flex items-center gap-2 text-sm font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors">
                 <RefreshCw size={12} /> {t.retry}
               </button>
             </div>

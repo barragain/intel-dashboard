@@ -22,7 +22,7 @@ const VARIANT_CLASSES: Record<string, string> = {
 export default function StatusBadge({ status, variant, size = 'sm' }: StatusBadgeProps) {
   const key = variant ?? status.toLowerCase().replace(/\s+/g, '-')
   const classes = VARIANT_CLASSES[key] ?? 'bg-intel-elevated border-intel-border text-intel-secondary'
-  const sizeClasses = size === 'md' ? 'px-3 py-1 text-xs' : 'px-2 py-0.5 text-[11px]'
+  const sizeClasses = size === 'md' ? 'px-3 py-1 text-sm' : 'px-2 py-0.5 text-[13px]'
 
   return (
     <span

@@ -49,13 +49,13 @@ function ProfitCalc({ opp, t }: { opp: InvestmentOpportunity; t: ReturnType<type
   const result = calcProjection(amount, opp.expectedAnnualReturn, opp.volatility, months)
   return (
     <div className="mt-3 pt-3 border-t border-intel-border/50 space-y-3">
-      <div className="flex items-center gap-2 text-[10px] font-mono text-intel-gold uppercase tracking-wider">
+      <div className="flex items-center gap-2 text-[13px] font-mono text-intel-gold uppercase tracking-wider">
         <Calculator size={11} />
         {t.profitCalc}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-[10px] font-mono text-intel-muted block mb-1">{t.calcAmount}</label>
+          <label className="text-[13px] font-mono text-intel-muted block mb-1">{t.calcAmount}</label>
           <input
             type="number"
             value={amount}
@@ -67,7 +67,7 @@ function ProfitCalc({ opp, t }: { opp: InvestmentOpportunity; t: ReturnType<type
           />
         </div>
         <div>
-          <label className="text-[10px] font-mono text-intel-muted block mb-1">
+          <label className="text-[13px] font-mono text-intel-muted block mb-1">
             {t.calcMonths}: <span className="text-intel-gold">{months}</span>
           </label>
           <input
@@ -87,13 +87,13 @@ function ProfitCalc({ opp, t }: { opp: InvestmentOpportunity; t: ReturnType<type
           { label: t.calcOptimistic, value: result.optimistic, color: 'text-trend-up' },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-intel-bg rounded border border-intel-border p-2 text-center">
-            <span className="text-[10px] font-mono text-intel-muted block">{label}</span>
+            <span className="text-[13px] font-mono text-intel-muted block">{label}</span>
             <span className={`text-sm font-mono font-bold tabular-nums ${color}`}>{fmtUSD(value)}</span>
-            <span className={`text-[10px] font-mono ${color}`}>{fmtReturn(amount, value)}</span>
+            <span className={`text-[13px] font-mono ${color}`}>{fmtReturn(amount, value)}</span>
           </div>
         ))}
       </div>
-      <p className="text-[10px] text-intel-dim italic">{t.calcDisclaimer}</p>
+      <p className="text-[13px] text-intel-dim italic">{t.calcDisclaimer}</p>
     </div>
   )
 }
@@ -115,32 +115,32 @@ function OpportunityCard({ opp, t }: { opp: InvestmentOpportunity; t: ReturnType
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5 mb-3">
-          <span className="text-[10px] font-mono text-intel-muted border border-intel-border rounded px-1.5 py-0.5">
+          <span className="text-[13px] font-mono text-intel-muted border border-intel-border rounded px-1.5 py-0.5">
             {horizonLabel}
           </span>
-          <span className="text-[10px] font-mono text-intel-gold border border-intel-gold/30 rounded px-1.5 py-0.5">
+          <span className="text-[13px] font-mono text-intel-gold border border-intel-gold/30 rounded px-1.5 py-0.5">
             ~{(opp.expectedAnnualReturn * 100).toFixed(0)}{t.percentYearEst}
           </span>
         </div>
-        <p className="text-xs text-intel-secondary leading-relaxed mb-2">{opp.thesis}</p>
+        <p className="text-sm text-intel-secondary leading-relaxed mb-2">{opp.thesis}</p>
         {opp.assets && opp.assets.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {opp.assets.map((a) => (
-              <span key={a} className="text-[10px] font-mono bg-intel-bg border border-intel-border rounded px-1.5 py-0.5 text-intel-secondary">
+              <span key={a} className="text-[13px] font-mono bg-intel-bg border border-intel-border rounded px-1.5 py-0.5 text-intel-secondary">
                 {a}
               </span>
             ))}
           </div>
         )}
         {opp.caveat && (
-          <p className="mt-2 text-[11px] text-intel-muted italic border-l-2 border-intel-border pl-2">
+          <p className="mt-2 text-[13px] text-intel-muted italic border-l-2 border-intel-border pl-2">
             {opp.caveat}
           </p>
         )}
 
         <button
           onClick={() => setShowCalc(!showCalc)}
-          className="mt-3 flex items-center gap-1 text-[11px] font-mono text-intel-gold hover:text-intel-gold-bright transition-colors"
+          className="mt-3 flex items-center gap-1 text-[13px] font-mono text-intel-gold hover:text-intel-gold-bright transition-colors"
         >
           <Calculator size={11} />
           {t.calculateProfit}
@@ -198,17 +198,17 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <div className="w-1.5 h-1.5 rounded-full bg-intel-gold" />
-              <span className="text-[10px] font-mono text-intel-gold tracking-[0.2em] uppercase">Section 04</span>
+              <span className="text-[13px] font-mono text-intel-gold tracking-[0.2em] uppercase">Section 04</span>
             </div>
             <h2 className="font-display font-bold text-xl text-intel-text" id="sentiment-title">
               {t.section4Title}
             </h2>
-            <p className="text-xs text-intel-muted mt-0.5">{t.section4Subtitle}</p>
+            <p className="text-sm text-intel-muted mt-0.5">{t.section4Subtitle}</p>
           </div>
           {data && (
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="text-[10px] font-mono text-intel-muted uppercase">{t.overallMood}</div>
+                <div className="text-[13px] font-mono text-intel-muted uppercase">{t.overallMood}</div>
                 <StatusBadge status={moodLabel} variant={data.overallMood} size="md" />
               </div>
               <button onClick={load} className="text-intel-dim hover:text-intel-gold transition-colors" aria-label={t.retry}>
@@ -226,8 +226,8 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
                 <Sparkles size={16} className="text-intel-gold" />
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-intel-muted">{t.loadDataDesc}</p>
-                <p className="text-[11px] font-mono text-intel-dim">{t.loadDataEst}</p>
+                <p className="text-sm text-intel-muted">{t.loadDataDesc}</p>
+                <p className="text-[13px] font-mono text-intel-dim">{t.loadDataEst}</p>
               </div>
               <button
                 onClick={load}
@@ -254,7 +254,7 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
             <div className="flex flex-col items-center py-10 gap-3 text-center">
               <KeyRound size={20} className="text-intel-gold" />
               <p className="text-sm font-medium text-intel-text">{t.noApiKey}</p>
-              <p className="text-xs text-intel-muted max-w-sm">{t.noApiKeyDetail}</p>
+              <p className="text-sm text-intel-muted max-w-sm">{t.noApiKeyDetail}</p>
             </div>
           )}
 
@@ -262,7 +262,7 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
             <div className="flex flex-col items-center py-10 gap-3">
               <AlertTriangle size={18} className="text-risk-worried" />
               <p className="text-sm text-intel-muted">{error}</p>
-              <button onClick={load} className="flex items-center gap-2 text-xs font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors">
+              <button onClick={load} className="flex items-center gap-2 text-sm font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors">
                 <RefreshCw size={12} /> {t.retry}
               </button>
             </div>
@@ -272,7 +272,7 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in">
               {/* Part A — Sentiment voices */}
               <div>
-                <h3 className="text-[10px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-4">
+                <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-4">
                   {t.communityVoices}
                 </h3>
                 <div className="space-y-3">
@@ -280,8 +280,8 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
                     <div key={i} className="bg-intel-elevated rounded-lg border border-intel-border p-3">
                       <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-intel-text">{item.source}</span>
-                          <span className="text-[10px] font-mono text-intel-dim border border-intel-border rounded px-1 py-0.5">
+                          <span className="text-sm font-medium text-intel-text">{item.source}</span>
+                          <span className="text-[13px] font-mono text-intel-dim border border-intel-border rounded px-1 py-0.5">
                             {t[SOURCE_TYPE_TKEYS[item.sourceType]] ?? item.sourceType}
                           </span>
                         </div>
@@ -291,7 +291,7 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
                           size="sm"
                         />
                       </div>
-                      <p className="text-xs text-intel-secondary leading-relaxed">{item.summary}</p>
+                      <p className="text-sm text-intel-secondary leading-relaxed">{item.summary}</p>
                     </div>
                   ))}
                 </div>
@@ -299,7 +299,7 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
 
               {/* Part B — Investment radar */}
               <div>
-                <h3 className="text-[10px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-4">
+                <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-4">
                   {t.investmentRadar}
                 </h3>
                 <div className="space-y-3">
@@ -313,7 +313,7 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
 
           {data && (
             <div className="mt-4 flex items-center justify-end gap-2">
-              <span className="text-[11px] font-mono text-intel-dim">
+              <span className="text-[13px] font-mono text-intel-dim">
                 {t.dataFrom} {fmtTimestamp(data.updatedAt)}
               </span>
               <button

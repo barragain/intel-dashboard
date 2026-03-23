@@ -15,7 +15,7 @@ export default function Header() {
             <span className="font-display font-black text-xl tracking-[0.2em] text-intel-text">
               INTEL
             </span>
-            <span className="hidden sm:block text-[10px] text-intel-muted font-mono tracking-widest uppercase mt-0.5">
+            <span className="hidden sm:block text-[13px] text-intel-muted font-mono tracking-widest uppercase mt-0.5">
               {t.appSubtitle}
             </span>
           </div>
@@ -29,7 +29,7 @@ export default function Header() {
               <span className="absolute w-2.5 h-2.5 rounded-full bg-risk-stable opacity-30 animate-ping" />
               <span className="relative w-1.5 h-1.5 rounded-full bg-risk-stable" />
             </div>
-            <span className="text-[10px] font-mono text-intel-muted tracking-widest uppercase">
+            <span className="text-[13px] font-mono text-intel-muted tracking-widest uppercase">
               {t.live}
             </span>
           </div>
@@ -40,7 +40,7 @@ export default function Header() {
           <div className="flex items-center rounded overflow-hidden border border-intel-border">
             <button
               onClick={() => setLanguage('en')}
-              className={`px-2.5 py-1 text-xs font-mono font-medium transition-colors ${
+              className={`px-2.5 py-1 text-sm font-mono font-medium transition-colors ${
                 language === 'en'
                   ? 'bg-intel-gold text-intel-bg'
                   : 'text-intel-muted hover:text-intel-text'
@@ -52,7 +52,7 @@ export default function Header() {
             <div className="w-px h-full bg-intel-border" />
             <button
               onClick={() => setLanguage('fr')}
-              className={`px-2.5 py-1 text-xs font-mono font-medium transition-colors ${
+              className={`px-2.5 py-1 text-sm font-mono font-medium transition-colors ${
                 language === 'fr'
                   ? 'bg-intel-gold text-intel-bg'
                   : 'text-intel-muted hover:text-intel-text'
