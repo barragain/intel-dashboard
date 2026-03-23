@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLanguage } from '@/lib/i18n'
 import { fmtTimestamp } from '@/lib/utils'
 import type { ConflictsData, Conflict } from '@/lib/types'
@@ -69,12 +69,18 @@ function ConflictCard({ conflict, lang }: { conflict: Conflict; lang: string }) 
   )
 }
 
-export default function ConflictTracker() {
+export default function ConflictTracker({ autoLoadDelay }: { autoLoadDelay?: number }) {
   const { t, language } = useLanguage()
   const [data, setData] = useState<ConflictsData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [needsApiKey, setNeedsApiKey] = useState(false)
+
+  useEffect(() => {
+    if (autoLoadDelay === undefined) return
+    const timer = setTimeout(load, autoLoadDelay)
+    return () => clearTimeout(timer)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function load() {
     setLoading(true)

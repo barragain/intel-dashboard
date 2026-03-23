@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useLanguage } from '@/lib/i18n'
 import { fmtTimestamp } from '@/lib/utils'
 import type { HistoricalData, HistoricalParallel, ExpertPrediction } from '@/lib/types'
@@ -90,7 +90,7 @@ function PredictionCard({ prediction, lang }: { prediction: ExpertPrediction; la
   )
 }
 
-export default function HistoricalContext() {
+export default function HistoricalContext({ autoLoadDelay }: { autoLoadDelay?: number }) {
   const { t, language } = useLanguage()
   const [data, setData] = useState<HistoricalData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -116,6 +116,12 @@ export default function HistoricalContext() {
       setLoading(false)
     }
   }, [t])
+
+  useEffect(() => {
+    if (autoLoadDelay === undefined) return
+    const timer = setTimeout(load, autoLoadDelay)
+    return () => clearTimeout(timer)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section aria-labelledby="historical-title">

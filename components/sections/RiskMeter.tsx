@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLanguage } from '@/lib/i18n'
 import { fmtTimestamp } from '@/lib/utils'
 import type { RiskData } from '@/lib/types'
@@ -57,7 +57,7 @@ const DRIVER_IMPACT_CLASSES = {
   neutral: 'text-intel-muted',
 }
 
-export default function RiskMeter() {
+export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number }) {
   const { t, language } = useLanguage()
   const [data, setData] = useState<RiskData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -90,6 +90,12 @@ export default function RiskMeter() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (autoLoadDelay === undefined) return
+    const timer = setTimeout(load, autoLoadDelay)
+    return () => clearTimeout(timer)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const status = data?.status ?? 'WATCH'
   const cfg = STATUS_CONFIG[status]

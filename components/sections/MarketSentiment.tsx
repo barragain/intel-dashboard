@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useLanguage } from '@/lib/i18n'
 import { fmtTimestamp } from '@/lib/utils'
 import type { SentimentData, InvestmentOpportunity } from '@/lib/types'
@@ -166,7 +166,7 @@ function OpportunityCard({ opp, lang }: { opp: InvestmentOpportunity; lang: stri
   )
 }
 
-export default function MarketSentiment() {
+export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: number }) {
   const { t, language } = useLanguage()
   const [data, setData] = useState<SentimentData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -192,6 +192,12 @@ export default function MarketSentiment() {
       setLoading(false)
     }
   }, [t])
+
+  useEffect(() => {
+    if (autoLoadDelay === undefined) return
+    const timer = setTimeout(load, autoLoadDelay)
+    return () => clearTimeout(timer)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const moodLabel = data ? (MOOD_LABELS[data.overallMood]?.[language] ?? data.overallMood) : ''
 
