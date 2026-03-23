@@ -4,11 +4,10 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 // which is not yet reflected in the SDK's Tool type definitions.
 type AnyModelParams = {
   model: string
-  tools?: unknown[]
 }
 type AnyGenerateParams = {
   contents: { role: string; parts: { text: string }[] }[]
-  generationConfig?: { maxOutputTokens?: number }
+  tools?: unknown[]
 }
 
 export async function searchAndAnalyze(prompt: string): Promise<string> {
@@ -21,14 +20,12 @@ export async function searchAndAnalyze(prompt: string): Promise<string> {
     generateContent: (params: AnyGenerateParams) => Promise<{ response: { text: () => string } }>
   }
 
-  const model = getModel({
-    model: 'gemini-2.5-flash',
-    tools: [{ googleSearch: {} }],
-  })
+  const model = getModel({ model: 'gemini-2.5-flash' })
 
   try {
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      tools: [{ googleSearch: {} }],
     })
     const text = result.response.text()
     if (!text || text.trim() === '') throw new Error('EMPTY_RESPONSE')

@@ -7,7 +7,7 @@ const PROMPT = `You are a market sentiment analyst. Today: ${new Date().toDateSt
 
 User: Taiwan-based, new investor, works in content production (ad-budget dependent), considering moving to France, interested in global equities/ETFs/crypto.
 
-Do 1 web search: current investor sentiment, analyst forecasts, prediction market odds (recession, rate cuts), and investment opportunities relevant to Taiwan/Europe exposure.
+Search the web for: current investor sentiment, analyst forecasts from major banks, prediction market odds (recession, rate cuts), and investment opportunities relevant to Taiwan/Europe exposure.
 
 Return ONLY this JSON:
 {
@@ -32,10 +32,18 @@ Return ONLY this JSON:
       "volatility": <decimal e.g. 0.15>,
       "caveat": "<1 sentence risk caveat>"
     }
+  ],
+  "quotes": [
+    { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date found via search>" }
+  ],
+  "sources": [
+    { "title": "<article headline>", "source": "<publication name>", "date": "<publication date>" }
   ]
 }
 
-Include 5 sentiment items (mix of community, institutional, prediction market) and 3 investment opportunities. Use realistic historical return/volatility figures.`
+Include 5 sentiment items (mix of community, institutional, prediction market) and 3 investment opportunities. Use realistic historical return/volatility figures.
+Include 2–3 real expert quotes from analysts, fund managers, or economists found via search — exact words, not paraphrased.
+Include 2–3 real news article titles with their publication and date.`
 
 export async function GET() {
   const cached = getCached('sentiment')

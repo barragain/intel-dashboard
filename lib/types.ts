@@ -13,6 +13,8 @@ export interface RiskData {
   score: number // 0–100
   explanation: string
   drivers: RiskDriver[]
+  quotes: Quote[]
+  sources: NewsSource[]
   updatedAt: string
 }
 
@@ -60,6 +62,8 @@ export interface Conflict {
 export interface ConflictsData {
   conflicts: Conflict[]
   overallAssessment: string
+  quotes: Quote[]
+  sources: NewsSource[]
   updatedAt: string
 }
 
@@ -92,6 +96,8 @@ export interface SentimentData {
   overallMood: MarketMood
   items: SentimentItem[]
   opportunities: InvestmentOpportunity[]
+  quotes: Quote[]
+  sources: NewsSource[]
   updatedAt: string
 }
 
@@ -144,10 +150,25 @@ export interface ExpertPrediction {
 export interface HistoricalData {
   parallels: HistoricalParallel[]
   predictions: ExpertPrediction[]
+  quotes: Quote[]
+  sources: NewsSource[]
   updatedAt: string
 }
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
+
+export interface Quote {
+  text: string
+  author: string
+  institution: string
+  date: string
+}
+
+export interface NewsSource {
+  title: string
+  source: string
+  date: string
+}
 
 export interface ApiError {
   error: string

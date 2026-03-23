@@ -7,7 +7,7 @@ const PROMPT = `You are a geopolitical analyst. Today: ${new Date().toDateString
 
 User: lives in Taiwan, works at content production company (job tied to ad budgets), girlfriend at ASUS Taiwan, planning to move to France.
 
-Do 1 web search on current status of: Taiwan Strait tensions, US trade/tariff policy affecting Taiwan, Middle East oil supply, Russia-Ukraine and EU energy.
+Search the web for current status of: Taiwan Strait tensions, US trade/tariff policy affecting Taiwan, Middle East oil supply, Russia-Ukraine and EU energy.
 
 Return ONLY this JSON:
 {
@@ -22,10 +22,18 @@ Return ONLY this JSON:
       "details": "2 sentences of current specific facts"
     }
   ],
-  "overallAssessment": "2-sentence combined risk summary and personal implication"
+  "overallAssessment": "2-sentence combined risk summary and personal implication",
+  "quotes": [
+    { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date found via search>" }
+  ],
+  "sources": [
+    { "title": "<article headline>", "source": "<publication name>", "date": "<publication date>" }
+  ]
 }
 
-Include 4 conflicts. Cite specific recent events or data points.`
+Include 4 conflicts. Cite specific recent events or data points.
+Include 2–3 real expert quotes (officials, analysts, military/government sources) found via search — exact words, not paraphrased.
+Include 2–3 real news article titles with their publication and date.`
 
 export async function GET() {
   const cached = getCached('conflicts')

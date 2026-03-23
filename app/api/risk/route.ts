@@ -7,7 +7,7 @@ const PROMPT = `You are a financial risk analyst. Today: ${new Date().toDateStri
 
 User profile: lives in Taiwan, works at a content production company (revenue tied to ad budgets), girlfriend is PR at ASUS Taiwan, considering moving to France long-term, wants to start investing.
 
-Run 1 web search covering: Taiwan strait tensions, VIX/oil/DXY, APAC ad spend, ASUS/semiconductor health, EU/France economic outlook.
+Search the web for current data on: Taiwan strait tensions, VIX/oil/DXY, APAC ad spend, ASUS/semiconductor health, EU/France economic outlook.
 
 Return ONLY this JSON:
 {
@@ -16,11 +16,19 @@ Return ONLY this JSON:
   "explanation": "<2–3 sentences citing specific current facts>",
   "drivers": [
     { "name": "<max 20 chars>", "impact": "positive"|"negative"|"neutral", "detail": "<one current fact>" }
+  ],
+  "quotes": [
+    { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date found via search>" }
+  ],
+  "sources": [
+    { "title": "<article headline>", "source": "<publication name>", "date": "<publication date>" }
   ]
 }
 
 Score guide: 0–33 = STABLE, 34–66 = WATCH, 67–100 = WORRIED.
-Include exactly 5 drivers: Taiwan Strait, Ad Spend, ASUS/Tech, France/EU, Market Volatility.`
+Include exactly 5 drivers: Taiwan Strait, Ad Spend, ASUS/Tech, France/EU, Market Volatility.
+Include 2–3 real expert quotes (analysts, economists, officials) found via search — exact words, not paraphrased.
+Include 2–3 real news article titles with their publication and date.`
 
 export async function GET() {
   const cached = getCached('risk')

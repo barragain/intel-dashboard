@@ -7,7 +7,7 @@ const PROMPT = `You are a financial historian and analyst. Today: ${new Date().t
 
 User: lives in Taiwan, works in content production (ad-budget revenue), girlfriend at ASUS Taiwan (tech exposure), wants to start investing, considering moving to France, concerned about Taiwan strait tensions.
 
-Do 1 web search: current economic conditions and what historical events they resemble, plus recent analyst predictions.
+Search the web for: current economic conditions and what historical events they resemble, plus recent analyst and institutional predictions.
 
 Return ONLY this JSON:
 {
@@ -29,10 +29,18 @@ Return ONLY this JSON:
       "sentiment": "optimistic"|"pessimistic"|"neutral",
       "confidence": "high"|"medium"|"low"
     }
+  ],
+  "quotes": [
+    { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date found via search>" }
+  ],
+  "sources": [
+    { "title": "<article headline>", "source": "<publication name>", "date": "<publication date>" }
   ]
 }
 
-Include 3 historical parallels (consider: 2008 crisis, 2020 COVID, 1970s oil shock, 1997 Asia crisis, 1996 Taiwan strait). Include 4-5 expert predictions from IMF, Goldman Sachs, JP Morgan, World Bank.`
+Include 3 historical parallels (consider: 2008 crisis, 2020 COVID, 1970s oil shock, 1997 Asia crisis, 1996 Taiwan strait). Include 4-5 expert predictions from IMF, Goldman Sachs, JP Morgan, World Bank.
+Include 2–3 real expert quotes from economists or institutional analysts found via search — exact words, not paraphrased.
+Include 2–3 real news article titles with their publication and date.`
 
 export async function GET() {
   const cached = getCached('historical')
