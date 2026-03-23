@@ -3,9 +3,9 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useLanguage } from '@/lib/i18n'
 import { fmtTimestamp } from '@/lib/utils'
-import type { SentimentData, InvestmentOpportunity } from '@/lib/types'
+import type { SentimentData, InvestmentOpportunity, RedditPost } from '@/lib/types'
 import StatusBadge from '@/components/ui/StatusBadge'
-import { AlertTriangle, RefreshCw, KeyRound, Calculator, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
+import { AlertTriangle, RefreshCw, KeyRound, Calculator, ChevronDown, ChevronUp, Sparkles, ArrowUp, MessageSquare } from 'lucide-react'
 
 const MOOD_TKEYS: Record<string, 'bullish' | 'bearish' | 'neutral' | 'fearful'> = {
   bullish: 'bullish', bearish: 'bearish', neutral: 'neutral', fearful: 'fearful',
@@ -149,6 +149,73 @@ function OpportunityCard({ opp, t }: { opp: InvestmentOpportunity; t: ReturnType
 
         {showCalc && <ProfitCalc opp={opp} t={t} />}
       </div>
+    </div>
+  )
+}
+
+function selectDisplayPosts(posts: RedditPost[]): RedditPost[] {
+  const bySub = new Map<string, RedditPost>()
+  for (const post of posts) {
+    const existing = bySub.get(post.subreddit)
+    if (!existing || post.score > existing.score) bySub.set(post.subreddit, post)
+  }
+  return Array.from(bySub.values()).slice(0, 3)
+}
+
+function RedditPostCard({ post }: { post: RedditPost }) {
+  const [expanded, setExpanded] = useState(false)
+  const displayComments = post.topComments.slice(0, 2)
+
+  return (
+    <div className="bg-intel-elevated rounded-lg border border-intel-border overflow-hidden">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full p-3 text-left hover:bg-intel-elevated/70 transition-colors"
+        aria-expanded={expanded}
+      >
+        <div className="flex items-start gap-3">
+          <span className="text-[13px] font-mono text-intel-gold border border-intel-gold/30 rounded px-1.5 py-0.5 flex-shrink-0 mt-0.5">
+            r/{post.subreddit}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-intel-text leading-snug">{post.title}</p>
+            <div className="flex items-center gap-3 mt-1.5">
+              <span className="flex items-center gap-1 text-[13px] font-mono text-intel-muted">
+                <ArrowUp size={11} />
+                {post.score.toLocaleString()}
+              </span>
+              {post.numComments > 0 && (
+                <span className="flex items-center gap-1 text-[13px] font-mono text-intel-dim">
+                  <MessageSquare size={10} />
+                  {post.numComments.toLocaleString()}
+                </span>
+              )}
+            </div>
+          </div>
+          {displayComments.length > 0 && (
+            expanded
+              ? <ChevronUp size={13} className="text-intel-muted flex-shrink-0 mt-1" />
+              : <ChevronDown size={13} className="text-intel-muted flex-shrink-0 mt-1" />
+          )}
+        </div>
+      </button>
+
+      {expanded && displayComments.length > 0 && (
+        <div className="px-3 pb-3 space-y-2.5 border-t border-intel-border/40 animate-in">
+          {displayComments.map((comment) => (
+            <div key={comment.id} className="pt-2.5 pl-3 border-l-2 border-intel-border">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[13px] font-mono text-intel-gold">u/{comment.author}</span>
+                <span className="flex items-center gap-0.5 text-[13px] font-mono text-intel-dim">
+                  <ArrowUp size={10} />
+                  {comment.score.toLocaleString()}
+                </span>
+              </div>
+              <p className="text-sm text-intel-secondary leading-relaxed">{comment.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -310,6 +377,24 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
               </div>
             </div>
           )}
+
+          {/* Reddit posts */}
+          {data?.redditPosts && data.redditPosts.length > 0 && (() => {
+            const displayPosts = selectDisplayPosts(data.redditPosts!)
+            if (displayPosts.length === 0) return null
+            return (
+              <div className="mt-6 border-t border-intel-border pt-6 animate-in">
+                <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-4">
+                  {t.redditSentiment}
+                </h3>
+                <div className="space-y-3">
+                  {displayPosts.map((post) => (
+                    <RedditPostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
 
           {data && (
             <div className="mt-4 flex items-center justify-end gap-2">

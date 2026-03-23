@@ -92,10 +92,28 @@ export interface InvestmentOpportunity {
   caveat: string
 }
 
+export interface RedditComment {
+  id: string
+  text: string
+  score: number
+  author: string
+}
+
+export interface RedditPost {
+  id: string
+  title: string
+  score: number
+  numComments: number
+  subreddit: string
+  url: string
+  topComments: RedditComment[]
+}
+
 export interface SentimentData {
   overallMood: MarketMood
   items: SentimentItem[]
   opportunities: InvestmentOpportunity[]
+  redditPosts?: RedditPost[]
   quotes: Quote[]
   sources: NewsSource[]
   updatedAt: string
