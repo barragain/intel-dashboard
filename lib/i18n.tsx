@@ -17,6 +17,10 @@ const translations = {
     noApiKey: 'ANTHROPIC_API_KEY not configured',
     noApiKeyDetail: 'Add your Anthropic API key to .env.local to enable AI-powered analysis.',
     configureKey: 'Configure API Key',
+    loadData: 'Load Data',
+    loadDataDesc: 'AI-powered — uses Claude with live web search',
+    loadDataEst: 'Est. 15–30 seconds',
+    dataFrom: 'Data from',
 
     // Sections
     section1Title: 'Personal Risk Meter',
@@ -136,6 +140,10 @@ const translations = {
     noApiKey: 'ANTHROPIC_API_KEY non configurée',
     noApiKeyDetail: "Ajoutez votre clé API Anthropic dans .env.local pour activer l'analyse IA.",
     configureKey: 'Configurer la clé API',
+    loadData: 'Charger les données',
+    loadDataDesc: 'Propulsé par IA — utilise Claude avec recherche web en direct',
+    loadDataEst: 'Env. 15–30 secondes',
+    dataFrom: 'Données du',
 
     // Sections
     section1Title: 'Indicateur de Risque',

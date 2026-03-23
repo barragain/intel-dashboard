@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLanguage } from '@/lib/i18n'
+import { fmtTimestamp } from '@/lib/utils'
 import type { ConflictsData, Conflict } from '@/lib/types'
 import StatusBadge from '@/components/ui/StatusBadge'
-import { AlertTriangle, RefreshCw, KeyRound } from 'lucide-react'
+import { AlertTriangle, RefreshCw, KeyRound, Sparkles } from 'lucide-react'
 
 const STATUS_LABELS: Record<string, { en: string; fr: string }> = {
   escalating: { en: 'Escalating', fr: 'En escalade' },
@@ -25,7 +26,6 @@ function ConflictCard({ conflict, lang }: { conflict: Conflict; lang: string }) 
 
   return (
     <div className="border border-intel-border rounded-lg overflow-hidden">
-      {/* Header row */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full px-4 py-3 flex items-center justify-between gap-3 hover:bg-intel-elevated/50 transition-colors text-left"
@@ -43,7 +43,6 @@ function ConflictCard({ conflict, lang }: { conflict: Conflict; lang: string }) 
         </div>
       </button>
 
-      {/* Expandable details */}
       {expanded && (
         <div className="px-4 pb-4 pt-1 space-y-2.5 border-t border-intel-border/50 bg-intel-elevated/30 animate-in">
           <div>
@@ -73,13 +72,14 @@ function ConflictCard({ conflict, lang }: { conflict: Conflict; lang: string }) 
 export default function ConflictTracker() {
   const { t, language } = useLanguage()
   const [data, setData] = useState<ConflictsData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [needsApiKey, setNeedsApiKey] = useState(false)
 
   async function load() {
     setLoading(true)
     setError(null)
+    setNeedsApiKey(false)
     try {
       const res = await fetch('/api/conflicts')
       const json = await res.json()
@@ -95,8 +95,6 @@ export default function ConflictTracker() {
       setLoading(false)
     }
   }
-
-  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section aria-labelledby="conflict-title">
@@ -114,6 +112,26 @@ export default function ConflictTracker() {
         </div>
 
         <div className="p-6">
+          {/* Idle */}
+          {!loading && !data && !error && !needsApiKey && (
+            <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+              <div className="w-10 h-10 rounded-full bg-intel-elevated border border-intel-border flex items-center justify-center">
+                <Sparkles size={16} className="text-intel-gold" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-intel-muted">{t.loadDataDesc}</p>
+                <p className="text-[11px] font-mono text-intel-dim">{t.loadDataEst}</p>
+              </div>
+              <button
+                onClick={load}
+                className="flex items-center gap-2 text-sm font-mono font-medium text-intel-bg bg-intel-gold px-4 py-2 rounded hover:bg-intel-gold-bright transition-colors"
+              >
+                <Sparkles size={13} />
+                {t.loadData}
+              </button>
+            </div>
+          )}
+
           {loading && (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -149,9 +167,14 @@ export default function ConflictTracker() {
               ))}
               <div className="flex items-center justify-end gap-2 pt-1">
                 <span className="text-[11px] font-mono text-intel-dim">
-                  {t.lastUpdated}: {new Date(data.updatedAt).toLocaleTimeString()}
+                  {t.dataFrom} {fmtTimestamp(data.updatedAt)}
                 </span>
-                <button onClick={load} className="text-intel-dim hover:text-intel-gold transition-colors" aria-label={t.retry}>
+                <button
+                  onClick={load}
+                  className="text-intel-dim hover:text-intel-gold transition-colors"
+                  aria-label={t.retry}
+                  title={new Date(data.updatedAt).toLocaleString()}
+                >
                   <RefreshCw size={11} />
                 </button>
               </div>

@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useLanguage } from '@/lib/i18n'
+import { fmtTimestamp } from '@/lib/utils'
 import type { HistoricalData, HistoricalParallel, ExpertPrediction } from '@/lib/types'
-import { AlertTriangle, RefreshCw, KeyRound, Clock, BookOpen } from 'lucide-react'
+import { AlertTriangle, RefreshCw, KeyRound, Clock, BookOpen, Sparkles } from 'lucide-react'
 import StatusBadge from '@/components/ui/StatusBadge'
 
 const SENTIMENT_CONFIG: Record<string, { label: { en: string; fr: string }; color: string }> = {
@@ -92,13 +93,14 @@ function PredictionCard({ prediction, lang }: { prediction: ExpertPrediction; la
 export default function HistoricalContext() {
   const { t, language } = useLanguage()
   const [data, setData] = useState<HistoricalData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [needsApiKey, setNeedsApiKey] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
+    setNeedsApiKey(false)
     try {
       const res = await fetch('/api/historical')
       const json = await res.json()
@@ -114,8 +116,6 @@ export default function HistoricalContext() {
       setLoading(false)
     }
   }, [t])
-
-  useEffect(() => { load() }, [load])
 
   return (
     <section aria-labelledby="historical-title">
@@ -135,9 +135,9 @@ export default function HistoricalContext() {
           {data && (
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono text-intel-dim">
-                {t.lastUpdated}: {new Date(data.updatedAt).toLocaleTimeString()}
+                {t.dataFrom} {fmtTimestamp(data.updatedAt)}
               </span>
-              <button onClick={load} className="text-intel-dim hover:text-intel-gold transition-colors" aria-label={t.retry}>
+              <button onClick={load} className="text-intel-dim hover:text-intel-gold transition-colors" aria-label={t.retry} title={new Date(data.updatedAt).toLocaleString()}>
                 <RefreshCw size={11} />
               </button>
             </div>
@@ -145,6 +145,26 @@ export default function HistoricalContext() {
         </div>
 
         <div className="p-6">
+          {/* Idle */}
+          {!loading && !data && !error && !needsApiKey && (
+            <div className="flex flex-col items-center justify-center py-14 gap-5 text-center">
+              <div className="w-10 h-10 rounded-full bg-intel-elevated border border-intel-border flex items-center justify-center">
+                <Sparkles size={16} className="text-intel-gold" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-intel-muted">{t.loadDataDesc}</p>
+                <p className="text-[11px] font-mono text-intel-dim">{t.loadDataEst}</p>
+              </div>
+              <button
+                onClick={load}
+                className="flex items-center gap-2 text-sm font-mono font-medium text-intel-bg bg-intel-gold px-4 py-2 rounded hover:bg-intel-gold-bright transition-colors"
+              >
+                <Sparkles size={13} />
+                {t.loadData}
+              </button>
+            </div>
+          )}
+
           {loading && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-3">
