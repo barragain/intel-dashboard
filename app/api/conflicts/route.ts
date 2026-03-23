@@ -3,40 +3,29 @@ import { getCached, setCached } from '@/lib/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/claude'
 import type { ConflictsData } from '@/lib/types'
 
-const PROMPT = `
-You are a geopolitical risk analyst. Today's date: ${new Date().toDateString()}.
+const PROMPT = `You are a geopolitical analyst. Today: ${new Date().toDateString()}.
 
-The person you're reporting for:
-- Lives in Taiwan, works at a content/video production company
-- Girlfriend works at ASUS Taiwan
-- Planning to move to France/Europe eventually
-- Concerned about impacts on: job security, investment timing, future relocation
+User: lives in Taiwan, works at content production company (job tied to ad budgets), girlfriend at ASUS Taiwan, planning to move to France.
 
-Search the web for CURRENT status (today/this week) of these specific conflicts and tensions:
-1. Taiwan Strait (China-Taiwan tensions, PLA military activity)
-2. US foreign policy and trade wars (tariffs, semiconductor restrictions, TSMC/Taiwan policy)
-3. Middle East (oil supply disruptions, US-Iran, Red Sea shipping)
-4. Russia-Ukraine (EU energy, European security, NATO)
-5. Any NEW significant conflicts or tensions markets are currently pricing in
+Do 1 web search on current status of: Taiwan Strait tensions, US trade/tariff policy affecting Taiwan, Middle East oil supply, Russia-Ukraine and EU energy.
 
-Return ONLY a JSON object with this exact structure:
+Return ONLY this JSON:
 {
   "conflicts": [
     {
-      "id": "<string id>",
-      "name": "<conflict name>",
-      "location": "<region>",
-      "relevance": "<1 sentence: exactly why this matters to this specific person>",
-      "status": "escalating" | "stable" | "de-escalating",
-      "keyImpact": "<primary market/personal impact: e.g. oil prices, supply chains, job security>",
-      "details": "<2 sentences of current specific facts from this week>"
+      "id": "string",
+      "name": "conflict name",
+      "location": "region",
+      "relevance": "1 sentence: why this matters to this specific user",
+      "status": "escalating"|"stable"|"de-escalating",
+      "keyImpact": "primary impact: e.g. oil prices, job security, supply chains",
+      "details": "2 sentences of current specific facts"
     }
   ],
-  "overallAssessment": "<2 sentence overall assessment of combined geopolitical risk and its personal implications>"
+  "overallAssessment": "2-sentence combined risk summary and personal implication"
 }
 
-Include 4-5 conflicts. Be specific with current facts — mention actual recent events, statements, or data points.
-`
+Include 4 conflicts. Cite specific recent events or data points.`
 
 export async function GET() {
   const cached = getCached('conflicts')

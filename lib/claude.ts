@@ -10,7 +10,7 @@ type AnyMessage = {
 export async function searchAndAnalyze(
   prompt: string,
   maxTokens = 2500,
-  maxSearches = Infinity,
+  maxSearches = 1,
 ): Promise<string> {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error('ANTHROPIC_API_KEY_MISSING')
@@ -30,7 +30,7 @@ export async function searchAndAnalyze(
 
   let searchesUsed = 0
 
-  for (let turn = 0; turn < 3; turn++) {
+  for (let turn = 0; turn < 2; turn++) {
     const response = await create({
       model: MODEL,
       max_tokens: maxTokens,
