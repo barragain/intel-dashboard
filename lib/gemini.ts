@@ -11,7 +11,7 @@ type AnyGenerateParams = {
   generationConfig?: { maxOutputTokens?: number }
 }
 
-export async function searchAndAnalyze(prompt: string, maxTokens = 2500): Promise<string> {
+export async function searchAndAnalyze(prompt: string): Promise<string> {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY_MISSING')
   }
@@ -29,7 +29,6 @@ export async function searchAndAnalyze(prompt: string, maxTokens = 2500): Promis
   try {
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: maxTokens },
     })
     const text = result.response.text()
     if (!text || text.trim() === '') throw new Error('EMPTY_RESPONSE')

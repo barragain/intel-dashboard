@@ -46,7 +46,7 @@ export async function GET() {
   }
 
   try {
-    const text = await searchAndAnalyze(PROMPT, 2000)
+    const text = await searchAndAnalyze(PROMPT)
     const parsed = parseJson<Omit<HistoricalData, 'updatedAt'>>(text)
 
     const data: HistoricalData = {
