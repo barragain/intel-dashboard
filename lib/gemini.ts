@@ -31,7 +31,9 @@ export async function searchAndAnalyze(prompt: string, maxTokens = 2500): Promis
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: { maxOutputTokens: maxTokens },
     })
-    return result.response.text()
+    const text = result.response.text()
+    if (!text || text.trim() === '') throw new Error('EMPTY_RESPONSE')
+    return text
   } catch (err) {
     const status = (err as { status?: number }).status
     if (status === 429) throw new Error('RATE_LIMIT_EXCEEDED')
@@ -56,11 +58,15 @@ export function parseJson<T>(text: string): T {
   else if (startBracket === -1) start = startBrace
   else start = Math.min(startBrace, startBracket)
 
-  if (start === -1) throw new Error('No JSON found in response')
+  if (start === -1) throw new Error(`No JSON found in response: ${raw.slice(0, 200)}`)
 
   const lastBrace = raw.lastIndexOf('}')
   const lastBracket = raw.lastIndexOf(']')
   const end = Math.max(lastBrace, lastBracket)
 
-  return JSON.parse(raw.slice(start, end + 1)) as T
+  try {
+    return JSON.parse(raw.slice(start, end + 1)) as T
+  } catch {
+    throw new Error(`JSON parse failed. Response preview: ${raw.slice(start, start + 300)}`)
+  }
 }
