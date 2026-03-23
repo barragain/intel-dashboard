@@ -8,7 +8,9 @@
       "Bash(node -e \"console.log\\(require\\(''./node_modules/next/package.json''\\).version\\)\")",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(printf '# Required for AI-powered sections \\(Risk Meter, Conflicts, Sentiment, Historical Context\\)\\\\n# Get your key at https://aistudio.google.com/app/apikey\\\\nGEMINI_API_KEY=your_key_here\\\\n')"
     ]
   }
 }

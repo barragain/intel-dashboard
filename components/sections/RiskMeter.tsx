@@ -148,7 +148,7 @@ export default function RiskMeter({ autoLoadDelay }: { autoLoadDelay?: number })
                 <p className="text-xs text-intel-muted mt-1 max-w-sm">{t.noApiKeyDetail}</p>
               </div>
               <code className="text-xs font-mono bg-intel-elevated px-3 py-1.5 rounded border border-intel-border text-intel-gold">
-                ANTHROPIC_API_KEY=sk-ant-...
+                GEMINI_API_KEY=AIza...
               </code>
             </div>
           )}

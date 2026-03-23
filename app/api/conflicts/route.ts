@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCached, setCached } from '@/lib/cache'
-import { searchAndAnalyze, parseJson } from '@/lib/claude'
+import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import type { ConflictsData } from '@/lib/types'
 
 const PROMPT = `You are a geopolitical analyst. Today: ${new Date().toDateString()}.
@@ -31,9 +31,9 @@ export async function GET() {
   const cached = getCached('conflicts')
   if (cached) return NextResponse.json(cached)
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
-      { error: 'ANTHROPIC_API_KEY_MISSING', needsApiKey: true },
+      { error: 'GEMINI_API_KEY_MISSING', needsApiKey: true },
       { status: 503 },
     )
   }
@@ -51,7 +51,7 @@ export async function GET() {
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
-    if (msg === 'ANTHROPIC_API_KEY_MISSING') {
+    if (msg === 'GEMINI_API_KEY_MISSING') {
       return NextResponse.json({ error: msg, needsApiKey: true }, { status: 503 })
     }
     if (msg === 'RATE_LIMIT_EXCEEDED') {
