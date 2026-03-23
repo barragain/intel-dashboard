@@ -109,11 +109,21 @@ export interface RedditPost {
   topComments: RedditComment[]
 }
 
+export interface PredictionMarket {
+  id: string
+  question: string
+  probability: number // 0–1, represents "Yes" probability
+  source: 'polymarket' | 'kalshi'
+  volume?: number
+  url?: string
+}
+
 export interface SentimentData {
   overallMood: MarketMood
   items: SentimentItem[]
   opportunities: InvestmentOpportunity[]
   redditPosts?: RedditPost[]
+  predictionMarkets?: PredictionMarket[]
   quotes: Quote[]
   sources: NewsSource[]
   updatedAt: string

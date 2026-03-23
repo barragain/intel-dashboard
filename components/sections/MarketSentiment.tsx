@@ -3,9 +3,9 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useLanguage } from '@/lib/i18n'
 import { fmtTimestamp } from '@/lib/utils'
-import type { SentimentData, InvestmentOpportunity, RedditPost } from '@/lib/types'
+import type { SentimentData, InvestmentOpportunity, RedditPost, PredictionMarket } from '@/lib/types'
 import StatusBadge from '@/components/ui/StatusBadge'
-import { AlertTriangle, RefreshCw, KeyRound, Calculator, ChevronDown, ChevronUp, Sparkles, ArrowUp, MessageSquare } from 'lucide-react'
+import { AlertTriangle, RefreshCw, KeyRound, Calculator, ChevronDown, ChevronUp, Sparkles, ArrowUp, MessageSquare, TrendingUp } from 'lucide-react'
 
 const MOOD_TKEYS: Record<string, 'bullish' | 'bearish' | 'neutral' | 'fearful'> = {
   bullish: 'bullish', bearish: 'bearish', neutral: 'neutral', fearful: 'fearful',
@@ -148,6 +148,47 @@ function OpportunityCard({ opp, t }: { opp: InvestmentOpportunity; t: ReturnType
         </button>
 
         {showCalc && <ProfitCalc opp={opp} t={t} />}
+      </div>
+    </div>
+  )
+}
+
+function PredictionMarketCard({ market }: { market: PredictionMarket }) {
+  const pct = Math.round(market.probability * 100)
+  // Color the bar and number by how extreme the probability is — not by direction,
+  // since "70% chance of recession" is bearish but "70% chance of rate cut" might be bullish.
+  // We just show the raw number clearly.
+  const barColor =
+    pct >= 70 ? 'bg-trend-down' : pct <= 30 ? 'bg-trend-up' : 'bg-risk-watch'
+  const numColor =
+    pct >= 70 ? 'text-trend-down' : pct <= 30 ? 'text-trend-up' : 'text-risk-watch'
+
+  return (
+    <div className="bg-intel-elevated rounded-lg border border-intel-border p-3">
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <p className="text-sm text-intel-text leading-snug flex-1">{market.question}</p>
+        <span className={`text-2xl font-mono font-black tabular-nums flex-shrink-0 ${numColor}`}>
+          {pct}%
+        </span>
+      </div>
+      {/* Probability bar */}
+      <div className="h-1.5 bg-intel-border rounded-full overflow-hidden mb-2">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ${barColor}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="flex items-center justify-between">
+        <span
+          className={`text-[13px] font-mono border rounded px-1.5 py-0.5 ${
+            market.source === 'polymarket'
+              ? 'text-intel-gold border-intel-gold/30'
+              : 'text-intel-muted border-intel-border'
+          }`}
+        >
+          {market.source === 'polymarket' ? 'Polymarket' : 'Kalshi'}
+        </span>
+        <span className="text-[13px] font-mono text-intel-dim">chance of YES</span>
       </div>
     </div>
   )
@@ -395,6 +436,21 @@ export default function MarketSentiment({ autoLoadDelay }: { autoLoadDelay?: num
               </div>
             )
           })()}
+
+          {/* Prediction markets */}
+          {data?.predictionMarkets && data.predictionMarkets.length > 0 && (
+            <div className="mt-6 border-t border-intel-border pt-6 animate-in">
+              <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                <TrendingUp size={12} className="text-intel-gold" />
+                {t.predictionMarketsTitle}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {data.predictionMarkets.slice(0, 4).map((market) => (
+                  <PredictionMarketCard key={market.id} market={market} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {data && (
             <div className="mt-4 flex items-center justify-end gap-2">

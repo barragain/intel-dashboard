@@ -4,6 +4,7 @@ import { getCached, setCached } from '@/lib/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
 import { fetchRedditPosts, buildRedditContext } from '@/lib/reddit'
+import { fetchPredictionMarkets, buildPredictionContext } from '@/lib/predictionMarkets'
 import type { SentimentData } from '@/lib/types'
 
 const PROMPT = `You are helping someone new to investing understand what the market mood is right now and whether it's a good time to put money to work. Today: ${new Date().toDateString()}.
@@ -52,7 +53,7 @@ Return ONLY this JSON:
   ]
 }
 
-Include 5 sentiment items: 2 community items drawn from the real Reddit posts above (cite the actual post title or comment, use source = subreddit name like "r/investing"), 2 from major banks or institutional analysts found via search, 1 from a prediction market. Include 3 investment ideas with realistic return and volatility numbers based on actual historical asset class performance.
+Include 5 sentiment items: 2 community items drawn from the real Reddit posts above (cite actual post titles or comments, use source = subreddit name like "r/investing"), 2 from major banks or institutional analysts found via search, 1 from a prediction market — use the real prediction market probabilities provided above, cite the specific market and its percentage. Include 3 investment ideas with realistic return and volatility numbers based on actual historical asset class performance.
 Include 2–3 real expert quotes from analysts, fund managers, or economists found via search — exact words only.
 Include 2–3 real news article headlines with publication and date.`
 
@@ -70,17 +71,23 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch Reddit posts first — gracefully returns [] if APIFY_API_KEY missing or fails
-    const redditPosts = await fetchRedditPosts()
-    const redditContext = buildRedditContext(redditPosts)
-    const fullPrompt = PROMPT + redditContext
+    // Fetch Reddit + prediction markets in parallel — both gracefully return [] on failure
+    const [redditPosts, predictionMarkets] = await Promise.all([
+      fetchRedditPosts(),
+      fetchPredictionMarkets(),
+    ])
+    const fullPrompt =
+      PROMPT +
+      buildRedditContext(redditPosts) +
+      buildPredictionContext(predictionMarkets)
 
     const text = await searchAndAnalyze(fullPrompt, lang)
-    const parsed = parseJson<Omit<SentimentData, 'updatedAt' | 'redditPosts'>>(text)
+    const parsed = parseJson<Omit<SentimentData, 'updatedAt' | 'redditPosts' | 'predictionMarkets'>>(text)
 
     const data: SentimentData = {
       ...parsed,
       redditPosts,
+      predictionMarkets,
       updatedAt: new Date().toISOString(),
     }
 
