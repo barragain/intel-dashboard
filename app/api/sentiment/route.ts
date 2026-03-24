@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { unstable_cache } from 'next/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
+import { getAISlot } from '@/lib/aiSlot'
 import { buildSubredditPromptSection } from '@/lib/reddit'
 import { fetchPredictionMarkets, buildPredictionContext } from '@/lib/predictionMarkets'
 import type { SentimentData } from '@/lib/types'
@@ -66,7 +67,7 @@ Include 2–3 real expert quotes from analysts, fund managers, or economists fou
 Include 2–3 real news article headlines with publication and date.`
 
 const fetchSentimentData = unstable_cache(
-  async (lang: string) => {
+  async (lang: string, _slot: string) => {
     const { markets: predictionMarkets } = await fetchPredictionMarkets()
     const prompt =
       PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString()) +
@@ -77,7 +78,7 @@ const fetchSentimentData = unstable_cache(
     return { ...parsed, predictionMarkets, updatedAt: new Date().toISOString() } as SentimentData
   },
   ['sentiment-data'],
-  { tags: ['ai-data', 'ai-sentiment'], revalidate: false },
+  { revalidate: false },
 )
 
 export async function GET(request: NextRequest) {
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const data = await fetchSentimentData(lang)
+    const data = await fetchSentimentData(lang, getAISlot())
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

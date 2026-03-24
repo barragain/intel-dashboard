@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { unstable_cache } from 'next/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
+import { getAISlot } from '@/lib/aiSlot'
 import type { HistoricalData } from '@/lib/types'
 
 const PROMPT_TEMPLATE = `You are a financial historian and analyst helping a general audience understand how today's situation compares to historical events, and what experts think is coming next. Today: {{DATE}}.
@@ -52,14 +53,14 @@ Include 2–3 real expert quotes from economists or institutional analysts found
 Include 2–3 real news article headlines with publication and date.`
 
 const fetchHistoricalData = unstable_cache(
-  async (lang: string) => {
+  async (lang: string, _slot: string) => {
     const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
     const text = await searchAndAnalyze(prompt, lang)
     const parsed = parseJson<Omit<HistoricalData, 'updatedAt'>>(text)
     return { ...parsed, updatedAt: new Date().toISOString() } as HistoricalData
   },
   ['historical-data'],
-  { tags: ['ai-data', 'ai-historical'], revalidate: false },
+  { revalidate: false },
 )
 
 export async function GET(request: NextRequest) {
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const data = await fetchHistoricalData(lang)
+    const data = await fetchHistoricalData(lang, getAISlot())
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

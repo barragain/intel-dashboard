@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { unstable_cache } from 'next/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
+import { getAISlot } from '@/lib/aiSlot'
 import type { RiskData } from '@/lib/types'
 
 const PROMPT_TEMPLATE = `You are a financial intelligence analyst helping people understand whether global conditions warrant concern right now. Today: {{DATE}}.
@@ -46,14 +47,14 @@ Include 2–3 real expert quotes found via search — exact words only, not para
 Include 2–3 real news article headlines with publication and date.`
 
 const fetchRiskData = unstable_cache(
-  async (lang: string) => {
+  async (lang: string, _slot: string) => {
     const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
     const text = await searchAndAnalyze(prompt, lang)
     const parsed = parseJson<Omit<RiskData, 'updatedAt'>>(text)
     return { ...parsed, updatedAt: new Date().toISOString() } as RiskData
   },
   ['risk-data'],
-  { tags: ['ai-data', 'ai-risk'], revalidate: false },
+  { revalidate: false },
 )
 
 export async function GET(request: NextRequest) {
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const data = await fetchRiskData(lang)
+    const data = await fetchRiskData(lang, getAISlot())
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
