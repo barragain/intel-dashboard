@@ -3,9 +3,36 @@ import type { NextRequest } from 'next/server'
 import { getCached, setCached } from '@/lib/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
-import { fetchRedditPosts, buildRedditContext } from '@/lib/reddit'
+import { buildSubredditPromptSection } from '@/lib/reddit'
 import { fetchPredictionMarkets, buildPredictionContext } from '@/lib/predictionMarkets'
 import type { SentimentData } from '@/lib/types'
+
+/**
+ * Returns a cache key that changes at 09:00 and 21:00 Taiwan time (UTC+8).
+ * This means Gemini is called at most twice per day regardless of traffic.
+ *
+ * Slot A: 01:00–13:00 UTC  =  09:00–21:00 Taiwan (morning slot)
+ * Slot B: 13:00–01:00 UTC  =  21:00–09:00 Taiwan (evening slot)
+ */
+function getSentimentSlotKey(lang: string): string {
+  const now = new Date()
+  const utcH = now.getUTCHours()
+  let slotDate = now.toISOString().slice(0, 10) // YYYY-MM-DD
+  let slotName: string
+
+  if (utcH >= 13) {
+    slotName = 'evening'
+  } else if (utcH >= 1) {
+    slotName = 'morning'
+  } else {
+    // 00:00–00:59 UTC = still in the previous day's evening slot
+    const prev = new Date(now.getTime() - 24 * 3600 * 1000)
+    slotDate = prev.toISOString().slice(0, 10)
+    slotName = 'evening'
+  }
+
+  return `sentiment_${lang}_${slotDate}_${slotName}`
+}
 
 const PROMPT = `You are a financial analyst helping a general audience understand the current market mood and whether it is a good time to invest. Today: ${new Date().toDateString()}.
 
@@ -32,6 +59,13 @@ Return ONLY this JSON:
       "summary": "<1-2 plain sentences: what does this source actually think will happen and why — be specific about what they expect>"
     }
   ],
+  "subredditSentiment": [
+    {
+      "subreddit": "<subreddit name without r/ prefix>",
+      "summary": "<1-2 plain sentences: what people are actually posting and feeling today>",
+      "mood": "bullish"|"neutral"|"bearish"|"fearful"
+    }
+  ],
   "opportunities": [
     {
       "id": "<string>",
@@ -54,13 +88,13 @@ Return ONLY this JSON:
   ]
 }
 
-Include 5 sentiment items: 2 community items drawn from the real Reddit posts above (cite actual post titles or comments, use source = subreddit name like "r/investing"), 2 from major banks or institutional analysts found via search, 1 from a prediction market — use the real prediction market probabilities provided above, cite the specific market and its percentage. Include 3 investment ideas with realistic return and volatility numbers based on actual historical asset class performance.
+Include 5 sentiment items: 2 community items (cite subreddits found via search, use source = subreddit name like "r/investing"), 2 from major banks or institutional analysts found via search, 1 from a prediction market — use the real prediction market probabilities provided above, cite the specific market and its percentage. Include 3 investment ideas with realistic return and volatility numbers based on actual historical asset class performance.
 Include 2–3 real expert quotes from analysts, fund managers, or economists found via search — exact words only.
 Include 2–3 real news article headlines with publication and date.`
 
 export async function GET(request: NextRequest) {
   const lang = getLang(request)
-  const cacheKey = `sentiment_${lang}`
+  const cacheKey = getSentimentSlotKey(lang)
   const cached = getCached(cacheKey)
   if (cached) return NextResponse.json(cached)
 
@@ -72,23 +106,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch Reddit + prediction markets in parallel
-    const [redditPosts, { markets: predictionMarkets }] = await Promise.all([
-      fetchRedditPosts(),
-      fetchPredictionMarkets(),
-    ])
+    const { markets: predictionMarkets } = await fetchPredictionMarkets()
 
     const fullPrompt =
       PROMPT +
-      buildRedditContext(redditPosts) +
+      buildSubredditPromptSection() +
       buildPredictionContext(predictionMarkets)
 
     const text = await searchAndAnalyze(fullPrompt, lang)
-    const parsed = parseJson<Omit<SentimentData, 'updatedAt' | 'redditPosts' | 'predictionMarkets'>>(text)
+    const parsed = parseJson<Omit<SentimentData, 'updatedAt' | 'predictionMarkets'>>(text)
 
     const data: SentimentData = {
       ...parsed,
-      redditPosts,
       predictionMarkets,
       updatedAt: new Date().toISOString(),
     }

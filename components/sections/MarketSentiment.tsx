@@ -3,9 +3,9 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useLanguage } from '@/lib/i18n'
 import { fmtTimestamp } from '@/lib/utils'
-import type { SentimentData, InvestmentOpportunity, RedditPost, PredictionMarket } from '@/lib/types'
+import type { SentimentData, InvestmentOpportunity, SubredditSentiment, PredictionMarket } from '@/lib/types'
 import StatusBadge from '@/components/ui/StatusBadge'
-import { AlertTriangle, RefreshCw, KeyRound, Calculator, ChevronDown, ChevronUp, ArrowUp, MessageSquare, TrendingUp } from 'lucide-react'
+import { AlertTriangle, RefreshCw, KeyRound, Calculator, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react'
 
 const MOOD_TKEYS: Record<string, 'bullish' | 'bearish' | 'neutral' | 'fearful'> = {
   bullish: 'bullish', bearish: 'bearish', neutral: 'neutral', fearful: 'fearful',
@@ -203,89 +203,26 @@ function PredictionMarketCard({ market }: { market: PredictionMarket }) {
   )
 }
 
-const BEARISH_RE = /\b(bear|crash|fall|fell|drop|decline|recession|fear|sell|loss|cut|weak|bubble|collapse|plunge|dump|warn|crisis|down\s+\d|correction|tanking|tank)\b/i
-const BULLISH_RE = /\b(bull|rally|rise|rose|gain|surge|soar|record|high|optimistic|buy|recover|growth|boom|up\s+\d|moon|breakout|outperform|strong)\b/i
-
-function postSentiment(title: string): 'bullish' | 'bearish' | 'neutral' {
-  if (BEARISH_RE.test(title)) return 'bearish'
-  if (BULLISH_RE.test(title)) return 'bullish'
-  return 'neutral'
-}
-
-const SENTIMENT_STYLES: Record<string, string> = {
+const MOOD_BADGE_STYLES: Record<string, string> = {
   bullish: 'text-risk-stable border-risk-stable/40',
   bearish: 'text-trend-down border-trend-down/40',
   neutral: 'text-intel-muted border-intel-border',
+  fearful: 'text-risk-worried border-risk-worried/40',
 }
 
-function groupPostsBySub(posts: RedditPost[]): Map<string, RedditPost[]> {
-  const bySub = new Map<string, RedditPost[]>()
-  for (const post of posts) {
-    const key = post.subreddit.toLowerCase()
-    if (!bySub.has(key)) bySub.set(key, [])
-    bySub.get(key)!.push(post)
-  }
-  for (const [key, group] of bySub) {
-    bySub.set(key, group.sort((a, b) => b.score - a.score).slice(0, 5))
-  }
-  return bySub
-}
-
-function RedditPostCard({ post }: { post: RedditPost }) {
-  const [expanded, setExpanded] = useState(false)
-  const displayComments = post.topComments.slice(0, 2)
-  const sentiment = postSentiment(post.title)
-
+function SubredditSentimentCard({ item }: { item: SubredditSentiment }) {
+  const moodStyle = MOOD_BADGE_STYLES[item.mood] ?? MOOD_BADGE_STYLES.neutral
   return (
-    <div className="border-b border-intel-border/40 last:border-b-0">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full py-2.5 px-0 text-left hover:opacity-80 transition-opacity"
-        aria-expanded={expanded}
-      >
-        <div className="flex items-start gap-2">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm text-intel-text leading-snug">{post.title}</p>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="flex items-center gap-1 text-[13px] font-mono text-intel-muted">
-                <ArrowUp size={11} />
-                {post.score.toLocaleString()}
-              </span>
-              {post.numComments > 0 && (
-                <span className="flex items-center gap-1 text-[13px] font-mono text-intel-dim">
-                  <MessageSquare size={10} />
-                  {post.numComments.toLocaleString()}
-                </span>
-              )}
-              <span className={`text-[11px] font-mono border rounded px-1.5 py-0.5 uppercase tracking-wider ${SENTIMENT_STYLES[sentiment]}`}>
-                {sentiment}
-              </span>
-            </div>
-          </div>
-          {displayComments.length > 0 && (
-            expanded
-              ? <ChevronUp size={12} className="text-intel-muted flex-shrink-0 mt-1" />
-              : <ChevronDown size={12} className="text-intel-muted flex-shrink-0 mt-1" />
-          )}
-        </div>
-      </button>
-
-      {expanded && displayComments.length > 0 && (
-        <div className="pb-2.5 space-y-2 pl-3 animate-in">
-          {displayComments.map((comment) => (
-            <div key={comment.id} className="pl-3 border-l-2 border-intel-border">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[13px] font-mono text-intel-gold">u/{comment.author}</span>
-                <span className="flex items-center gap-0.5 text-[13px] font-mono text-intel-dim">
-                  <ArrowUp size={10} />
-                  {comment.score.toLocaleString()}
-                </span>
-              </div>
-              <p className="text-sm text-intel-secondary leading-relaxed">{comment.text}</p>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="bg-intel-elevated rounded-lg border border-intel-border p-3">
+      <div className="flex items-center justify-between mb-2 pb-2 border-b border-intel-border/50">
+        <span className="text-[13px] font-mono text-intel-gold border border-intel-gold/30 rounded px-1.5 py-0.5">
+          r/{item.subreddit}
+        </span>
+        <span className={`text-[11px] font-mono border rounded px-1.5 py-0.5 uppercase tracking-wider ${moodStyle}`}>
+          {item.mood}
+        </span>
+      </div>
+      <p className="text-sm text-intel-secondary leading-relaxed">{item.summary}</p>
     </div>
   )
 }
@@ -417,40 +354,19 @@ export default function MarketSentiment() {
             </div>
           )}
 
-          {/* Reddit posts — grouped by community */}
-          {data && (() => {
-            const grouped: Map<string, RedditPost[]> = data.redditPosts ? groupPostsBySub(data.redditPosts) : new Map()
-            return (
-              <div className="mt-6 border-t border-intel-border pt-6 animate-in">
-                <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-4">
-                  {t.redditSentiment}
-                </h3>
-                {grouped.size > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Array.from(grouped.entries()).map(([sub, posts]) => (
-                      <div key={sub} className="bg-intel-elevated rounded-lg border border-intel-border p-3">
-                        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-intel-border/50">
-                          <span className="text-[13px] font-mono text-intel-gold border border-intel-gold/30 rounded px-1.5 py-0.5">
-                            r/{sub}
-                          </span>
-                          <span className="text-[11px] font-mono text-intel-dim">{posts.length} posts</span>
-                        </div>
-                        <div>
-                          {posts.map((post) => (
-                            <RedditPostCard key={post.id} post={post} />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[13px] font-mono text-intel-muted py-3">
-                    Reddit data unavailable — retrying on next refresh.
-                  </p>
-                )}
+          {/* Community sentiment — one card per subreddit */}
+          {data?.subredditSentiment && data.subredditSentiment.length > 0 && (
+            <div className="mt-6 border-t border-intel-border pt-6 animate-in">
+              <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-4">
+                {t.redditSentiment}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {data.subredditSentiment.map((item) => (
+                  <SubredditSentimentCard key={item.subreddit} item={item} />
+                ))}
               </div>
-            )
-          })()}
+            </div>
+          )}
 
           {/* Prediction markets */}
           {data?.predictionMarkets && data.predictionMarkets.length > 0 && (

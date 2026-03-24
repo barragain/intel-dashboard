@@ -39,6 +39,7 @@ export interface EconomyCard {
   summary: string
   direction: TrendDirection
   status: EconomyStatus
+  sparkline?: { price: number; date: string }[]
 }
 
 export interface EconomiesData {
@@ -94,21 +95,10 @@ export interface InvestmentOpportunity {
   caveat: string
 }
 
-export interface RedditComment {
-  id: string
-  text: string
-  score: number
-  author: string
-}
-
-export interface RedditPost {
-  id: string
-  title: string
-  score: number
-  numComments: number
-  subreddit: string
-  url: string
-  topComments: RedditComment[]
+export interface SubredditSentiment {
+  subreddit: string  // e.g. "wallstreetbets" — no r/ prefix
+  summary: string    // 1-2 plain sentences
+  mood: MarketMood
 }
 
 export interface PredictionMarket {
@@ -124,7 +114,7 @@ export interface SentimentData {
   overallMood: MarketMood
   items: SentimentItem[]
   opportunities: InvestmentOpportunity[]
-  redditPosts?: RedditPost[]
+  subredditSentiment?: SubredditSentiment[]
   predictionMarkets?: PredictionMarket[]
   predictionMarketsAnalysis?: string
   quotes: Quote[]

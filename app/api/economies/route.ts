@@ -30,6 +30,35 @@ async function fetchYF(symbol: string): Promise<{ price: number; change: number;
   }
 }
 
+async function fetchYFSparkline(symbol: string): Promise<{ price: number; date: string }[] | null> {
+  try {
+    const res = await fetch(
+      `${YF_BASE}/${encodeURIComponent(symbol)}?interval=1d&range=1mo`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; INTEL-Dashboard/1.0)',
+          Accept: 'application/json',
+        },
+        next: { revalidate: 0 },
+      },
+    )
+    if (!res.ok) return null
+    const json = await res.json()
+    const result = json?.chart?.result?.[0]
+    const timestamps: number[] = result?.timestamp ?? []
+    const closes: number[] = result?.indicators?.quote?.[0]?.close ?? []
+    if (timestamps.length === 0) return null
+    return timestamps
+      .map((ts, i) => ({
+        price: closes[i] ?? null,
+        date: new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      }))
+      .filter((d) => d.price !== null) as { price: number; date: string }[]
+  } catch {
+    return null
+  }
+}
+
 function fmt(n: number | null | undefined, decimals = 2): string {
   if (n == null || isNaN(n)) return 'N/A'
   return n.toLocaleString('en-US', { maximumFractionDigits: decimals, minimumFractionDigits: decimals })
@@ -64,7 +93,7 @@ export async function GET() {
   if (cached) return NextResponse.json(cached)
 
   // Fetch all symbols in parallel
-  const [spx, vix, dxy, gold, oil, taiex, twd, cac, eur, pyg] = await Promise.all([
+  const [spx, vix, dxy, gold, oil, taiex, twd, cac, eur, pyg, ndx, sox, asus, asusSpark] = await Promise.all([
     fetchYF('^GSPC'),
     fetchYF('^VIX'),
     fetchYF('DX-Y.NYB'),
@@ -75,6 +104,10 @@ export async function GET() {
     fetchYF('^FCHI'),
     fetchYF('EURUSD=X'),
     fetchYF('PYG=X'),
+    fetchYF('^NDX'),
+    fetchYF('^SOX'),
+    fetchYF('2357.TW'),
+    fetchYFSparkline('2357.TW'),
   ])
 
   const economies: EconomyCard[] = [
@@ -171,6 +204,46 @@ export async function GET() {
         summary: `Paraguay's guaraní at ${pyg ? fmt(pyg.price, 0) : 'N/A'} per USD. Paraguay maintains a dollarized trade economy with relatively stable macro fundamentals. GDP growth typically tracks agricultural exports (soy, beef) and hydroelectric energy revenue. Inflation historically moderate. Limited real-time data available for this smaller emerging market.`,
         direction: 'stable',
         status: 'yellow',
+      }
+    })(),
+
+    // 6. Tech Sector
+    (() => {
+      const indicators: EconomyIndicator[] = [
+        { label: 'Nasdaq 100', value: ndx ? fmt(ndx.price, 0) : 'N/A', change: ndx ? fmtPct(ndx.changePercent) : undefined, changeType: changeType(ndx?.changePercent) },
+        { label: 'SOX (Semis)', value: sox ? fmt(sox.price, 0) : 'N/A', change: sox ? fmtPct(sox.changePercent) : undefined, changeType: changeType(sox?.changePercent) },
+        { label: 'VIX', value: vix ? fmt(vix.price) : 'N/A', change: vix ? fmtPct(vix.changePercent) : undefined, changeType: vix ? changeType(-vix.changePercent) : 'neutral' },
+      ]
+      const lead = ndx ?? sox
+      const dir = directionFromPct(lead?.changePercent)
+      const soxDesc = (sox?.changePercent ?? 0) >= 0 ? 'semiconductors advancing' : 'semiconductors under pressure'
+      return {
+        id: 'tech',
+        name: 'Tech Sector',
+        emoji: '💻',
+        indicators,
+        summary: `Nasdaq 100 ${ndx ? (ndx.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(ndx.changePercent).toFixed(1) + '%' : 'data unavailable'} today. ${soxDesc} — SOX at ${sox ? fmt(sox.price, 0) : 'N/A'}, a key read on chip demand from hyperscalers and AI infrastructure. Tech valuations remain sensitive to Fed rate expectations and any signs of slowing cloud or AI spending.`,
+        direction: dir,
+        status: statusFromDirection(dir),
+      }
+    })(),
+
+    // 7. ASUS
+    (() => {
+      const indicators: EconomyIndicator[] = [
+        { label: 'ASUS (2357.TW)', value: asus ? `NT$${fmt(asus.price, 0)}` : 'N/A', change: asus ? fmtPct(asus.changePercent) : undefined, changeType: changeType(asus?.changePercent) },
+        { label: 'TWD/USD', value: twd ? fmt(twd.price) : 'N/A', change: twd ? fmtPct(twd.changePercent) : undefined, changeType: changeType(-(twd?.changePercent ?? 0)) },
+      ]
+      const dir = directionFromPct(asus?.changePercent)
+      return {
+        id: 'asus',
+        name: 'ASUS',
+        emoji: '🖥️',
+        indicators,
+        summary: `ASUS (2357.TW) at NT$${asus ? fmt(asus.price, 0) : 'N/A'}, ${asus ? (asus.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(asus.changePercent).toFixed(1) + '% today' : 'data unavailable'}. ASUS revenue is split across consumer PCs, gaming hardware, components, and servers — the server/AI infrastructure segment is the fastest-growing driver. TWD moves at ${twd ? fmt(twd.price) : 'N/A'} per USD, directly affecting USD-denominated export margins.`,
+        direction: dir,
+        status: statusFromDirection(dir),
+        sparkline: asusSpark ?? undefined,
       }
     })(),
   ]

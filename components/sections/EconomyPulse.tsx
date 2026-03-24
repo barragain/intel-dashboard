@@ -6,6 +6,7 @@ import type { EconomiesData, EconomyCard } from '@/lib/types'
 import TrendArrow from '@/components/ui/TrendArrow'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import Tooltip from '@/components/ui/Tooltip'
+import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
 
 // Map economy IDs to ISO 3166-1 alpha-2 codes for flag-icons
 const FLAG_ISO: Record<string, string> = {
@@ -122,6 +123,59 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
           </div>
         ))}
       </div>
+
+      {/* Sparkline — shown for cards that include price history (e.g. ASUS) */}
+      {card.sparkline && card.sparkline.length > 0 && (
+        <div className="px-4 pt-3 pb-1 border-b border-intel-border">
+          <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wider block mb-1.5">
+            30-day price (NT$)
+          </span>
+          <ResponsiveContainer width="100%" height={72}>
+            <AreaChart data={card.sparkline} margin={{ top: 2, right: 0, left: -28, bottom: 0 }}>
+              <defs>
+                <linearGradient id="asusGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={card.direction === 'deteriorating' ? '#EF4444' : '#22C55E'} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={card.direction === 'deteriorating' ? '#EF4444' : '#22C55E'} stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 9, fill: '#6B7280', fontFamily: 'monospace' }}
+                tickLine={false}
+                axisLine={false}
+                interval={Math.floor(card.sparkline.length / 4)}
+              />
+              <YAxis
+                tick={{ fontSize: 9, fill: '#6B7280', fontFamily: 'monospace' }}
+                tickLine={false}
+                axisLine={false}
+                domain={['auto', 'auto']}
+                tickFormatter={(v) => `${Math.round(v / 1000)}k`}
+              />
+              <RechartsTooltip
+                content={({ active, payload, label }: any) => {
+                  if (!active || !payload?.length) return null
+                  return (
+                    <div className="bg-intel-elevated border border-intel-border rounded px-2 py-1 text-[11px] font-mono">
+                      <div className="text-intel-muted">{label}</div>
+                      <div className="text-intel-text font-bold">NT${Math.round(payload[0].value).toLocaleString()}</div>
+                    </div>
+                  )
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="price"
+                stroke={card.direction === 'deteriorating' ? '#EF4444' : '#22C55E'}
+                strokeWidth={1.5}
+                fill="url(#asusGradient)"
+                dot={false}
+                isAnimationActive={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Summary */}
       <div className="px-4 py-3 flex-1">
