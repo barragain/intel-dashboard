@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getCached, setCached } from '@/lib/cache'
+import { unstable_cache } from 'next/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
 import type { ConflictsData } from '@/lib/types'
 
-const PROMPT = `You are a geopolitical and financial analyst explaining active conflicts and tensions to a general audience. Today: ${new Date().toDateString()}.
+const PROMPT_TEMPLATE = `You are a geopolitical and financial analyst explaining active conflicts and tensions to a general audience. Today: {{DATE}}.
 
 Search the web for what is happening right now with: Taiwan Strait (Chinese military activity, US-China political moves), US trade and tariff policy (especially anything affecting Taiwan or tech companies), Middle East (oil supply, Iran, shipping), Russia-Ukraine (energy prices, how it affects Europe).
 
@@ -44,29 +44,26 @@ Include 4 conflicts. Use real recent events with specific details.
 Include 2–3 real expert quotes from officials, analysts, or military/government sources found via search — exact words only.
 Include 2–3 real news article headlines with publication and date.`
 
+const fetchConflictsData = unstable_cache(
+  async (lang: string) => {
+    const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
+    const text = await searchAndAnalyze(prompt, lang)
+    const parsed = parseJson<Omit<ConflictsData, 'updatedAt'>>(text)
+    return { ...parsed, updatedAt: new Date().toISOString() } as ConflictsData
+  },
+  ['conflicts-data'],
+  { tags: ['ai-data', 'ai-conflicts'], revalidate: false },
+)
+
 export async function GET(request: NextRequest) {
   const lang = getLang(request)
-  const cacheKey = `conflicts_${lang}`
-  const cached = getCached(cacheKey)
-  if (cached) return NextResponse.json(cached)
 
   if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json(
-      { error: 'GEMINI_API_KEY_MISSING', needsApiKey: true },
-      { status: 503 },
-    )
+    return NextResponse.json({ error: 'GEMINI_API_KEY_MISSING', needsApiKey: true }, { status: 503 })
   }
 
   try {
-    const text = await searchAndAnalyze(PROMPT, lang)
-    const parsed = parseJson<Omit<ConflictsData, 'updatedAt'>>(text)
-
-    const data: ConflictsData = {
-      ...parsed,
-      updatedAt: new Date().toISOString(),
-    }
-
-    setCached(cacheKey, data)
+    const data = await fetchConflictsData(lang)
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

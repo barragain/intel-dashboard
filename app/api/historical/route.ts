@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getCached, setCached } from '@/lib/cache'
+import { unstable_cache } from 'next/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
 import type { HistoricalData } from '@/lib/types'
 
-const PROMPT = `You are a financial historian and analyst helping a general audience understand how today's situation compares to historical events, and what experts think is coming next. Today: ${new Date().toDateString()}.
+const PROMPT_TEMPLATE = `You are a financial historian and analyst helping a general audience understand how today's situation compares to historical events, and what experts think is coming next. Today: {{DATE}}.
 
 Search the web for: what is happening in the global economy right now, and what recent public predictions major institutions have made.
 
@@ -51,29 +51,26 @@ Include 3 historical parallels — choose whichever are most relevant to right n
 Include 2–3 real expert quotes from economists or institutional analysts found via search — exact words only.
 Include 2–3 real news article headlines with publication and date.`
 
+const fetchHistoricalData = unstable_cache(
+  async (lang: string) => {
+    const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
+    const text = await searchAndAnalyze(prompt, lang)
+    const parsed = parseJson<Omit<HistoricalData, 'updatedAt'>>(text)
+    return { ...parsed, updatedAt: new Date().toISOString() } as HistoricalData
+  },
+  ['historical-data'],
+  { tags: ['ai-data', 'ai-historical'], revalidate: false },
+)
+
 export async function GET(request: NextRequest) {
   const lang = getLang(request)
-  const cacheKey = `historical_${lang}`
-  const cached = getCached(cacheKey)
-  if (cached) return NextResponse.json(cached)
 
   if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json(
-      { error: 'GEMINI_API_KEY_MISSING', needsApiKey: true },
-      { status: 503 },
-    )
+    return NextResponse.json({ error: 'GEMINI_API_KEY_MISSING', needsApiKey: true }, { status: 503 })
   }
 
   try {
-    const text = await searchAndAnalyze(PROMPT, lang)
-    const parsed = parseJson<Omit<HistoricalData, 'updatedAt'>>(text)
-
-    const data: HistoricalData = {
-      ...parsed,
-      updatedAt: new Date().toISOString(),
-    }
-
-    setCached(cacheKey, data)
+    const data = await fetchHistoricalData(lang)
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

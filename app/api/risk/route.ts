@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getCached, setCached } from '@/lib/cache'
+import { unstable_cache } from 'next/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
 import type { RiskData } from '@/lib/types'
 
-const PROMPT = `You are a financial intelligence analyst helping people understand whether global conditions warrant concern right now. Today: ${new Date().toDateString()}.
+const PROMPT_TEMPLATE = `You are a financial intelligence analyst helping people understand whether global conditions warrant concern right now. Today: {{DATE}}.
 
 Focus areas: Taiwan Strait (military activity, political developments), global oil prices and what is driving them, the VIX fear index, US dollar strength (DXY), ad spending trends in Asia, semiconductor and tech sector health, France and EU economy.
 
@@ -45,29 +45,26 @@ Include exactly 5 drivers: Taiwan Strait, Ad Spend, Tech Sector, France/EU, Mark
 Include 2–3 real expert quotes found via search — exact words only, not paraphrased.
 Include 2–3 real news article headlines with publication and date.`
 
+const fetchRiskData = unstable_cache(
+  async (lang: string) => {
+    const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
+    const text = await searchAndAnalyze(prompt, lang)
+    const parsed = parseJson<Omit<RiskData, 'updatedAt'>>(text)
+    return { ...parsed, updatedAt: new Date().toISOString() } as RiskData
+  },
+  ['risk-data'],
+  { tags: ['ai-data', 'ai-risk'], revalidate: false },
+)
+
 export async function GET(request: NextRequest) {
   const lang = getLang(request)
-  const cacheKey = `risk_${lang}`
-  const cached = getCached(cacheKey)
-  if (cached) return NextResponse.json(cached)
 
   if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json(
-      { error: 'GEMINI_API_KEY_MISSING', needsApiKey: true },
-      { status: 503 },
-    )
+    return NextResponse.json({ error: 'GEMINI_API_KEY_MISSING', needsApiKey: true }, { status: 503 })
   }
 
   try {
-    const text = await searchAndAnalyze(PROMPT, lang)
-    const parsed = parseJson<Omit<RiskData, 'updatedAt'>>(text)
-
-    const data: RiskData = {
-      ...parsed,
-      updatedAt: new Date().toISOString(),
-    }
-
-    setCached(cacheKey, data)
+    const data = await fetchRiskData(lang)
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

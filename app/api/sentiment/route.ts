@@ -1,40 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getCached, setCached } from '@/lib/cache'
+import { unstable_cache } from 'next/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getLang } from '@/lib/lang'
 import { buildSubredditPromptSection } from '@/lib/reddit'
 import { fetchPredictionMarkets, buildPredictionContext } from '@/lib/predictionMarkets'
 import type { SentimentData } from '@/lib/types'
 
-/**
- * Returns a cache key that changes at 09:00 and 21:00 Taiwan time (UTC+8).
- * This means Gemini is called at most twice per day regardless of traffic.
- *
- * Slot A: 01:00–13:00 UTC  =  09:00–21:00 Taiwan (morning slot)
- * Slot B: 13:00–01:00 UTC  =  21:00–09:00 Taiwan (evening slot)
- */
-function getSentimentSlotKey(lang: string): string {
-  const now = new Date()
-  const utcH = now.getUTCHours()
-  let slotDate = now.toISOString().slice(0, 10) // YYYY-MM-DD
-  let slotName: string
-
-  if (utcH >= 13) {
-    slotName = 'evening'
-  } else if (utcH >= 1) {
-    slotName = 'morning'
-  } else {
-    // 00:00–00:59 UTC = still in the previous day's evening slot
-    const prev = new Date(now.getTime() - 24 * 3600 * 1000)
-    slotDate = prev.toISOString().slice(0, 10)
-    slotName = 'evening'
-  }
-
-  return `sentiment_${lang}_${slotDate}_${slotName}`
-}
-
-const PROMPT = `You are a financial analyst helping a general audience understand the current market mood and whether it is a good time to invest. Today: ${new Date().toDateString()}.
+const PROMPT_TEMPLATE = `You are a financial analyst helping a general audience understand the current market mood and whether it is a good time to invest. Today: {{DATE}}.
 
 Focus on investors interested in global markets with exposure to Asia and Europe — particularly those new to investing who hold or are considering global stocks, ETFs, and crypto.
 
@@ -92,37 +65,30 @@ Include 5 sentiment items: 2 community items (cite subreddits found via search, 
 Include 2–3 real expert quotes from analysts, fund managers, or economists found via search — exact words only.
 Include 2–3 real news article headlines with publication and date.`
 
+const fetchSentimentData = unstable_cache(
+  async (lang: string) => {
+    const { markets: predictionMarkets } = await fetchPredictionMarkets()
+    const prompt =
+      PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString()) +
+      buildSubredditPromptSection() +
+      buildPredictionContext(predictionMarkets)
+    const text = await searchAndAnalyze(prompt, lang)
+    const parsed = parseJson<Omit<SentimentData, 'updatedAt' | 'predictionMarkets'>>(text)
+    return { ...parsed, predictionMarkets, updatedAt: new Date().toISOString() } as SentimentData
+  },
+  ['sentiment-data'],
+  { tags: ['ai-data', 'ai-sentiment'], revalidate: false },
+)
+
 export async function GET(request: NextRequest) {
   const lang = getLang(request)
-  const cacheKey = getSentimentSlotKey(lang)
-  const cached = getCached(cacheKey)
-  if (cached) return NextResponse.json(cached)
 
   if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json(
-      { error: 'GEMINI_API_KEY_MISSING', needsApiKey: true },
-      { status: 503 },
-    )
+    return NextResponse.json({ error: 'GEMINI_API_KEY_MISSING', needsApiKey: true }, { status: 503 })
   }
 
   try {
-    const { markets: predictionMarkets } = await fetchPredictionMarkets()
-
-    const fullPrompt =
-      PROMPT +
-      buildSubredditPromptSection() +
-      buildPredictionContext(predictionMarkets)
-
-    const text = await searchAndAnalyze(fullPrompt, lang)
-    const parsed = parseJson<Omit<SentimentData, 'updatedAt' | 'predictionMarkets'>>(text)
-
-    const data: SentimentData = {
-      ...parsed,
-      predictionMarkets,
-      updatedAt: new Date().toISOString(),
-    }
-
-    setCached(cacheKey, data)
+    const data = await fetchSentimentData(lang)
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
