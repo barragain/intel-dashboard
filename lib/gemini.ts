@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { SYSTEM_CONTEXT } from '@/lib/context'
 
 // Cast to bypass strict typing on the googleSearch grounding tool,
 // which is not yet reflected in the SDK's Tool type definitions.
@@ -8,6 +9,7 @@ type AnyModelParams = {
 type AnyGenerateParams = {
   contents: { role: string; parts: { text: string }[] }[]
   tools?: unknown[]
+  generationConfig?: { maxOutputTokens?: number }
 }
 
 const LANG_SUFFIX: Record<string, string> = {
@@ -15,24 +17,82 @@ const LANG_SUFFIX: Record<string, string> = {
   es: '\n\nYou must respond entirely in Spanish. Every single word of your response must be in Spanish — all summaries, quotes, labels, explanations, field values, and descriptions. Do not use any English words anywhere in the JSON output.',
 }
 
+function makeModel(apiKey: string) {
+  const genAI = new GoogleGenerativeAI(apiKey)
+  const getModel = genAI.getGenerativeModel.bind(genAI) as (params: AnyModelParams) => {
+    generateContent: (params: AnyGenerateParams) => Promise<{ response: { text: () => string } }>
+  }
+  return getModel({ model: 'gemini-2.5-flash' })
+}
+
+/**
+ * Call Gemini WITH Google Search grounding enabled.
+ * Use for sections that need live, authoritative data: Historical Context,
+ * Analyst/Expert Voices, Taiwan, Paraguay.
+ * max_tokens: 150
+ */
 export async function searchAndAnalyze(prompt: string, lang = 'en'): Promise<string> {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY_MISSING')
   }
 
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-  const getModel = genAI.getGenerativeModel.bind(genAI) as (params: AnyModelParams) => {
-    generateContent: (params: AnyGenerateParams) => Promise<{ response: { text: () => string } }>
-  }
-
-  const model = getModel({ model: 'gemini-2.5-flash' })
+  const model = makeModel(process.env.GEMINI_API_KEY)
 
   try {
-    const fullPrompt = LANG_SUFFIX[lang] ? `${prompt}${LANG_SUFFIX[lang]}` : prompt
+    const fullPrompt = [SYSTEM_CONTEXT, prompt, LANG_SUFFIX[lang] ?? ''].filter(Boolean).join('\n\n')
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
       tools: [{ googleSearch: {} }],
+      generationConfig: { maxOutputTokens: 150 },
+    })
+    const text = result.response.text()
+    if (!text || text.trim() === '') throw new Error('EMPTY_RESPONSE')
+    return text
+  } catch (err) {
+    const status = (err as { status?: number }).status
+    if (status === 429) throw new Error('RATE_LIMIT_EXCEEDED')
+    throw err
+  }
+}
+
+/**
+ * Call Gemini WITHOUT search grounding, using pre-fetched news headlines as context.
+ * Use for: Market Sentiment, Crypto Signal, Conflict Tracker, EU/France,
+ * Tech Sector, Community Sentiment.
+ * max_tokens: 150
+ *
+ * @param headlines  Recent headlines fetched from lib/news.ts
+ * @param prompt     The analysis prompt (should request compact JSON or 2-3 sentence summary)
+ * @param lang       Response language (en/fr/es)
+ */
+export async function analyzeWithContext(
+  headlines: Array<{ title: string; source: string; date: string }>,
+  prompt: string,
+  lang = 'en',
+): Promise<string> {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY_MISSING')
+  }
+
+  const model = makeModel(process.env.GEMINI_API_KEY)
+
+  const headlineList = headlines
+    .slice(0, 8)
+    .map(
+      (h) =>
+        `- ${h.title} (${h.source}, ${new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})`,
+    )
+    .join('\n')
+
+  const newsBlock = `Based on these recent headlines:\n${headlineList}`
+  const fullPrompt = [SYSTEM_CONTEXT, newsBlock, prompt, LANG_SUFFIX[lang] ?? ''].filter(Boolean).join('\n\n')
+
+  try {
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      // No tools — search grounding intentionally disabled
+      generationConfig: { maxOutputTokens: 150 },
     })
     const text = result.response.text()
     if (!text || text.trim() === '') throw new Error('EMPTY_RESPONSE')

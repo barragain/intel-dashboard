@@ -1,58 +1,49 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { unstable_cache } from 'next/cache'
-import { searchAndAnalyze, parseJson } from '@/lib/gemini'
+import { analyzeWithContext, parseJson } from '@/lib/gemini'
+import { fetchNews } from '@/lib/news'
+import { USER_CONTEXT } from '@/lib/context'
+import { getCached, setCached } from '@/lib/cache'
 import { getLang } from '@/lib/lang'
 import { getAISlot } from '@/lib/aiSlot'
 import type { RiskData } from '@/lib/types'
 
-const PROMPT_TEMPLATE = `You are a financial intelligence analyst helping people understand whether global conditions warrant concern right now. Today: {{DATE}}.
+// Search grounding DISABLED — context comes from pre-fetched news headlines.
+// Topics covered: Tech Sector, EU/France, Market Fear, Taiwan Strait, Ad Spend.
 
-Focus areas: Taiwan Strait (military activity, political developments), global oil prices and what is driving them, the VIX fear index, US dollar strength (DXY), ad spending trends in Asia, semiconductor and tech sector health, France and EU economy.
+const PROMPT = `Given this user context: ${USER_CONTEXT}
 
-Search the web for the latest developments on these topics.
+Return ONLY compact JSON. Max 10 words per text field. Plain English, no jargon. Score guide: 0-33=STABLE, 34-66=WATCH, 67-100=WORRIED.
 
-WRITING RULES — follow these strictly:
-- Plain English only. Anyone who never reads financial news should understand every word.
-- Banned words and phrases: geopolitical headwinds, macroeconomic uncertainty, risk-off sentiment, yield curve dynamics, hawkish, dovish, liquidity concerns, market volatility regime, escalation dynamics, systemic risk, headwinds, tailwinds, normalize, inflection point, de-risking, elevated uncertainty, remain cautious.
-- Be specific and direct. "Taiwan Strait tensions rose this week after China sent warships near the island" not "geopolitical risks in the region remain elevated."
-- Say what actually happened. Name the thing. Give the number. Say the country.
-- If something is bad news, say so. If it is fine, say so. Do not soften bad news or inflate good news.
-- Short sentences. One idea per sentence.
+{"status":"STABLE|WATCH|WORRIED","score":0-100,"explanation":"2 short sentences about what is actually happening right now.","drivers":[{"name":"Taiwan Strait","impact":"positive|negative|neutral","detail":"1 short sentence."},{"name":"Ad Spend","impact":"positive|negative|neutral","detail":"1 short sentence."},{"name":"Tech Sector","impact":"positive|negative|neutral","detail":"1 short sentence."},{"name":"France/EU","impact":"positive|negative|neutral","detail":"1 short sentence."},{"name":"Market Fear","impact":"positive|negative|neutral","detail":"1 short sentence."}],"quotes":[],"sources":[]}
 
-Return ONLY this JSON:
-{
-  "status": "STABLE" | "WATCH" | "WORRIED",
-  "score": <0–100, where 0=everything is calm, 100=crisis mode>,
-  "explanation": "<2–3 plain-English sentences about what is actually happening right now and the overall risk level>",
-  "drivers": [
-    {
-      "name": "<max 20 chars>",
-      "impact": "positive"|"negative"|"neutral",
-      "detail": "<one plain-English sentence about what is happening with this specific thing today — be specific, name the actual event or number>",
-      "whyItMatters": "<2 plain-English sentences: why this driver matters to investors and workers in Taiwan and Europe right now, with specific reference to job markets, savings, or cost of living. No jargon.>"
-    }
-  ],
-  "quotes": [
-    { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date found via search>" }
-  ],
-  "sources": [
-    { "title": "<article headline>", "source": "<publication name>", "date": "<publication date>" }
+All 5 drivers required. Leave quotes and sources as empty arrays.`
+
+async function generateRiskData(lang: string): Promise<RiskData> {
+  const [tech, eu, fear, tw, adspend] = await Promise.all([
+    fetchNews('tech sector semiconductor earnings AI'),
+    fetchNews('france eu economy market'),
+    fetchNews('global market fear volatility VIX'),
+    fetchNews('taiwan strait security'),
+    fetchNews('global advertising spending digital'),
+  ])
+  const headlines = [
+    ...tech.slice(0, 2),
+    ...eu.slice(0, 2),
+    ...fear.slice(0, 2),
+    ...tw.slice(0, 2),
+    ...adspend.slice(0, 1),
   ]
+  const text = await analyzeWithContext(headlines, PROMPT, lang)
+  const parsed = parseJson<Omit<RiskData, 'updatedAt'>>(text)
+  return { ...parsed, updatedAt: new Date().toISOString() } as RiskData
 }
 
-Score guide: 0–33 = STABLE (things are fine), 34–66 = WATCH (worth paying attention to), 67–100 = WORRIED (take action or be careful).
-Include exactly 5 drivers: Taiwan Strait, Ad Spend, Tech Sector, France/EU, Market Fear.
-Include 2–3 real expert quotes found via search — exact words only, not paraphrased.
-Include 2–3 real news article headlines with publication and date.`
-
-const fetchRiskData = unstable_cache(
-  async (lang: string, _slot: string) => {
-    const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
-    const text = await searchAndAnalyze(prompt, lang)
-    const parsed = parseJson<Omit<RiskData, 'updatedAt'>>(text)
-    return { ...parsed, updatedAt: new Date().toISOString() } as RiskData
-  },
+// EN only: keyed by slot, warmed by the cron job at each slot rollover.
+// FR/ES are never stored here — they use the in-memory cache below.
+const fetchRiskEN = unstable_cache(
+  (_slot: string) => generateRiskData('en'),
   ['risk-data'],
   { revalidate: false },
 )
@@ -65,7 +56,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const data = await fetchRiskData(lang, getAISlot())
+    if (lang === 'en') {
+      return NextResponse.json(await fetchRiskEN(getAISlot()))
+    }
+
+    // FR/ES: on-demand only — generated when a user requests that language,
+    // cached in the in-memory store (24h TTL via the 'risk' key prefix).
+    const cacheKey = `risk_${lang}`
+    const cached = getCached(cacheKey)
+    if (cached) return NextResponse.json(cached)
+
+    const data = await generateRiskData(lang)
+    setCached(cacheKey, data)
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

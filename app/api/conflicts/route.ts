@@ -1,57 +1,47 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { unstable_cache } from 'next/cache'
-import { searchAndAnalyze, parseJson } from '@/lib/gemini'
+import { analyzeWithContext, parseJson } from '@/lib/gemini'
+import { fetchNews } from '@/lib/news'
+import { USER_CONTEXT } from '@/lib/context'
+import { getCached, setCached } from '@/lib/cache'
 import { getLang } from '@/lib/lang'
 import { getAISlot } from '@/lib/aiSlot'
 import type { ConflictsData } from '@/lib/types'
 
-const PROMPT_TEMPLATE = `You are a geopolitical and financial analyst explaining active conflicts and tensions to a general audience. Today: {{DATE}}.
+// Search grounding DISABLED — context comes from pre-fetched news headlines.
+// Topics covered: Taiwan Strait, US-China trade, Middle East, Russia-Ukraine.
 
-Search the web for what is happening right now with: Taiwan Strait (Chinese military activity, US-China political moves), US trade and tariff policy (especially anything affecting Taiwan or tech companies), Middle East (oil supply, Iran, shipping), Russia-Ukraine (energy prices, how it affects Europe).
+const PROMPT = `Given this user context: ${USER_CONTEXT}
 
-WRITING RULES — follow these strictly:
-- Plain English only. No jargon.
-- Banned phrases: geopolitical tensions, escalation dynamics, flashpoint, strategic competition, destabilizing factors, risk factors, macro environment, heightened uncertainty. Say what is actually happening.
-- Be specific. "China sent 36 warplanes near Taiwan on Monday" not "increased military activity near Taiwan." Use real events, real numbers, real dates.
-- Connect to real-world impact. "Oil rising means higher fuel and shipping costs globally" not "energy price increases may impact consumer discretionary spending."
-- If something is getting worse, say so and explain what it could lead to in simple terms.
-- Short sentences.
+Return ONLY compact JSON. Max 10 words per text field. Plain English, no jargon.
 
-Return ONLY this JSON:
-{
-  "conflicts": [
-    {
-      "id": "string",
-      "name": "<conflict name>",
-      "location": "<region or country>",
-      "relevance": "<1 plain-English sentence: why this matters to investors, workers in the tech or media industries, and people in Taiwan or Europe>",
-      "status": "escalating"|"stable"|"de-escalating",
-      "keyImpact": "<what it actually affects in plain terms: oil prices, tech supply chains, job markets, cost of living>",
-      "details": "<2 sentences of specific current facts — real events, real numbers where available>",
-      "headlines": ["<exact headline of a real article you found via search about this conflict, with publication name and date>", "<second headline if available>"]
-    }
-  ],
-  "overallAssessment": "<2 plain-English sentences: what the overall picture looks like right now and what this person should be paying attention to>",
-  "quotes": [
-    { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date found via search>" }
-  ],
-  "sources": [
-    { "title": "<article headline>", "source": "<publication name>", "date": "<publication date>" }
+{"conflicts":[{"id":"1","name":"...","location":"...","relevance":"...","status":"escalating|stable|de-escalating","keyImpact":"...","details":"...","headlines":["..."]},{"id":"2","name":"...","location":"...","relevance":"...","status":"escalating|stable|de-escalating","keyImpact":"...","details":"...","headlines":["..."]}],"overallAssessment":"2 sentences — what matters most to this user right now.","quotes":[],"sources":[]}
+
+2 conflicts only. Leave quotes and sources as empty arrays.`
+
+async function generateConflictsData(lang: string): Promise<ConflictsData> {
+  const [tw, trade, mideast, ru] = await Promise.all([
+    fetchNews('taiwan strait china military'),
+    fetchNews('us china trade tariffs technology'),
+    fetchNews('middle east oil conflict'),
+    fetchNews('russia ukraine war energy'),
+  ])
+  const headlines = [
+    ...tw.slice(0, 2),
+    ...trade.slice(0, 2),
+    ...mideast.slice(0, 2),
+    ...ru.slice(0, 2),
   ]
+  const text = await analyzeWithContext(headlines, PROMPT, lang)
+  const parsed = parseJson<Omit<ConflictsData, 'updatedAt'>>(text)
+  return { ...parsed, updatedAt: new Date().toISOString() } as ConflictsData
 }
 
-Include 4 conflicts. Use real recent events with specific details.
-Include 2–3 real expert quotes from officials, analysts, or military/government sources found via search — exact words only.
-Include 2–3 real news article headlines with publication and date.`
-
-const fetchConflictsData = unstable_cache(
-  async (lang: string, _slot: string) => {
-    const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
-    const text = await searchAndAnalyze(prompt, lang)
-    const parsed = parseJson<Omit<ConflictsData, 'updatedAt'>>(text)
-    return { ...parsed, updatedAt: new Date().toISOString() } as ConflictsData
-  },
+// EN only: keyed by slot, warmed by the cron job at each slot rollover.
+// FR/ES are never stored here — they use the in-memory cache below.
+const fetchConflictsEN = unstable_cache(
+  (_slot: string) => generateConflictsData('en'),
   ['conflicts-data'],
   { revalidate: false },
 )
@@ -64,7 +54,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const data = await fetchConflictsData(lang, getAISlot())
+    if (lang === 'en') {
+      return NextResponse.json(await fetchConflictsEN(getAISlot()))
+    }
+
+    // FR/ES: on-demand only — generated when a user requests that language,
+    // cached in the in-memory store (24h TTL via the 'conflicts' key prefix).
+    const cacheKey = `conflicts_${lang}`
+    const cached = getCached(cacheKey)
+    if (cached) return NextResponse.json(cached)
+
+    const data = await generateConflictsData(lang)
+    setCached(cacheKey, data)
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

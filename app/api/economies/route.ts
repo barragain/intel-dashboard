@@ -230,8 +230,13 @@ export async function GET() {
 
     // 7. ASUS
     (() => {
+      const twdRate = twd?.price ?? null
+      const asusUsd = asus && twdRate ? { price: asus.price / twdRate, changePercent: asus.changePercent } : null
+      const asusSparkUsd = asusSpark && twdRate
+        ? asusSpark.map((d) => ({ ...d, price: d.price / twdRate }))
+        : asusSpark ?? null
       const indicators: EconomyIndicator[] = [
-        { label: 'ASUS (2357.TW)', value: asus ? `NT$${fmt(asus.price, 0)}` : 'N/A', change: asus ? fmtPct(asus.changePercent) : undefined, changeType: changeType(asus?.changePercent) },
+        { label: 'ASUS (2357.TW)', value: asusUsd ? `$${fmt(asusUsd.price, 2)}` : 'N/A', change: asus ? fmtPct(asus.changePercent) : undefined, changeType: changeType(asus?.changePercent) },
         { label: 'TWD/USD', value: twd ? fmt(twd.price) : 'N/A', change: twd ? fmtPct(twd.changePercent) : undefined, changeType: changeType(-(twd?.changePercent ?? 0)) },
       ]
       const dir = directionFromPct(asus?.changePercent)
@@ -240,10 +245,10 @@ export async function GET() {
         name: 'ASUS',
         emoji: '🖥️',
         indicators,
-        summary: `ASUS (2357.TW) at NT$${asus ? fmt(asus.price, 0) : 'N/A'}, ${asus ? (asus.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(asus.changePercent).toFixed(1) + '% today' : 'data unavailable'}. ASUS revenue is split across consumer PCs, gaming hardware, components, and servers — the server/AI infrastructure segment is the fastest-growing driver. TWD moves at ${twd ? fmt(twd.price) : 'N/A'} per USD, directly affecting USD-denominated export margins.`,
+        summary: `ASUS (2357.TW) at $${asusUsd ? fmt(asusUsd.price, 2) : 'N/A'} USD, ${asus ? (asus.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(asus.changePercent).toFixed(1) + '% today' : 'data unavailable'}. ASUS revenue is split across consumer PCs, gaming hardware, components, and servers — the server/AI infrastructure segment is the fastest-growing driver. TWD moves at ${twd ? fmt(twd.price) : 'N/A'} per USD, directly affecting USD-denominated export margins.`,
         direction: dir,
         status: statusFromDirection(dir),
-        sparkline: asusSpark ?? undefined,
+        sparkline: asusSparkUsd ?? undefined,
       }
     })(),
   ]

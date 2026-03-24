@@ -11,6 +11,14 @@ import type { NextRequest } from 'next/server'
  * This cron fires right as the slot rolls over and warms all routes
  * immediately, so users always hit a pre-populated cache.
  *
+ * Language strategy:
+ *   EN  — always pre-cached here. Each route uses unstable_cache keyed
+ *          only by slot (no lang arg), so hitting ?lang=en fills the
+ *          persistent cache that all subsequent EN requests will hit.
+ *   FR/ES — intentionally excluded. Those languages use the in-memory
+ *          getCached/setCached store and are populated on first user
+ *          request only. They are never pre-warmed.
+ *
  * Protect with CRON_SECRET env var in Vercel project settings.
  * Vercel automatically sends: Authorization: Bearer <CRON_SECRET>
  */

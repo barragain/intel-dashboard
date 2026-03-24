@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server'
 import { getCached, setCached } from '@/lib/cache'
+import { analyzeWithContext, parseJson } from '@/lib/gemini'
+import { fetchNews } from '@/lib/news'
+import { USER_CONTEXT } from '@/lib/context'
 import type { CryptoData } from '@/lib/types'
 
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3'
 const FEAR_GREED_URL = 'https://api.alternative.me/fng/?limit=30'
+
+// Search grounding DISABLED — Crypto Signal uses news headlines as context.
+
+const CRYPTO_PROMPT = `Given this user context: ${USER_CONTEXT}
+
+Return ONLY this JSON (be concise):
+{"interpretation":"2 sentences: what current crypto market conditions mean for this user specifically.","macroSignal":"short signal phrase, e.g. RISK-OFF or CAUTIOUS or RISK-ON"}`
 
 function fearGreedLabel(score: number): string {
   if (score <= 24) return 'Extreme Fear'
@@ -13,6 +23,7 @@ function fearGreedLabel(score: number): string {
   return 'Extreme Greed'
 }
 
+// Fallback deterministic interpretation used if Gemini is unavailable
 function buildInterpretation(score: number, btcChange7d: number, totalCapChange24h: number): string {
   const label = fearGreedLabel(score)
   const capDir = totalCapChange24h >= 0 ? 'up' : 'down'
@@ -32,7 +43,7 @@ function buildInterpretation(score: number, btcChange7d: number, totalCapChange2
   return `Crypto sentiment is in ${label} territory at ${score}/100. This level of exuberance has historically preceded corrections. While positive in the short term, extreme greed can signal overextension — worth being cautious about entering new positions at elevated levels.`
 }
 
-function macroSignal(score: number): string {
+function macroSignalFallback(score: number): string {
   if (score <= 24) return 'RISK-OFF — broad market fear, defensive positioning'
   if (score <= 44) return 'CAUTIOUS — moderate risk aversion, selective exposure'
   if (score <= 55) return 'NEUTRAL — wait-and-see, macro uncertainty'
@@ -98,6 +109,24 @@ export async function GET() {
 
     const btcChange7d = assets.find((a) => a.id === 'bitcoin')?.priceChange7d ?? 0
 
+    // Start with deterministic fallbacks
+    let interpretation = buildInterpretation(fearGreedIndex, btcChange7d, totalMarketCapChange24h)
+    let macroSignal = macroSignalFallback(fearGreedIndex)
+
+    // Enhance with news-grounded AI interpretation if Gemini is available
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const cryptoHeadlines = await fetchNews('bitcoin cryptocurrency market news')
+        const aiText = await analyzeWithContext(cryptoHeadlines.slice(0, 5), CRYPTO_PROMPT)
+        const aiJson = parseJson<{ interpretation: string; macroSignal: string }>(aiText)
+        if (aiJson.interpretation) interpretation = aiJson.interpretation
+        if (aiJson.macroSignal) macroSignal = aiJson.macroSignal
+      } catch (err) {
+        // Gemini unavailable or rate-limited — deterministic fallback stays in place
+        console.warn('[crypto] Gemini analysis skipped:', err instanceof Error ? err.message : err)
+      }
+    }
+
     const data: CryptoData = {
       assets,
       totalMarketCap,
@@ -105,8 +134,8 @@ export async function GET() {
       fearGreedIndex,
       fearGreedLabel: fearGreedLabel(fearGreedIndex),
       fearGreedHistory,
-      interpretation: buildInterpretation(fearGreedIndex, btcChange7d, totalMarketCapChange24h),
-      macroSignal: macroSignal(fearGreedIndex),
+      interpretation,
+      macroSignal,
       updatedAt: new Date().toISOString(),
     }
 

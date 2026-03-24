@@ -128,7 +128,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
       {card.sparkline && card.sparkline.length > 0 && (
         <div className="px-4 pt-3 pb-1 border-b border-intel-border">
           <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wider block mb-1.5">
-            30-day price (NT$)
+            30-day price (USD)
           </span>
           <ResponsiveContainer width="100%" height={72}>
             <AreaChart data={card.sparkline} margin={{ top: 2, right: 0, left: -28, bottom: 0 }}>
@@ -150,7 +150,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
                 tickLine={false}
                 axisLine={false}
                 domain={['auto', 'auto']}
-                tickFormatter={(v) => `${Math.round(v / 1000)}k`}
+                tickFormatter={(v) => `$${v.toFixed(0)}`}
               />
               <RechartsTooltip
                 content={({ active, payload, label }: any) => {
@@ -158,7 +158,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
                   return (
                     <div className="bg-intel-elevated border border-intel-border rounded px-2 py-1 text-[11px] font-mono">
                       <div className="text-intel-muted">{label}</div>
-                      <div className="text-intel-text font-bold">NT${Math.round(payload[0].value).toLocaleString()}</div>
+                      <div className="text-intel-text font-bold">${payload[0].value.toFixed(2)}</div>
                     </div>
                   )
                 }}
