@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { unstable_cache } from 'next/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
-import { USER_CONTEXT } from '@/lib/context'
 import { getCached, setCached } from '@/lib/cache'
 import { getLang } from '@/lib/lang'
 import { getAISlot } from '@/lib/aiSlot'
@@ -11,17 +10,51 @@ import type { HistoricalData } from '@/lib/types'
 // Search grounding ENABLED — Historical Context and Analyst/Expert Voices sections
 // need live, authoritative data that requires Google Search to verify.
 
-const PROMPT_TEMPLATE = `You are a financial historian. Today: {{DATE}}.
+const PROMPT_TEMPLATE = `You are a financial historian and analyst helping a general audience understand how today's situation compares to historical events, and what experts think is coming next. Today: {{DATE}}.
 
-Search the web for: the single most relevant historical parallel to current global conditions, plus 2 real recent institutional predictions.
+Search the web for: what is happening in the global economy right now, and what recent public predictions major institutions have made.
 
-Given user context: ${USER_CONTEXT}
+WRITING RULES — follow these strictly:
+- Plain English only. Write for someone who knows nothing about financial history.
+- When you describe a historical event, focus on what happened to regular people: did they lose jobs? Did prices double? Did savings get wiped out? How long did it last? Was it a rough year or a rough decade?
+- Connect past to present clearly: say what is similar and what is different. Do not just list events — explain why the comparison is useful.
+- For predictions: say what the institution thinks will happen, when, and why. Be specific. "Goldman Sachs thinks there is a 35% chance of a US recession by end of 2025 because consumer spending is slowing" not "Goldman maintains a cautious outlook given prevailing macroeconomic conditions."
+- If experts disagree, say so. Do not smooth everything into consensus.
+- Banned phrases: macroeconomic parallels, structural similarities, recessionary pressures, normalization, tightening cycle, soft landing, hard landing, elevated volatility, uncertainty environment. Say the actual thing.
+- Short sentences.
 
-Return ONLY compact JSON. 1 short sentence per text field. Plain English.
+Return ONLY this JSON:
+{
+  "parallels": [
+    {
+      "id": "<string>",
+      "currentSituation": "<1 plain sentence: what is happening right now>",
+      "historicalEvent": "<event name>",
+      "period": "<year or range>",
+      "whatHappened": "<2 sentences: what actually happened to markets, jobs, and prices back then — be specific with numbers and timeframes>",
+      "personalImplication": "<1-2 sentences: what this history lesson means for investors in Asian markets and Europe, and for people in tech or media industries>"
+    }
+  ],
+  "predictions": [
+    {
+      "source": "<institution or analyst name>",
+      "prediction": "<2 plain sentences: what they actually think will happen and why — quote specific numbers or timeframes if they gave them>",
+      "timeframe": "<specific timeframe, e.g. end of 2025 or Q2 2026>",
+      "sentiment": "optimistic"|"pessimistic"|"neutral",
+      "confidence": "high"|"medium"|"low"
+    }
+  ],
+  "quotes": [
+    { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date found via search>" }
+  ],
+  "sources": [
+    { "title": "<article headline>", "source": "<publication name>", "date": "<publication date>" }
+  ]
+}
 
-{"parallels":[{"id":"1","currentSituation":"1 sentence about right now.","historicalEvent":"event name","period":"year or range","whatHappened":"1 sentence — real numbers, real impact.","personalImplication":"1 sentence — what this means for this user specifically."}],"predictions":[{"source":"institution name","prediction":"1 sentence — specific number or timeframe.","timeframe":"e.g. end of 2025","sentiment":"optimistic|pessimistic|neutral","confidence":"high|medium|low"},{"source":"institution name","prediction":"1 sentence — specific number or timeframe.","timeframe":"e.g. Q2 2026","sentiment":"optimistic|pessimistic|neutral","confidence":"high|medium|low"}],"quotes":[],"sources":[]}
-
-1 parallel (most relevant to today). 2 predictions from real institutions (IMF, Goldman Sachs, JP Morgan, World Bank). Leave quotes and sources as empty arrays.`
+Include 3 historical parallels — choose whichever are most relevant to right now from: 2008 financial crisis, 2020 COVID crash, 1970s oil shocks, 1997 Asian financial crisis, 1996 Taiwan Strait crisis. Include 4-5 predictions from real institutions (IMF, Goldman Sachs, JP Morgan, World Bank, Morgan Stanley) — use their most recent public statements found via search.
+Include 2–3 real expert quotes from economists or institutional analysts found via search — exact words only.
+Include 2–3 real news article headlines with publication and date.`
 
 async function generateHistoricalData(lang: string): Promise<HistoricalData> {
   const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())

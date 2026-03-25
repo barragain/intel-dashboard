@@ -3,7 +3,6 @@ import type { NextRequest } from 'next/server'
 import { unstable_cache } from 'next/cache'
 import { analyzeWithContext, parseJson } from '@/lib/gemini'
 import { fetchNews } from '@/lib/news'
-import { USER_CONTEXT } from '@/lib/context'
 import { getCached, setCached } from '@/lib/cache'
 import { getLang } from '@/lib/lang'
 import { getAISlot } from '@/lib/aiSlot'
@@ -12,13 +11,42 @@ import type { ConflictsData } from '@/lib/types'
 // Search grounding DISABLED — context comes from pre-fetched news headlines.
 // Topics covered: Taiwan Strait, US-China trade, Middle East, Russia-Ukraine.
 
-const PROMPT = `Given this user context: ${USER_CONTEXT}
+const PROMPT_TEMPLATE = `You are a geopolitical and financial analyst explaining active conflicts and tensions to a general audience. Today: {{DATE}}.
 
-Return ONLY compact JSON. Max 10 words per text field. Plain English, no jargon.
+WRITING RULES — follow these strictly:
+- Plain English only. No jargon.
+- Banned phrases: geopolitical tensions, escalation dynamics, flashpoint, strategic competition, destabilizing factors, risk factors, macro environment, heightened uncertainty. Say what is actually happening.
+- Be specific. "China sent 36 warplanes near Taiwan on Monday" not "increased military activity near Taiwan." Use real events, real numbers, real dates from the headlines provided.
+- Connect to real-world impact. "Oil rising means higher fuel and shipping costs globally" not "energy price increases may impact consumer discretionary spending."
+- If something is getting worse, say so and explain what it could lead to in simple terms.
+- Short sentences.
 
-{"conflicts":[{"id":"1","name":"...","location":"...","relevance":"...","status":"escalating|stable|de-escalating","keyImpact":"...","details":"...","headlines":["..."]},{"id":"2","name":"...","location":"...","relevance":"...","status":"escalating|stable|de-escalating","keyImpact":"...","details":"...","headlines":["..."]}],"overallAssessment":"2 sentences — what matters most to this user right now.","quotes":[],"sources":[]}
+Return ONLY this JSON:
+{
+  "conflicts": [
+    {
+      "id": "string",
+      "name": "<conflict name>",
+      "location": "<region or country>",
+      "relevance": "<1 plain-English sentence: why this matters to investors, workers in the tech or media industries, and people in Taiwan or Europe>",
+      "status": "escalating"|"stable"|"de-escalating",
+      "keyImpact": "<what it actually affects in plain terms: oil prices, tech supply chains, job markets, cost of living>",
+      "details": "<2 sentences of specific current facts — real events, real numbers where available from the headlines>",
+      "headlines": ["<exact headline from the news context about this conflict, with source name>", "<second headline if available>"]
+    }
+  ],
+  "overallAssessment": "<2 plain-English sentences: what the overall picture looks like right now and what this person should be paying attention to>",
+  "quotes": [
+    { "text": "<exact quote>", "author": "<full name>", "institution": "<organization>", "date": "<date>" }
+  ],
+  "sources": [
+    { "title": "<article headline>", "source": "<publication name>", "date": "<publication date>" }
+  ]
+}
 
-2 conflicts only. Leave quotes and sources as empty arrays.`
+Include 4 conflicts: Taiwan Strait, US-China trade/tariffs, Middle East, Russia-Ukraine. Use specific details from the headlines provided.
+Include 2–3 real expert quotes from the news context — exact words only, not paraphrased.
+Include 2–3 real news article headlines with publication and date from the context provided.`
 
 async function generateConflictsData(lang: string): Promise<ConflictsData> {
   const [tw, trade, mideast, ru] = await Promise.all([
@@ -33,7 +61,8 @@ async function generateConflictsData(lang: string): Promise<ConflictsData> {
     ...mideast.slice(0, 2),
     ...ru.slice(0, 2),
   ]
-  const text = await analyzeWithContext(headlines, PROMPT, lang)
+  const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
+  const text = await analyzeWithContext(headlines, prompt, lang)
   const parsed = parseJson<Omit<ConflictsData, 'updatedAt'>>(text)
   return { ...parsed, updatedAt: new Date().toISOString() } as ConflictsData
 }
