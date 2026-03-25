@@ -25,11 +25,15 @@ function makeModel(apiKey: string) {
   return getModel({ model: 'gemini-2.5-flash' })
 }
 
+// Injected before every prompt to prevent Gemini from writing prose
+// before the JSON when search grounding is active.
+const JSON_ENFORCEMENT =
+  'IMPORTANT: Your entire response must be valid JSON starting with { — no preamble, no explanation, no markdown fences, no text before or after the JSON object.'
+
 /**
  * Call Gemini WITH Google Search grounding enabled.
  * Use for sections that need live, authoritative data: Historical Context,
  * Analyst/Expert Voices, Taiwan, Paraguay.
- * max_tokens: 150
  */
 export async function searchAndAnalyze(prompt: string, lang = 'en'): Promise<string> {
   if (!process.env.GEMINI_API_KEY) {
@@ -39,12 +43,12 @@ export async function searchAndAnalyze(prompt: string, lang = 'en'): Promise<str
   const model = makeModel(process.env.GEMINI_API_KEY)
 
   try {
-    const fullPrompt = [SYSTEM_CONTEXT, prompt, LANG_SUFFIX[lang] ?? ''].filter(Boolean).join('\n\n')
+    const fullPrompt = [SYSTEM_CONTEXT, JSON_ENFORCEMENT, prompt, LANG_SUFFIX[lang] ?? ''].filter(Boolean).join('\n\n')
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
       tools: [{ googleSearch: {} }],
-      generationConfig: { maxOutputTokens: 150 },
+      generationConfig: { maxOutputTokens: 8192 },
     })
     const text = result.response.text()
     if (!text || text.trim() === '') throw new Error('EMPTY_RESPONSE')
@@ -60,7 +64,6 @@ export async function searchAndAnalyze(prompt: string, lang = 'en'): Promise<str
  * Call Gemini WITHOUT search grounding, using pre-fetched news headlines as context.
  * Use for: Market Sentiment, Crypto Signal, Conflict Tracker, EU/France,
  * Tech Sector, Community Sentiment.
- * max_tokens: 150
  *
  * @param headlines  Recent headlines fetched from lib/news.ts
  * @param prompt     The analysis prompt (should request compact JSON or 2-3 sentence summary)
@@ -86,13 +89,13 @@ export async function analyzeWithContext(
     .join('\n')
 
   const newsBlock = `Based on these recent headlines:\n${headlineList}`
-  const fullPrompt = [SYSTEM_CONTEXT, newsBlock, prompt, LANG_SUFFIX[lang] ?? ''].filter(Boolean).join('\n\n')
+  const fullPrompt = [SYSTEM_CONTEXT, JSON_ENFORCEMENT, newsBlock, prompt, LANG_SUFFIX[lang] ?? ''].filter(Boolean).join('\n\n')
 
   try {
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
       // No tools — search grounding intentionally disabled
-      generationConfig: { maxOutputTokens: 150 },
+      generationConfig: { maxOutputTokens: 8192 },
     })
     const text = result.response.text()
     if (!text || text.trim() === '') throw new Error('EMPTY_RESPONSE')
@@ -126,6 +129,11 @@ export function parseJson<T>(text: string): T {
   const lastBrace = raw.lastIndexOf('}')
   const lastBracket = raw.lastIndexOf(']')
   const end = Math.max(lastBrace, lastBracket)
+
+  // Guard: if no closing delimiter found after the opening brace, JSON is truncated
+  if (end < start) {
+    throw new Error(`JSON truncated — no closing delimiter. Response preview: ${raw.slice(start, start + 300)}`)
+  }
 
   try {
     return JSON.parse(raw.slice(start, end + 1)) as T
