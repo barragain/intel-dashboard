@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/lib/i18n'
-import { fmtTimestamp } from '@/lib/utils'
 import type { ConflictsData, Conflict } from '@/lib/types'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { AlertTriangle, RefreshCw, KeyRound, Newspaper } from 'lucide-react'
@@ -20,7 +19,16 @@ const STATUS_DOT_COLORS: Record<string, string> = {
   'de-escalating': 'bg-risk-stable',
 }
 
-function ConflictCard({ conflict, t }: { conflict: Conflict; t: ReturnType<typeof useLanguage>['t'] }) {
+function fmtDate(iso: string | undefined): string {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  } catch {
+    return ''
+  }
+}
+
+function ConflictCard({ conflict, updatedAt, t }: { conflict: Conflict; updatedAt: string; t: ReturnType<typeof useLanguage>['t'] }) {
   const [expanded, setExpanded] = useState(false)
   const [hovered, setHovered] = useState(false)
   const tKey = STATUS_TKEYS[conflict.status]
@@ -38,7 +46,7 @@ function ConflictCard({ conflict, t }: { conflict: Conflict; t: ReturnType<typeo
               <Newspaper size={11} className="text-intel-gold flex-shrink-0" />
               <span className="text-[11px] font-mono text-intel-gold uppercase tracking-wider">{t.latestHeadline}</span>
             </div>
-            <p className="text-[13px] text-zinc-300 leading-relaxed">{firstHeadline}</p>
+            <p className="text-[13px] text-zinc-300 leading-relaxed">{firstHeadline.text}</p>
             <span className="absolute top-full left-6 border-[5px] border-transparent border-t-[#27272A]" aria-hidden="true" />
           </div>
         </div>
@@ -97,13 +105,33 @@ function ConflictCard({ conflict, t }: { conflict: Conflict; t: ReturnType<typeo
               </div>
               <div className="space-y-1.5">
                 {conflict.headlines.map((h, i) => (
-                  <p key={i} className="text-[13px] text-intel-dim leading-relaxed pl-3 border-l border-intel-border">
-                    {h}
-                  </p>
+                  <div key={i} className="pl-3 border-l border-intel-border">
+                    {h.url ? (
+                      <a
+                        href={h.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[13px] text-intel-dim leading-relaxed hover:text-intel-gold hover:underline transition-colors"
+                      >
+                        {h.text}
+                      </a>
+                    ) : (
+                      <p className="text-[13px] text-intel-dim leading-relaxed">{h.text}</p>
+                    )}
+                    {h.date && (
+                      <span className="text-[11px] font-mono text-intel-dim/60 mt-0.5 block">{fmtDate(h.date)}</span>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           )}
+          {/* Analysis date */}
+          <div className="pt-2 border-t border-intel-border/20">
+            <span className="text-[11px] font-mono text-intel-dim/60">
+              {t.dataFrom} {new Date(updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
         </div>
       )}
     </div>
@@ -185,7 +213,7 @@ export default function ConflictTracker() {
                 {data.overallAssessment}
               </p>
               {data.conflicts.map((conflict) => (
-                <ConflictCard key={conflict.id} conflict={conflict} t={t} />
+                <ConflictCard key={conflict.id} conflict={conflict} updatedAt={data.updatedAt} t={t} />
               ))}
               <div className="flex items-center justify-between pt-1">
                 <NextRefresh />

@@ -111,11 +111,10 @@ function MiniSparkline({ data, color, id }: { data: { price: number; date: strin
   )
 }
 
-// Green if today's change is positive, red if negative.
-// Paraguay's first indicator already has changeType inverted in the route.
-function sparklineColor(changeType: string | undefined): string {
-  if (changeType === 'negative') return '#EF4444'
-  return '#22C55E'
+// Uses explicit sparklineGreen flag set in the route (bypasses 0.05% deadband).
+// true = green, false = red, undefined = green (fallback)
+function sparklineColor(green: boolean | undefined): string {
+  return green === false ? '#EF4444' : '#22C55E'
 }
 
 /** Global card — wide layout with 6 indicators each showing a mini sparkline */
@@ -201,7 +200,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
   const statusColor = STATUS_COLORS[card.status]
   const cardTip = firstSentence(card.summary)
   const metricTips = getMetricTips(t)
-  const sparkColor = sparklineColor(card.indicators[0]?.changeType)
+  const sparkColor = sparklineColor(card.sparklineGreen)
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">

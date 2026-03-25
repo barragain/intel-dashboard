@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { unstable_cache } from 'next/cache'
 import { analyzeWithContext, parseJson } from '@/lib/gemini'
 import { fetchNews } from '@/lib/news'
+import type { NewsHeadline } from '@/lib/news'
 import { getCached, setCached } from '@/lib/cache'
 import { getLang } from '@/lib/lang'
 import { getAISlot } from '@/lib/aiSlot'
@@ -44,9 +45,25 @@ Return ONLY this JSON:
   ]
 }
 
-Include 4 conflicts: Taiwan Strait, US-China trade/tariffs, Middle East, Russia-Ukraine. Use specific details from the headlines provided.
+Include 5 conflicts: Taiwan Strait, US-China trade/tariffs, Middle East, Russia-Ukraine, and one more active conflict or tension from the headlines (pick whichever is most relevant to investors in Taiwan and Europe). Use specific details from the headlines provided.
 Include 2–3 real expert quotes from the news context — exact words only, not paraphrased.
 Include 2–3 real news article headlines with publication and date from the context provided.`
+
+/** Match Gemini-generated headline strings back to original NewsHeadline objects for URL/date enrichment. */
+function enrichHeadlines(
+  strs: string[],
+  pool: NewsHeadline[],
+): { text: string; url?: string; date?: string }[] {
+  return strs.map((text) => {
+    const lower = text.toLowerCase()
+    const match = pool.find((h) => {
+      const ht = h.title.toLowerCase()
+      // Check if either string starts with the same 35 characters
+      return lower.includes(ht.substring(0, 35)) || ht.includes(lower.substring(0, 35))
+    })
+    return { text, url: match?.url || undefined, date: match?.date || undefined }
+  })
+}
 
 async function generateConflictsData(lang: string): Promise<ConflictsData> {
   const [tw, trade, mideast, ru] = await Promise.all([
@@ -55,6 +72,7 @@ async function generateConflictsData(lang: string): Promise<ConflictsData> {
     fetchNews('middle east oil conflict'),
     fetchNews('russia ukraine war energy'),
   ])
+  const allHeadlines = [...tw, ...trade, ...mideast, ...ru]
   const headlines = [
     ...tw.slice(0, 2),
     ...trade.slice(0, 2),
@@ -64,7 +82,15 @@ async function generateConflictsData(lang: string): Promise<ConflictsData> {
   const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
   const text = await analyzeWithContext(headlines, prompt, lang)
   const parsed = parseJson<Omit<ConflictsData, 'updatedAt'>>(text)
-  return { ...parsed, updatedAt: new Date().toISOString() } as ConflictsData
+  // Enrich conflict headlines with real URLs from fetchNews results
+  const enriched = {
+    ...parsed,
+    conflicts: (parsed.conflicts ?? []).map((c) => ({
+      ...c,
+      headlines: enrichHeadlines((c.headlines as unknown as string[]) ?? [], allHeadlines),
+    })),
+  }
+  return { ...enriched, updatedAt: new Date().toISOString() } as ConflictsData
 }
 
 // EN only: keyed by slot, warmed by the cron job at each slot rollover.

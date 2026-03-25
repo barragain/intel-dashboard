@@ -21,8 +21,10 @@ function secondsUntilNextSlot(): number {
 function fmt(sec: number): string {
   const h = Math.floor(sec / 3600)
   const m = Math.floor((sec % 3600) / 60)
-  if (h > 0) return `${h}h ${m}m`
-  return `${m}m`
+  const s = sec % 60
+  if (h > 0) return `${h}h ${m}m ${s}s`
+  if (m > 0) return `${m}m ${s}s`
+  return `${s}s`
 }
 
 /**
@@ -34,7 +36,7 @@ export default function NextRefresh() {
   useEffect(() => {
     const update = () => setLabel(fmt(secondsUntilNextSlot()))
     update()
-    const id = setInterval(update, 30_000)
+    const id = setInterval(update, 1_000)
     return () => clearInterval(id)
   }, [])
 

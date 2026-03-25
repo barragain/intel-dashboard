@@ -265,6 +265,9 @@ export default function RiskMeter() {
                           </span>
                         </div>
                         <p className="text-[13px] text-intel-muted leading-relaxed">{driver.detail}</p>
+                        <p className="text-[10px] font-mono text-intel-dim/60 mt-1.5">
+                          {new Date(data.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
                         {driver.whyItMatters && (
                           <span className="absolute top-2 right-2 text-[10px] text-intel-dim group-hover:text-intel-gold/60 transition-colors" aria-hidden="true">?</span>
                         )}

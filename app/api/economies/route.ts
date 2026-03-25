@@ -189,6 +189,7 @@ export async function GET() {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: spxSpark ?? undefined,
+        sparklineGreen: (spx?.changePercent ?? 0) >= 0,
       }
     })(),
 
@@ -208,6 +209,7 @@ export async function GET() {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: taiexSpark ?? undefined,
+        sparklineGreen: (taiex?.changePercent ?? 0) >= 0,
       }
     })(),
 
@@ -227,6 +229,7 @@ export async function GET() {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: cacSpark ?? undefined,
+        sparklineGreen: (cac?.changePercent ?? 0) >= 0,
       }
     })(),
 
@@ -244,6 +247,7 @@ export async function GET() {
         direction: directionFromPct(-(pyg?.changePercent ?? 0)), // invert: dollar up = bad for guaraní
         status: statusFromDirection(directionFromPct(-(pyg?.changePercent ?? 0))),
         sparkline: pygSpark ?? undefined,
+        sparklineGreen: (pyg?.changePercent ?? 0) <= 0, // inverted: dollar down = green for Paraguay
       }
     })(),
 
@@ -265,6 +269,7 @@ export async function GET() {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: ndxSpark ?? undefined,
+        sparklineGreen: ((ndx ?? sox)?.changePercent ?? 0) >= 0,
       }
     })(),
 
@@ -289,6 +294,7 @@ export async function GET() {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: asusSparkUsd ?? undefined,
+        sparklineGreen: (asus?.changePercent ?? 0) >= 0,
       }
     })(),
   ]

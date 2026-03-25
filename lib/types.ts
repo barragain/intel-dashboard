@@ -41,6 +41,7 @@ export interface EconomyCard {
   direction: TrendDirection
   status: EconomyStatus
   sparkline?: { price: number; date: string }[]
+  sparklineGreen?: boolean // true = green, false = red (bypasses 0.05% deadband)
 }
 
 export interface EconomiesData {
@@ -60,7 +61,7 @@ export interface Conflict {
   status: ConflictStatus
   keyImpact: string
   details: string
-  headlines?: string[] // 1-2 real news headlines from search grounding
+  headlines?: { text: string; url?: string; date?: string }[] // clickable news headlines
 }
 
 export interface ConflictsData {
