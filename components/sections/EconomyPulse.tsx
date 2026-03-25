@@ -111,12 +111,11 @@ function MiniSparkline({ data, color, id }: { data: { price: number; date: strin
   )
 }
 
-// Returns green/red based on 30-day net change (last vs first price in sparkline).
-// Pass inverted=true for metrics where up = bad (e.g. PYG/USD for Paraguay).
-function sparklineColor(data: { price: number }[] | undefined, inverted = false): string {
-  if (!data || data.length < 2) return '#22C55E'
-  const isUp = data[data.length - 1].price >= data[0].price
-  return (inverted ? !isUp : isUp) ? '#22C55E' : '#EF4444'
+// Green if today's change is positive, red if negative.
+// Paraguay's first indicator already has changeType inverted in the route.
+function sparklineColor(changeType: string | undefined): string {
+  if (changeType === 'negative') return '#EF4444'
+  return '#22C55E'
 }
 
 /** Global card — wide layout with 6 indicators each showing a mini sparkline */
@@ -202,8 +201,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
   const statusColor = STATUS_COLORS[card.status]
   const cardTip = firstSentence(card.summary)
   const metricTips = getMetricTips(t)
-  // Paraguay is inverted: dollar going UP = PYG weakening = bad (red)
-  const sparkColor = sparklineColor(card.sparkline, card.id === 'paraguay')
+  const sparkColor = sparklineColor(card.indicators[0]?.changeType)
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
