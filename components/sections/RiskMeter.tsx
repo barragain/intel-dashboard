@@ -6,6 +6,7 @@ import { fmtTimestamp } from '@/lib/utils'
 import type { RiskData } from '@/lib/types'
 import { AlertTriangle, RefreshCw, KeyRound } from 'lucide-react'
 import Tooltip from '@/components/ui/Tooltip'
+import NextRefresh from '@/components/ui/NextRefresh'
 
 function SectionHeader({ label, subtitle }: { label: string; subtitle: string }) {
   return (
@@ -274,9 +275,10 @@ export default function RiskMeter() {
               )}
 
               {/* Timestamp */}
-              <div className="mt-4 flex items-center justify-end">
+              <div className="mt-4 flex items-center justify-between">
+                <NextRefresh />
                 <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
-                  {t.dataFrom} {fmtTimestamp(data.updatedAt)}
+                  {t.dataFrom} {new Date(data.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             </div>

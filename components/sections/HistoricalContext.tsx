@@ -5,6 +5,7 @@ import { useLanguage } from '@/lib/i18n'
 import { fmtTimestamp } from '@/lib/utils'
 import type { HistoricalData, HistoricalParallel, ExpertPrediction } from '@/lib/types'
 import { AlertTriangle, RefreshCw, KeyRound, Clock, BookOpen } from 'lucide-react'
+import NextRefresh from '@/components/ui/NextRefresh'
 import StatusBadge from '@/components/ui/StatusBadge'
 
 const SENTIMENT_CONFIG: Record<string, { tKey: 'optimistic' | 'pessimistic' | 'neutral'; color: string }> = {
@@ -133,11 +134,14 @@ export default function HistoricalContext() {
             </h2>
             <p className="text-sm text-intel-muted mt-0.5">{t.section6Subtitle}</p>
           </div>
-          {data && (
-            <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
-              {t.dataFrom} {fmtTimestamp(data.updatedAt)}
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            <NextRefresh />
+            {data && (
+              <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
+                {new Date(data.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="p-6">

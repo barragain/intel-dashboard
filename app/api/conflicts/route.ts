@@ -14,12 +14,12 @@ import type { ConflictsData } from '@/lib/types'
 const PROMPT_TEMPLATE = `You are a geopolitical and financial analyst explaining active conflicts and tensions to a general audience. Today: {{DATE}}.
 
 WRITING RULES — follow these strictly:
-- Plain English only. No jargon.
-- Banned phrases: geopolitical tensions, escalation dynamics, flashpoint, strategic competition, destabilizing factors, risk factors, macro environment, heightened uncertainty. Say what is actually happening.
-- Be specific. "China sent 36 warplanes near Taiwan on Monday" not "increased military activity near Taiwan." Use real events, real numbers, real dates from the headlines provided.
-- Connect to real-world impact. "Oil rising means higher fuel and shipping costs globally" not "energy price increases may impact consumer discretionary spending."
-- If something is getting worse, say so and explain what it could lead to in simple terms.
-- Short sentences.
+- Write for a smart adult who does not read geopolitics or finance news regularly. Simple words only.
+- Banned phrases: geopolitical tensions, escalation dynamics, flashpoint, strategic competition, destabilizing factors, risk factors, macro environment, heightened uncertainty. Say what is actually happening in plain words.
+- Be specific and use the headlines provided. "China sent 36 warplanes near Taiwan on Monday" not "increased military activity near Taiwan."
+- Connect to real everyday life. "Oil going up means you pay more for fuel and shipping costs go up for everything you buy" not "energy price increases may impact consumer discretionary spending."
+- If something is getting worse, say so clearly and explain what it could mean for regular people.
+- Short sentences. Maximum 2 sentences per field.
 
 Return ONLY this JSON:
 {

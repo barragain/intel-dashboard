@@ -15,12 +15,12 @@ const PROMPT_TEMPLATE = `You are a financial historian and analyst helping a gen
 Search the web for: what is happening in the global economy right now, and what recent public predictions major institutions have made.
 
 WRITING RULES — follow these strictly:
-- Plain English only. Write for someone who knows nothing about financial history.
-- When you describe a historical event, focus on what happened to regular people: did they lose jobs? Did prices double? Did savings get wiped out? How long did it last? Was it a rough year or a rough decade?
-- Connect past to present clearly: say what is similar and what is different. Do not just list events — explain why the comparison is useful.
-- For predictions: say what the institution thinks will happen, when, and why. Be specific. "Goldman Sachs thinks there is a 35% chance of a US recession by end of 2025 because consumer spending is slowing" not "Goldman maintains a cautious outlook given prevailing macroeconomic conditions."
-- If experts disagree, say so. Do not smooth everything into consensus.
-- Banned phrases: macroeconomic parallels, structural similarities, recessionary pressures, normalization, tightening cycle, soft landing, hard landing, elevated volatility, uncertainty environment. Say the actual thing.
+- Write for a smart adult who knows nothing about financial history. Use simple everyday words.
+- When you describe a historical event, focus on what happened to normal people: did they lose their jobs? Did prices double at the supermarket? Did people lose their savings? How long did it last?
+- Connect past to present in a clear and useful way. Say what is similar and what is different. Do not just mention events — explain why the comparison helps understand today.
+- For predictions: be very specific. "Goldman Sachs thinks there is a 35% chance of a US recession by end of 2025 because people are spending less" not "Goldman maintains a cautious outlook given prevailing conditions."
+- If experts disagree with each other, say so clearly.
+- Banned phrases: macroeconomic parallels, structural similarities, recessionary pressures, normalization, tightening cycle, soft landing, hard landing, elevated volatility, uncertainty environment, price action. Say the actual thing.
 - Short sentences.
 
 Return ONLY this JSON:

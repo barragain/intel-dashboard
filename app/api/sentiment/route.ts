@@ -18,12 +18,11 @@ Focus on investors interested in global markets with exposure to Asia and Europe
 Search the web for: how investors are feeling right now (scared or confident?), what major banks and analysts are actually saying about the next 6-12 months, prediction market odds on recession or interest rate changes, and investment options relevant to global, Asian, and European markets.
 
 WRITING RULES — follow these strictly:
-- Plain English only. Write like you're explaining to a smart friend who just asked "so, should I put money in the market right now?"
-- Banned phrases: risk-off, risk-on, hawkish, dovish, yield curve, price-to-earnings multiples, macro headwinds, liquidity, alpha, beta, portfolio rebalancing, de-risking, sector rotation. Say what you mean in plain words.
-- Be direct. "Most investors are nervous right now because the US economy might slow down" not "sentiment indicators reflect elevated uncertainty amid recessionary concerns."
-- For investment ideas: say clearly what it is and why you'd consider buying it now. What are you betting on? What actually goes wrong if it doesn't work?
-- Don't make anything sound safer or riskier than it actually is. If returns are uncertain, say so.
-- Short sentences.
+- Write like you're explaining to a smart friend who doesn't work in finance. Use everyday words.
+- Banned phrases: risk-off, risk-on, hawkish, dovish, yield curve, price-to-earnings multiples, macro headwinds, liquidity, alpha, beta, portfolio rebalancing, de-risking, sector rotation, price action. Say what you mean in plain words.
+- Be direct and specific. "Most investors are nervous because the US economy might slow down" not "sentiment indicators reflect elevated uncertainty."
+- For investment ideas: clearly say what it is, what you are betting on, and what could go wrong. Be realistic — do not oversell.
+- Short sentences. Write at a level where someone whose first language is not English can still understand every word.
 
 Return ONLY this JSON:
 {

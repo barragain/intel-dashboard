@@ -6,6 +6,7 @@ import { fmtTimestamp } from '@/lib/utils'
 import type { SentimentData, InvestmentOpportunity, SubredditSentiment, PredictionMarket } from '@/lib/types'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { AlertTriangle, RefreshCw, KeyRound, Calculator, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react'
+import NextRefresh from '@/components/ui/NextRefresh'
 
 const MOOD_TKEYS: Record<string, 'bullish' | 'bearish' | 'neutral' | 'fearful'> = {
   bullish: 'bullish', bearish: 'bearish', neutral: 'neutral', fearful: 'fearful',
@@ -397,9 +398,10 @@ export default function MarketSentiment() {
           )}
 
           {data && (
-            <div className="mt-4 flex items-center justify-end">
+            <div className="mt-4 flex items-center justify-between">
+              <NextRefresh />
               <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
-                {t.dataFrom} {fmtTimestamp(data.updatedAt)}
+                {t.dataFrom} {new Date(data.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           )}

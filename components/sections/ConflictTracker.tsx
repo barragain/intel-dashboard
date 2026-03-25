@@ -6,6 +6,7 @@ import { fmtTimestamp } from '@/lib/utils'
 import type { ConflictsData, Conflict } from '@/lib/types'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { AlertTriangle, RefreshCw, KeyRound, Newspaper } from 'lucide-react'
+import NextRefresh from '@/components/ui/NextRefresh'
 
 const STATUS_TKEYS: Record<string, 'escalating' | 'conflictStable' | 'deEscalating'> = {
   escalating: 'escalating',
@@ -186,9 +187,10 @@ export default function ConflictTracker() {
               {data.conflicts.map((conflict) => (
                 <ConflictCard key={conflict.id} conflict={conflict} t={t} />
               ))}
-              <div className="flex items-center justify-end pt-1">
+              <div className="flex items-center justify-between pt-1">
+                <NextRefresh />
                 <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
-                  {t.dataFrom} {fmtTimestamp(data.updatedAt)}
+                  {t.dataFrom} {new Date(data.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             </div>

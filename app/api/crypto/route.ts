@@ -12,8 +12,10 @@ const FEAR_GREED_URL = 'https://api.alternative.me/fng/?limit=30'
 
 const CRYPTO_PROMPT = `Given this user context: ${USER_CONTEXT}
 
-Return ONLY this JSON (be concise):
-{"interpretation":"2 sentences: what current crypto market conditions mean for this user specifically.","macroSignal":"short signal phrase, e.g. RISK-OFF or CAUTIOUS or RISK-ON"}`
+Write in plain, simple English — as if explaining to someone who does not read finance news every day. Avoid jargon completely.
+
+Return ONLY this JSON:
+{"interpretation":"2 short sentences: what crypto markets are doing right now and what that means for this user in practical terms.","macroSignal":"short signal phrase, e.g. RISK-OFF or CAUTIOUS or RISK-ON"}`
 
 function fearGreedLabel(score: number): string {
   if (score <= 24) return 'Extreme Fear'
@@ -58,7 +60,7 @@ export async function GET() {
   try {
     const [coinsRes, globalRes, fngRes] = await Promise.allSettled([
       fetch(
-        `${COINGECKO_BASE}/coins/markets?vs_currency=usd&ids=bitcoin,ethereum&sparkline=false&price_change_percentage=7d`,
+        `${COINGECKO_BASE}/coins/markets?vs_currency=usd&ids=bitcoin,ethereum&sparkline=true&price_change_percentage=7d`,
         { headers: { Accept: 'application/json' }, next: { revalidate: 0 } },
       ),
       fetch(`${COINGECKO_BASE}/global`, {
@@ -83,6 +85,7 @@ export async function GET() {
         priceChange24h: c.price_change_percentage_24h ?? 0,
         priceChange7d: c.price_change_percentage_7d_in_currency ?? 0,
         marketCap: c.market_cap,
+        sparkline: (c.sparkline_in_7d as { price?: number[] } | undefined)?.price ?? undefined,
       }))
     }
 

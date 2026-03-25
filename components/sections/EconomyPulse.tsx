@@ -7,6 +7,7 @@ import TrendArrow from '@/components/ui/TrendArrow'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import Tooltip from '@/components/ui/Tooltip'
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
+import NextRefresh from '@/components/ui/NextRefresh'
 
 // Map economy IDs to ISO 3166-1 alpha-2 codes for flag-icons
 const FLAG_ISO: Record<string, string> = {
@@ -114,7 +115,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
               <span className="text-sm font-mono font-semibold text-intel-text tabular-nums">
                 {ind.value}
               </span>
-              {ind.change && (
+              {ind.change && ind.change !== 'N/A' && (
                 <span className={`text-[13px] font-mono ${CHANGE_COLORS[ind.changeType ?? 'neutral']}`}>
                   {ind.change}
                 </span>
@@ -128,12 +129,12 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
       {card.sparkline && card.sparkline.length > 0 && (
         <div className="px-4 pt-3 pb-1 border-b border-intel-border">
           <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wider block mb-1.5">
-            30-day price (USD)
+            30-day chart
           </span>
           <ResponsiveContainer width="100%" height={72}>
             <AreaChart data={card.sparkline} margin={{ top: 2, right: 0, left: -28, bottom: 0 }}>
               <defs>
-                <linearGradient id="asusGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={`econ-spark-${card.id}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={card.direction === 'deteriorating' ? '#EF4444' : '#22C55E'} stopOpacity={0.3} />
                   <stop offset="95%" stopColor={card.direction === 'deteriorating' ? '#EF4444' : '#22C55E'} stopOpacity={0.02} />
                 </linearGradient>
@@ -168,7 +169,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
                 dataKey="price"
                 stroke={card.direction === 'deteriorating' ? '#EF4444' : '#22C55E'}
                 strokeWidth={1.5}
-                fill="url(#asusGradient)"
+                fill={`url(#econ-spark-${card.id})`}
                 dot={false}
                 isAnimationActive={false}
               />
@@ -236,11 +237,14 @@ export default function EconomyPulse() {
             </h2>
             <p className="text-sm text-intel-muted mt-0.5">{t.section2Subtitle}</p>
           </div>
-          {data && (
-            <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
-              {new Date(data.updatedAt).toLocaleTimeString()}
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            <NextRefresh />
+            {data && (
+              <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
+                {new Date(data.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="p-6">

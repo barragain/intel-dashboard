@@ -93,7 +93,8 @@ export async function GET() {
   if (cached) return NextResponse.json(cached)
 
   // Fetch all symbols in parallel
-  const [spx, vix, dxy, gold, oil, taiex, twd, cac, eur, pyg, ndx, sox, asus, asusSpark] = await Promise.all([
+  const [spx, vix, dxy, gold, oil, taiex, twd, cac, eur, pyg, ndx, sox, asus,
+         spxSpark, taiexSpark, cacSpark, ndxSpark, asusSpark] = await Promise.all([
     fetchYF('^GSPC'),
     fetchYF('^VIX'),
     fetchYF('DX-Y.NYB'),
@@ -107,6 +108,10 @@ export async function GET() {
     fetchYF('^NDX'),
     fetchYF('^SOX'),
     fetchYF('2357.TW'),
+    fetchYFSparkline('^GSPC'),
+    fetchYFSparkline('^TWII'),
+    fetchYFSparkline('^FCHI'),
+    fetchYFSparkline('^NDX'),
     fetchYFSparkline('2357.TW'),
   ])
 
@@ -130,9 +135,10 @@ export async function GET() {
         name: 'Global',
         emoji: '🌐',
         indicators,
-        summary: `S&P 500 ${spx ? (spx.changePercent >= 0 ? 'rose' : 'fell') + ' ' + Math.abs(spx.changePercent).toFixed(1) + '%' : 'data unavailable'} today. VIX at ${vix ? fmt(vix.price) : 'N/A'} signals ${vixDesc}. DXY ${dxy ? (dxy.changePercent >= 0 ? 'strengthened' : 'weakened') : 'moved'}, reflecting ${(dxy?.changePercent ?? 0) > 0 ? 'dollar demand and risk-off flows' : 'dollar softening amid risk appetite'}.`,
+        summary: `S&P 500 ${spx ? (spx.changePercent >= 0 ? 'went up' : 'went down') + ' ' + Math.abs(spx.changePercent).toFixed(1) + '%' : 'data unavailable'} today. The VIX fear index is at ${vix ? fmt(vix.price) : 'N/A'} — ${vixDesc}. The US dollar (DXY) ${dxy ? (dxy.changePercent >= 0 ? 'got stronger' : 'got weaker') : 'moved'}, which means ${(dxy?.changePercent ?? 0) > 0 ? 'investors are moving money to safe assets' : 'investors feel more comfortable taking risks'}.`,
         direction: dir,
         status: statusFromDirection(dir),
+        sparkline: spxSpark ?? undefined,
       }
     })(),
 
@@ -149,9 +155,10 @@ export async function GET() {
         name: 'United States',
         emoji: '🇺🇸',
         indicators,
-        summary: `US equities ${spx ? (spx.changePercent >= 0 ? 'advancing' : 'retreating') : 'mixed'} with S&P 500 at ${spx ? fmt(spx.price, 0) : 'N/A'}. VIX at ${vix ? fmt(vix.price) : 'N/A'} — ${(vix?.price ?? 20) > 25 ? 'elevated, suggesting investor anxiety about macro risks including Fed policy and trade tensions' : 'contained, suggesting relative confidence in near-term economic stability'}. Fed policy uncertainty continues to be the dominant driver of market direction.`,
+        summary: `US stocks are ${spx ? (spx.changePercent >= 0 ? 'up' : 'down') + ' today, with the S&P 500 at ' + fmt(spx.price, 0) : 'mixed today'}. The fear index (VIX) is at ${vix ? fmt(vix.price) : 'N/A'} — ${(vix?.price ?? 20) > 25 ? 'high, meaning many investors are worried' : 'low, meaning investors feel fairly calm'}. The US central bank (the Fed) and its interest rate decisions are still the biggest thing moving markets.`,
         direction: dir,
         status: statusFromDirection(dir),
+        sparkline: spxSpark ?? undefined,
       }
     })(),
 
@@ -167,9 +174,10 @@ export async function GET() {
         name: 'Taiwan',
         emoji: '🇹🇼',
         indicators,
-        summary: `TAIEX ${taiex ? (taiex.changePercent >= 0 ? 'gaining' : 'losing') + ' ' + Math.abs(taiex.changePercent).toFixed(1) + '%' : 'data unavailable'}. TWD at ${twd ? fmt(twd.price) : 'N/A'} per USD — ${(twd?.changePercent ?? 0) > 0 ? 'currency weakening, potentially supporting exports but signaling capital outflows' : 'currency stable or strengthening, reflecting regional confidence'}. Taiwan semiconductor sector remains globally critical; TSMC's performance is a proxy for the tech supply chain's health.`,
+        summary: `Taiwan's stock market (TAIEX) is ${taiex ? (taiex.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(taiex.changePercent).toFixed(1) + '%' : 'data unavailable'} today. The Taiwan dollar is at ${twd ? fmt(twd.price) : 'N/A'} per US dollar — ${(twd?.changePercent ?? 0) > 0 ? 'it got weaker, which can help companies that export goods but also shows money leaving the country' : 'it held steady or got stronger, a sign of confidence in the region'}. Taiwan makes a huge share of the world's computer chips, so its market often moves with global tech demand.`,
         direction: dir,
         status: statusFromDirection(dir),
+        sparkline: taiexSpark ?? undefined,
       }
     })(),
 
@@ -185,9 +193,10 @@ export async function GET() {
         name: 'France',
         emoji: '🇫🇷',
         indicators,
-        summary: `CAC 40 at ${cac ? fmt(cac.price, 0) : 'N/A'}, ${cac ? (cac.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(cac.changePercent).toFixed(1) + '% today' : 'data unavailable'}. EUR/USD at ${eur ? fmt(eur.price, 4) : 'N/A'}, ${(eur?.changePercent ?? 0) >= 0 ? 'euro holding ground as ECB signals cautious approach to rate cuts' : 'euro under pressure amid diverging EU economic outlooks'}. EU reconstruction and defense spending remain key themes for French industrials and infrastructure.`,
+        summary: `France's main stock index (CAC 40) is at ${cac ? fmt(cac.price, 0) : 'N/A'}, ${cac ? (cac.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(cac.changePercent).toFixed(1) + '% today' : 'data unavailable'}. The euro is at ${eur ? fmt(eur.price, 4) : 'N/A'} per US dollar — ${(eur?.changePercent ?? 0) >= 0 ? 'holding steady as the European Central Bank takes a careful approach to cutting interest rates' : 'under some pressure as different EU countries have different economic situations'}. Defense and infrastructure spending across Europe is growing and supporting some French companies.`,
         direction: dir,
         status: statusFromDirection(dir),
+        sparkline: cacSpark ?? undefined,
       }
     })(),
 
@@ -201,7 +210,7 @@ export async function GET() {
         name: 'Paraguay',
         emoji: '🇵🇾',
         indicators,
-        summary: `Paraguay's guaraní at ${pyg ? fmt(pyg.price, 0) : 'N/A'} per USD. Paraguay maintains a dollarized trade economy with relatively stable macro fundamentals. GDP growth typically tracks agricultural exports (soy, beef) and hydroelectric energy revenue. Inflation historically moderate. Limited real-time data available for this smaller emerging market.`,
+        summary: `Paraguay's guaraní is at ${pyg ? fmt(pyg.price, 0) : 'N/A'} per US dollar. Paraguay's economy is mostly based on farming exports like soy and beef, plus electricity from its giant Itaipú dam. Inflation is usually manageable. It is a smaller economy with limited live market data, but it is generally stable.`,
         direction: 'stable',
         status: 'yellow',
       }
@@ -222,9 +231,10 @@ export async function GET() {
         name: 'Tech Sector',
         emoji: '💻',
         indicators,
-        summary: `Nasdaq 100 ${ndx ? (ndx.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(ndx.changePercent).toFixed(1) + '%' : 'data unavailable'} today. ${soxDesc} — SOX at ${sox ? fmt(sox.price, 0) : 'N/A'}, a key read on chip demand from hyperscalers and AI infrastructure. Tech valuations remain sensitive to Fed rate expectations and any signs of slowing cloud or AI spending.`,
+        summary: `The Nasdaq 100 (big US tech stocks) is ${ndx ? (ndx.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(ndx.changePercent).toFixed(1) + '%' : 'data unavailable'} today. ${soxDesc === 'semiconductors advancing' ? 'Chip companies are doing well' : 'Chip companies are under pressure'} — the semiconductor index (SOX) is at ${sox ? fmt(sox.price, 0) : 'N/A'}, which shows demand for chips from AI and cloud services. Tech stocks tend to fall when interest rates go up, so the US central bank's decisions matter a lot here.`,
         direction: dir,
         status: statusFromDirection(dir),
+        sparkline: ndxSpark ?? undefined,
       }
     })(),
 
@@ -245,7 +255,7 @@ export async function GET() {
         name: 'ASUS',
         emoji: '🖥️',
         indicators,
-        summary: `ASUS (2357.TW) at $${asusUsd ? fmt(asusUsd.price, 2) : 'N/A'} USD, ${asus ? (asus.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(asus.changePercent).toFixed(1) + '% today' : 'data unavailable'}. ASUS revenue is split across consumer PCs, gaming hardware, components, and servers — the server/AI infrastructure segment is the fastest-growing driver. TWD moves at ${twd ? fmt(twd.price) : 'N/A'} per USD, directly affecting USD-denominated export margins.`,
+        summary: `ASUS (2357.TW) is at $${asusUsd ? fmt(asusUsd.price, 2) : 'N/A'} USD, ${asus ? (asus.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(asus.changePercent).toFixed(1) + '% today' : 'data unavailable'}. ASUS makes laptops, gaming gear, PC parts, and servers. The server and AI hardware part of the business is growing the fastest right now. The Taiwan dollar is at ${twd ? fmt(twd.price) : 'N/A'} per USD — when the TWD weakens, ASUS earns more in local currency on its US-dollar sales, which is good for profit margins.`,
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: asusSparkUsd ?? undefined,

@@ -14,6 +14,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts'
+import NextRefresh from '@/components/ui/NextRefresh'
 
 const FG_CONFIG = [
   { max: 24, tKey: 'extremeFear' as const, color: 'text-risk-worried', bg: 'bg-risk-worried-bg border-risk-worried-border' },
@@ -179,25 +180,65 @@ export default function CryptoSignal() {
             <div className="space-y-4 animate-in">
               {/* Crypto assets */}
               <div className="grid grid-cols-2 gap-3">
-                {data.assets.map((asset) => (
-                  <div key={asset.id} className="bg-intel-elevated rounded-lg border border-intel-border p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-mono font-bold text-intel-text">{asset.symbol}</span>
-                      <TrendArrow direction={asset.priceChange24h >= 0 ? 'up' : 'down'} />
+                {data.assets.map((asset) => {
+                  const color = asset.priceChange7d >= 0 ? '#22C55E' : '#EF4444'
+                  const sparkData = asset.sparkline
+                    ? asset.sparkline.filter(Boolean).map((v, i) => ({ v, i }))
+                    : null
+                  return (
+                    <div key={asset.id} className="bg-intel-elevated rounded-lg border border-intel-border p-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-mono font-bold text-intel-text">{asset.symbol}</span>
+                        <TrendArrow direction={asset.priceChange24h >= 0 ? 'up' : 'down'} />
+                      </div>
+                      <div className="text-base font-mono font-bold text-intel-text tabular-nums">
+                        {fmtPrice(asset.price)}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-[13px] font-mono ${asset.priceChange24h >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
+                          {fmtPct(asset.priceChange24h)} {t.dayChange.split(' ').pop()}
+                        </span>
+                        <span className={`text-[13px] font-mono ${asset.priceChange7d >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
+                          {fmtPct(asset.priceChange7d)} 7d
+                        </span>
+                      </div>
+                      {sparkData && sparkData.length > 4 && (
+                        <div className="mt-2 -mx-1">
+                          <ResponsiveContainer width="100%" height={44}>
+                            <AreaChart data={sparkData} margin={{ top: 2, right: 2, left: 2, bottom: 0 }}>
+                              <defs>
+                                <linearGradient id={`spark-${asset.id}`} x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor={color} stopOpacity={0.25} />
+                                  <stop offset="95%" stopColor={color} stopOpacity={0.0} />
+                                </linearGradient>
+                              </defs>
+                              <Area
+                                type="monotone"
+                                dataKey="v"
+                                stroke={color}
+                                strokeWidth={1.5}
+                                fill={`url(#spark-${asset.id})`}
+                                dot={false}
+                                isAnimationActive={false}
+                              />
+                              <Tooltip
+                                content={({ active, payload }: any) => {
+                                  if (!active || !payload?.length) return null
+                                  return (
+                                    <div className="bg-intel-elevated border border-intel-border rounded px-2 py-1 text-[11px] font-mono">
+                                      <div style={{ color }}>{fmtPrice(payload[0].value)}</div>
+                                    </div>
+                                  )
+                                }}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                          <span className="text-[10px] font-mono text-intel-dim block text-right">7-day price</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-base font-mono font-bold text-intel-text tabular-nums">
-                      {fmtPrice(asset.price)}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-[13px] font-mono ${asset.priceChange24h >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
-                        {fmtPct(asset.priceChange24h)} {t.dayChange.split(' ').pop()}
-                      </span>
-                      <span className={`text-[13px] font-mono ${asset.priceChange7d >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
-                        {fmtPct(asset.priceChange7d)} 7d
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Market cap */}
@@ -256,9 +297,10 @@ export default function CryptoSignal() {
                 <p className="text-sm text-intel-secondary leading-relaxed">{data.interpretation}</p>
               </div>
 
-              <div className="flex items-center justify-end pt-1">
+              <div className="flex items-center justify-between pt-1">
+                <NextRefresh />
                 <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
-                  {t.lastUpdated}: {new Date(data.updatedAt).toLocaleTimeString()}
+                  {t.lastUpdated}: {new Date(data.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             </div>
