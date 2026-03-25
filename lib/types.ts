@@ -29,6 +29,7 @@ export interface EconomyIndicator {
   value: string
   change?: string
   changeType?: 'positive' | 'negative' | 'neutral'
+  sparkline?: { price: number; date: string }[] // per-indicator mini chart
 }
 
 export interface EconomyCard {
