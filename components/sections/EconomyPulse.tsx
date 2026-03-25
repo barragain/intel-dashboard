@@ -74,13 +74,14 @@ function firstSentence(text: string): string {
 }
 
 /** Tiny inline sparkline used inside Global card per-indicator */
-function MiniSparkline({ data, color }: { data: { price: number; date: string }[]; color: string }) {
+function MiniSparkline({ data, color, id }: { data: { price: number; date: string }[]; color: string; id: string }) {
   if (!data || data.length < 3) return null
+  const gradId = `mini-${id}`
   return (
     <ResponsiveContainer width="100%" height={40}>
       <AreaChart data={data} margin={{ top: 1, right: 0, left: 0, bottom: 0 }}>
         <defs>
-          <linearGradient id={`mini-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={color} stopOpacity={0.25} />
             <stop offset="95%" stopColor={color} stopOpacity={0.0} />
           </linearGradient>
@@ -101,7 +102,7 @@ function MiniSparkline({ data, color }: { data: { price: number; date: string }[
           dataKey="price"
           stroke={color}
           strokeWidth={1.5}
-          fill={`url(#mini-${color.replace('#', '')})`}
+          fill={`url(#${gradId})`}
           dot={false}
           isAnimationActive={false}
         />
@@ -117,14 +118,11 @@ function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
   const statusColor = STATUS_COLORS[card.status]
   const metricTips = getMetricTips(t)
 
-  // Color for each indicator sparkline (neutral gold for most macro indicators)
-  const INDICATOR_COLORS: Record<string, string> = {
-    'VIX':         '#EF4444', // red — high VIX = danger
-    'DXY':         '#C8A96E', // gold
-    'Gold (oz)':   '#F59E0B', // amber
-    'Silver (oz)': '#94A3B8', // slate
-    'Oil WTI':     '#60A5FA', // blue
-    'Brent Crude': '#818CF8', // indigo
+  // Color based purely on today's direction: green = went up, red = went down
+  function indicatorColor(changeType: string | undefined): string {
+    if (changeType === 'positive') return '#22C55E'
+    if (changeType === 'negative') return '#EF4444'
+    return '#C8A96E' // neutral gold
   }
 
   return (
@@ -148,7 +146,7 @@ function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
       {/* Indicators grid — 3 or 6 columns, each with mini sparkline */}
       <div className="px-4 py-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-3">
         {card.indicators.map((ind, i) => {
-          const color = INDICATOR_COLORS[ind.label] ?? '#C8A96E'
+          const color = indicatorColor(ind.changeType)
           return (
             <div key={i} className="flex flex-col">
               {metricTips[ind.label] ? (
@@ -170,7 +168,7 @@ function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
               </div>
               {ind.sparkline && ind.sparkline.length > 3 && (
                 <div className="mt-1">
-                  <MiniSparkline data={ind.sparkline} color={color} />
+                  <MiniSparkline data={ind.sparkline} color={color} id={`global-${i}`} />
                 </div>
               )}
             </div>

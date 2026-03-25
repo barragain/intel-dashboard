@@ -241,8 +241,8 @@ export async function GET() {
         emoji: '🇵🇾',
         indicators,
         summary: `Paraguay's guaraní is at ${pyg ? fmt(pyg.price, 0) : 'N/A'} per US dollar. Paraguay's economy is mostly based on farming exports like soy and beef, plus electricity from its giant Itaipú dam. Inflation is usually manageable. It is a smaller economy with limited live market data, but it is generally stable.`,
-        direction: 'stable',
-        status: 'yellow',
+        direction: directionFromPct(-(pyg?.changePercent ?? 0)), // invert: dollar up = bad for guaraní
+        status: statusFromDirection(directionFromPct(-(pyg?.changePercent ?? 0))),
         sparkline: pygSpark ?? undefined,
       }
     })(),

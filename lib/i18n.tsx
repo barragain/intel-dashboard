@@ -148,8 +148,8 @@ const translations = {
     confidenceLow: 'Low confidence',
 
     // Metric tooltips (Economy Pulse)
-    metricVIX: 'Measures how nervous the US stock market is right now. Higher = more fear, lower = more calm.',
-    metricDXY: 'Tracks the US dollar against major currencies. Higher = stronger dollar, which tightens financial conditions worldwide.',
+    metricVIX: 'Fear index — measures how nervous the stock market is. Under 15: very calm. 15–20: normal. 20–25: some worry. 25–30: high fear. Over 30: crisis level. Long-term average is around 19.',
+    metricDXY: 'US dollar strength index against 6 major currencies (euro, yen, pound…). Under 90: weak dollar. 90–100: normal range. 100–105: strong dollar. Over 105: very strong, puts pressure on other currencies and emerging markets.',
     metricSP500: 'Index of the 500 biggest US companies. When it rises, US stocks are doing well overall.',
     metricGold: 'Price of gold per ounce in USD. Rises when investors are scared and want a safe place to park money.',
     metricOilWTI: 'US benchmark crude oil price. Higher oil raises costs for shipping, manufacturing, and everyday life globally.',
@@ -303,8 +303,8 @@ const translations = {
     confidenceLow: 'Faible confiance',
 
     // Metric tooltips
-    metricVIX: "Mesure le niveau de nervosité du marché boursier américain. Plus élevé = plus de peur, plus bas = plus calme.",
-    metricDXY: "Suit le dollar américain par rapport aux principales monnaies. Plus élevé = dollar plus fort, ce qui resserre les conditions financières mondiales.",
+    metricVIX: "Indice de peur — mesure la nervosité des marchés. Sous 15 : très calme. 15–20 : normal. 20–25 : inquiétude modérée. 25–30 : forte peur. Plus de 30 : niveau de crise. Moyenne historique : environ 19.",
+    metricDXY: "Indice de force du dollar américain face à 6 grandes devises (euro, yen, livre…). Sous 90 : dollar faible. 90–100 : plage normale. 100–105 : dollar fort. Plus de 105 : très fort, pression sur les autres monnaies.",
     metricSP500: "Indice des 500 plus grandes entreprises américaines. Quand il monte, les actions américaines vont globalement bien.",
     metricGold: "Prix de l'or par once en USD. Augmente quand les investisseurs ont peur et cherchent un refuge sûr.",
     metricOilWTI: "Prix de référence du pétrole brut américain. Un pétrole plus cher augmente les coûts de transport, de fabrication et du quotidien.",
@@ -458,8 +458,8 @@ const translations = {
     confidenceLow: 'Baja confianza',
 
     // Metric tooltips
-    metricVIX: 'Mide el nerviosismo del mercado bursátil de EE.UU. Mayor = más miedo, menor = más calma.',
-    metricDXY: 'Rastrea el dólar estadounidense frente a las principales divisas. Mayor = dólar más fuerte, lo que endurece las condiciones financieras globales.',
+    metricVIX: 'Índice de miedo — mide el nerviosismo del mercado. Menos de 15: muy tranquilo. 15–20: normal. 20–25: algo de preocupación. 25–30: mucho miedo. Más de 30: nivel de crisis. Promedio histórico: alrededor de 19.',
+    metricDXY: 'Índice de fortaleza del dólar frente a 6 divisas principales (euro, yen, libra…). Menos de 90: dólar débil. 90–100: rango normal. 100–105: dólar fuerte. Más de 105: muy fuerte, presiona las demás monedas.',
     metricSP500: 'Índice de las 500 mayores empresas de EE.UU. Cuando sube, las acciones estadounidenses van bien en general.',
     metricOilWTI: 'Precio de referencia del crudo estadounidense. El petróleo más caro encarece el transporte, la fabricación y la vida cotidiana.',
     metricGold: 'Precio del oro por onza en USD. Sube cuando los inversores tienen miedo y buscan un refugio seguro.',
