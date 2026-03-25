@@ -111,6 +111,14 @@ function MiniSparkline({ data, color, id }: { data: { price: number; date: strin
   )
 }
 
+// Returns green/red based on 30-day net change (last vs first price in sparkline).
+// Pass inverted=true for metrics where up = bad (e.g. PYG/USD for Paraguay).
+function sparklineColor(data: { price: number }[] | undefined, inverted = false): string {
+  if (!data || data.length < 2) return '#22C55E'
+  const isUp = data[data.length - 1].price >= data[0].price
+  return (inverted ? !isUp : isUp) ? '#22C55E' : '#EF4444'
+}
+
 /** Global card — wide layout with 6 indicators each showing a mini sparkline */
 function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
   const dirKey = DIR_TKEYS[card.direction]
@@ -118,11 +126,14 @@ function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
   const statusColor = STATUS_COLORS[card.status]
   const metricTips = getMetricTips(t)
 
-  // Color based purely on today's direction: green = went up, red = went down
-  function indicatorColor(changeType: string | undefined): string {
-    if (changeType === 'positive') return '#22C55E'
-    if (changeType === 'negative') return '#EF4444'
-    return '#C8A96E' // neutral gold
+  // Static per-indicator colors for global macro charts
+  const INDICATOR_COLORS: Record<string, string> = {
+    'VIX':         '#EF4444', // red — fear index
+    'DXY':         '#C8A96E', // gold — dollar
+    'Gold (oz)':   '#F59E0B', // amber
+    'Silver (oz)': '#94A3B8', // slate
+    'Oil WTI':     '#60A5FA', // blue
+    'Brent Crude': '#818CF8', // indigo
   }
 
   return (
@@ -146,7 +157,7 @@ function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
       {/* Indicators grid — 3 or 6 columns, each with mini sparkline */}
       <div className="px-4 py-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-3">
         {card.indicators.map((ind, i) => {
-          const color = indicatorColor(ind.changeType)
+          const color = INDICATOR_COLORS[ind.label] ?? '#C8A96E'
           return (
             <div key={i} className="flex flex-col">
               {metricTips[ind.label] ? (
@@ -191,6 +202,8 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
   const statusColor = STATUS_COLORS[card.status]
   const cardTip = firstSentence(card.summary)
   const metricTips = getMetricTips(t)
+  // Paraguay is inverted: dollar going UP = PYG weakening = bad (red)
+  const sparkColor = sparklineColor(card.sparkline, card.id === 'paraguay')
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
@@ -245,8 +258,8 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
             <AreaChart data={card.sparkline} margin={{ top: 2, right: 0, left: -28, bottom: 0 }}>
               <defs>
                 <linearGradient id={`econ-spark-${card.id}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={card.direction === 'deteriorating' ? '#EF4444' : '#22C55E'} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={card.direction === 'deteriorating' ? '#EF4444' : '#22C55E'} stopOpacity={0.02} />
+                  <stop offset="5%" stopColor={sparkColor} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={sparkColor} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <XAxis
@@ -277,7 +290,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
               <Area
                 type="monotone"
                 dataKey="price"
-                stroke={card.direction === 'deteriorating' ? '#EF4444' : '#22C55E'}
+                stroke={sparkColor}
                 strokeWidth={1.5}
                 fill={`url(#econ-spark-${card.id})`}
                 dot={false}
