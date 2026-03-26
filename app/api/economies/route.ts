@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getCached, setCached } from '@/lib/cache'
+import { getLang } from '@/lib/lang'
+import { translateEconomiesData } from '@/lib/translate'
 import type { EconomiesData, EconomyCard, EconomyIndicator } from '@/lib/types'
 
 const YF_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart'
@@ -88,9 +91,23 @@ function statusFromDirection(dir: EconomyCard['direction']): EconomyCard['status
   return 'yellow'
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const lang = getLang(request)
+
+  // Check language-specific cache first (FR/ES)
+  if (lang !== 'en') {
+    const cached = getCached(`economies_${lang}`)
+    if (cached) return NextResponse.json(cached)
+  }
+
   const cached = getCached('economies')
-  if (cached) return NextResponse.json(cached)
+  if (cached) {
+    if (lang === 'en') return NextResponse.json(cached)
+    // Translate the cached EN data
+    const translated = await translateEconomiesData(cached as EconomiesData, lang)
+    setCached(`economies_${lang}`, translated)
+    return NextResponse.json(translated)
+  }
 
   // Fetch all prices and sparklines in parallel
   const [
@@ -305,5 +322,11 @@ export async function GET() {
   }
 
   setCached('economies', data)
+
+  if (lang !== 'en') {
+    const translated = await translateEconomiesData(data, lang)
+    setCached(`economies_${lang}`, translated)
+    return NextResponse.json(translated)
+  }
   return NextResponse.json(data)
 }

@@ -130,7 +130,7 @@ export default function CryptoSignal() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/crypto')
+      const res = await fetch(`/api/crypto?lang=${language}`)
       const json = await res.json()
       if (!res.ok) { setError(json.error ?? t.error); return }
       setData(json as CryptoData)
@@ -141,7 +141,7 @@ export default function CryptoSignal() {
     }
   }
 
-  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fgCfg = data ? getFgConfig(data.fearGreedIndex) : null
   const fgLabel = fgCfg ? t[fgCfg.tKey] : ''

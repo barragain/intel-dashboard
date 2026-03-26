@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { unstable_cache } from 'next/cache'
 import { getCached, setCached } from '@/lib/cache'
 import { analyzeWithContext, parseJson } from '@/lib/gemini'
 import { fetchNews } from '@/lib/news'
 import { getAISlot } from '@/lib/aiSlot'
+import { getLang } from '@/lib/lang'
+import { translateCryptoData } from '@/lib/translate'
 import { USER_CONTEXT } from '@/lib/context'
 import type { CryptoData } from '@/lib/types'
 
@@ -67,9 +70,21 @@ const fetchCryptoAI = unstable_cache(
   { revalidate: false },
 )
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const lang = getLang(request)
+
+  if (lang !== 'en') {
+    const cached = getCached(`crypto_${lang}`)
+    if (cached) return NextResponse.json(cached)
+  }
+
   const cached = getCached('crypto')
-  if (cached) return NextResponse.json(cached)
+  if (cached) {
+    if (lang === 'en') return NextResponse.json(cached)
+    const translated = await translateCryptoData(cached as CryptoData, lang)
+    setCached(`crypto_${lang}`, translated)
+    return NextResponse.json(translated)
+  }
 
   try {
     const [coinsRes, globalRes, fngRes] = await Promise.allSettled([
@@ -155,6 +170,12 @@ export async function GET() {
     }
 
     setCached('crypto', data)
+
+    if (lang !== 'en') {
+      const translated = await translateCryptoData(data, lang)
+      setCached(`crypto_${lang}`, translated)
+      return NextResponse.json(translated)
+    }
     return NextResponse.json(data)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { unstable_cache } from 'next/cache'
 import { searchAndAnalyze, parseJson } from '@/lib/gemini'
+import { getCached, setCached } from '@/lib/cache'
 import { getAISlot } from '@/lib/aiSlot'
+import { getLang } from '@/lib/lang'
+import { translateAISectorData } from '@/lib/translate'
 import type { AISectorData, AIStock, AIETF } from '@/lib/types'
 
 const YF_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart'
@@ -135,13 +139,25 @@ const fetchAISectorData = unstable_cache(
   { revalidate: false },
 )
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const lang = getLang(request)
+
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json({ error: 'GEMINI_API_KEY_MISSING', needsApiKey: true }, { status: 503 })
   }
 
   try {
-    return NextResponse.json(await fetchAISectorData(getAISlot()))
+    const enData = await fetchAISectorData(getAISlot())
+
+    if (lang === 'en') return NextResponse.json(enData)
+
+    const cacheKey = `ai-sector_${lang}`
+    const cached = getCached(cacheKey)
+    if (cached) return NextResponse.json(cached)
+
+    const translated = await translateAISectorData(enData, lang)
+    setCached(cacheKey, translated)
+    return NextResponse.json(translated)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
     if (msg === 'GEMINI_API_KEY_MISSING') return NextResponse.json({ error: msg, needsApiKey: true }, { status: 503 })

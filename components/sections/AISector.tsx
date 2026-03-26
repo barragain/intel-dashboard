@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import { useLanguage } from '@/lib/i18n'
 import { AlertTriangle, RefreshCw, KeyRound } from 'lucide-react'
 import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
 import NextRefresh from '@/components/ui/NextRefresh'
@@ -362,6 +363,7 @@ function LoadSkeleton() {
 // ─── Main Section ─────────────────────────────────────────────────────────────
 
 export default function AISector() {
+  const { language } = useLanguage()
   const [data, setData] = useState<AISectorData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -372,7 +374,7 @@ export default function AISector() {
     setError(null)
     setNeedsApiKey(false)
     try {
-      const res = await fetch('/api/ai-sector')
+      const res = await fetch(`/api/ai-sector?lang=${language}`)
       const json = await res.json()
       if (!res.ok) {
         if (json.needsApiKey) { setNeedsApiKey(true); setError('Gemini API key required') }
@@ -388,7 +390,7 @@ export default function AISector() {
     }
   }, [])
 
-  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section aria-labelledby="ai-sector-title">

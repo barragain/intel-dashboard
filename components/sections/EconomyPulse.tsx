@@ -315,7 +315,7 @@ export default function EconomyPulse() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/economies')
+      const res = await fetch(`/api/economies?lang=${language}`)
       const json = await res.json()
       if (!res.ok) {
         setError(json.error ?? t.error)
@@ -329,7 +329,7 @@ export default function EconomyPulse() {
     }
   }
 
-  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const nameMap: Record<string, string> = {
     global: t.econGlobal,

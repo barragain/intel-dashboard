@@ -6,7 +6,7 @@
  * Falls back to the original English text on any error.
  */
 
-import type { RiskData, ConflictsData, HistoricalData } from '@/lib/types'
+import type { RiskData, ConflictsData, HistoricalData, EconomiesData, CryptoData, AISectorData } from '@/lib/types'
 
 const GT_URL = 'https://translate.googleapis.com/translate_a/single'
 
@@ -118,4 +118,33 @@ export async function translateHistoricalData(data: HistoricalData, lang: string
   }))
 
   return { ...data, parallels, predictions: translatedPredictions }
+}
+
+export async function translateEconomiesData(data: EconomiesData, lang: string): Promise<EconomiesData> {
+  const summaries = data.economies.map((e) => e.summary)
+  const translated = await Promise.all(summaries.map((s) => translateText(s, lang)))
+  const economies = data.economies.map((e, i) => ({ ...e, summary: translated[i] ?? e.summary }))
+  return { ...data, economies }
+}
+
+export async function translateCryptoData(data: CryptoData, lang: string): Promise<CryptoData> {
+  const [interpretation, macroSignal] = await Promise.all([
+    translateText(data.interpretation, lang),
+    translateText(data.macroSignal, lang),
+  ])
+  return { ...data, interpretation, macroSignal }
+}
+
+export async function translateAISectorData(data: AISectorData, lang: string): Promise<AISectorData> {
+  const [summary, personal_angle, label, interpretation] = await Promise.all([
+    translateText(data.momentum.summary, lang),
+    translateText(data.momentum.personal_angle, lang),
+    translateText(data.momentum.label, lang),
+    translateText(data.vcxGauge.interpretation, lang),
+  ])
+  return {
+    ...data,
+    momentum: { ...data.momentum, summary, personal_angle, label },
+    vcxGauge: { ...data.vcxGauge, interpretation },
+  }
 }
