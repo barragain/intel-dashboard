@@ -23,15 +23,14 @@ const ETF_NAMES: Record<string, string> = {
 
 interface YFData {
   price: number
-  change1d: number
-  change7d: number
+  change30d: number
   sparkline: number[]
 }
 
 async function fetchYF(symbol: string): Promise<YFData | null> {
   try {
     const res = await fetch(
-      `${YF_BASE}/${encodeURIComponent(symbol)}?interval=1d&range=7d`,
+      `${YF_BASE}/${encodeURIComponent(symbol)}?interval=1d&range=1mo`,
       { headers: YF_HEADERS, next: { revalidate: 0 } },
     )
     if (!res.ok) return null
@@ -43,12 +42,10 @@ async function fetchYF(symbol: string): Promise<YFData | null> {
       (c: number | null) => c !== null && isFinite(c),
     )
     const price: number = meta.regularMarketPrice ?? 0
-    const prevClose: number = meta.previousClose ?? price
-    const change1d = prevClose ? ((price - prevClose) / prevClose) * 100 : 0
     const firstClose = closes[0] ?? price
     const lastClose = closes[closes.length - 1] ?? price
-    const change7d = firstClose ? ((lastClose - firstClose) / firstClose) * 100 : 0
-    return { price, change1d, change7d, sparkline: closes }
+    const change30d = firstClose ? ((lastClose - firstClose) / firstClose) * 100 : 0
+    return { price, change30d, sparkline: closes }
   } catch {
     return null
   }
@@ -59,16 +56,14 @@ const PROMPT = `Today is {{DATE}}.
 Search the web for:
 1. The most recently published NAV (net asset value) per share for VCX (Fundrise Innovation Fund, NYSE: VCX). Exact dollar figure from official sources.
 2. Year-to-date performance (%) as of today: AIQ ETF (AI sector proxy), S&P 500 index, Nasdaq Composite, MSCI World index.
-3. Last 5 quarters of combined AI capex in $B from earnings reports: Group A = Microsoft + Alphabet, Group B = Meta + Amazon. Mark most recent as isEst:true if not fully reported.
-4. Current AI sector momentum: score 0-100 (100=extreme bull), one short label phrase, 2-3 sentence market summary, 2-3 sentence personal angle for someone at a video/photo production agency in Taiwan whose partner works in PR for Asus across multiple Asian markets.
-5. One blunt sentence about what VCX's current premium above NAV signals about AI market sentiment. If trading 1000%+ above NAV, say that plainly.
+3. Current AI sector momentum: score 0-100 (100=extreme bull), one short label phrase, 2-3 sentence market summary, 2-3 sentence personal angle for someone at a video/photo production agency in Taiwan whose partner works in PR for Asus across multiple Asian markets.
+4. One blunt sentence about what VCX's current premium above NAV signals about AI market sentiment. If trading 1000%+ above NAV, say that plainly.
 
 Return ONLY valid JSON — no prose, no markdown fences:
 {
   "vcxNav": <number>,
   "vcxInterpretation": "<1 blunt sentence>",
   "ytd": {"AIQ": <pct>, "SP500": <pct>, "Nasdaq": <pct>, "MSCIWorld": <pct>},
-  "capex": [{"quarter":"Q3 2024","groupA":<$B>,"groupB":<$B>,"isEst":false}, ...5 total],
   "momentum": {"score":<0-100>,"label":"<short phrase>","summary":"<2-3 sentences>","personal_angle":"<2-3 sentences>"}
 }`
 
@@ -76,7 +71,6 @@ type GeminiResponse = {
   vcxNav?: number
   vcxInterpretation?: string
   ytd: { AIQ: number; SP500: number; Nasdaq: number; MSCIWorld: number }
-  capex: Array<{ quarter: string; groupA: number; groupB: number; isEst?: boolean }>
   momentum: { score: number; label: string; summary: string; personal_angle: string }
 }
 
@@ -92,17 +86,17 @@ async function generateAISectorData(): Promise<AISectorData> {
 
   const hyperscalers: AIStock[] = ['MSFT', 'GOOGL', 'META', 'ORCL'].map((ticker, i) => {
     const d = stockResults[i]
-    return { ticker, name: STOCK_NAMES[ticker], price: d?.price ?? 0, change1d: d?.change1d ?? 0, sparkline7d: d?.sparkline ?? [] }
+    return { ticker, name: STOCK_NAMES[ticker], price: d?.price ?? 0, change30d: d?.change30d ?? 0, sparkline30d: d?.sparkline ?? [] }
   })
 
   const infrastructure: AIStock[] = ['NVDA', 'AVGO', 'MU', 'TSM', 'VRT'].map((ticker, i) => {
     const d = stockResults[i + 4]
-    return { ticker, name: STOCK_NAMES[ticker], price: d?.price ?? 0, change1d: d?.change1d ?? 0, sparkline7d: d?.sparkline ?? [] }
+    return { ticker, name: STOCK_NAMES[ticker], price: d?.price ?? 0, change30d: d?.change30d ?? 0, sparkline30d: d?.sparkline ?? [] }
   })
 
   const etfs: AIETF[] = etfSymbols.map((ticker, i) => {
     const d = etfResults[i]
-    return { ticker, name: ETF_NAMES[ticker], price: d?.price ?? 0, change7d: d?.change7d ?? 0 }
+    return { ticker, name: ETF_NAMES[ticker], price: d?.price ?? 0, change30d: d?.change30d ?? 0, sparkline30d: d?.sparkline ?? [] }
   })
 
   const prompt = PROMPT.replace('{{DATE}}', new Date().toDateString())
@@ -128,7 +122,6 @@ async function generateAISectorData(): Promise<AISectorData> {
       { label: 'Nasdaq', value: g.ytd?.Nasdaq ?? 0 },
       { label: 'MSCI World', value: g.ytd?.MSCIWorld ?? 0 },
     ],
-    capexChart: g.capex ?? [],
     momentum: g.momentum ?? { score: 50, label: 'Neutral', summary: '', personal_angle: '' },
     updatedAt: new Date().toISOString(),
   }

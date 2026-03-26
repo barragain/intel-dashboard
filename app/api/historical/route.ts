@@ -52,7 +52,7 @@ Return ONLY this JSON:
   ]
 }
 
-Include 3 historical parallels — choose whichever are most relevant to right now from: 2008 financial crisis, 2020 COVID crash, 1970s oil shocks, 1997 Asian financial crisis, 1996 Taiwan Strait crisis. Include 4-5 predictions from real institutions (IMF, Goldman Sachs, JP Morgan, World Bank, Morgan Stanley) — use their most recent public statements found via search.
+Include 3 historical parallels — choose whichever are most relevant to right now from: 2008 financial crisis, 2020 COVID crash, 1970s oil shocks, 1997 Asian financial crisis, 1996 Taiwan Strait crisis. Include 5-6 predictions from real institutions (IMF, Goldman Sachs, JP Morgan, World Bank, Morgan Stanley, Banco Central del Paraguay) — use their most recent public statements found via search. For the Banco Central del Paraguay entry, include their current monetary policy stance, recent interest rate decisions, and their outlook on inflation or the Paraguayan guaraní.
 Include 2–3 real expert quotes from economists or institutional analysts found via search — exact words only.
 Include 2–3 real news article headlines with publication and date.`
 

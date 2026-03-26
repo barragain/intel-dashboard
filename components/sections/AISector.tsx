@@ -6,7 +6,7 @@ import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip } from
 import NextRefresh from '@/components/ui/NextRefresh'
 import Tooltip from '@/components/ui/Tooltip'
 import TrendArrow from '@/components/ui/TrendArrow'
-import type { AISectorData, AIStock, AIETF, VCXGauge, YTDItem, CapexQuarter, AIMomentum } from '@/lib/types'
+import type { AISectorData, AIStock, AIETF, VCXGauge, YTDItem, AIMomentum } from '@/lib/types'
 
 // ─── Style maps (identical to EconomyPulse) ───────────────────────────────────
 
@@ -88,8 +88,8 @@ function StockSparkline({ data, color, id }: { data: number[]; color: string; id
 // ─── Stock Card ───────────────────────────────────────────────────────────────
 
 function StockCard({ stock }: { stock: AIStock }) {
-  const dir = direction(stock.change1d)
-  const sparkColor = stock.change1d >= 0 ? '#4ADE80' : '#F87171'
+  const dir = direction(stock.change30d)
+  const sparkColor = stock.change30d >= 0 ? '#4ADE80' : '#F87171'
   const tip = COMPANY_TIPS[stock.ticker] ?? stock.name
 
   return (
@@ -115,19 +115,19 @@ function StockCard({ stock }: { stock: AIStock }) {
           <span className="text-sm font-mono font-semibold text-intel-text tabular-nums mt-0.5">{fmtPrice(stock.price)}</span>
         </div>
         <div className="flex flex-col">
-          <Tooltip text="Price change compared to yesterday's closing price." width="md" position="top" align="left">
-            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">1D Change</span>
+          <Tooltip text="Price change over the past 30 trading days." width="md" position="top" align="left">
+            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">30D Change</span>
           </Tooltip>
-          <span className={`text-sm font-mono font-semibold tabular-nums mt-0.5 ${stock.change1d >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
-            {fmtPct(stock.change1d)}
+          <span className={`text-sm font-mono font-semibold tabular-nums mt-0.5 ${stock.change30d >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
+            {fmtPct(stock.change30d)}
           </span>
         </div>
       </div>
 
-      {stock.sparkline7d.length > 1 && (
+      {stock.sparkline30d.length > 1 && (
         <div className="px-4 pt-3 pb-1 border-b border-intel-border">
-          <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wider block mb-1">7-day chart</span>
-          <StockSparkline data={stock.sparkline7d} color={sparkColor} id={stock.ticker.toLowerCase()} />
+          <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wider block mb-1">30-day chart</span>
+          <StockSparkline data={stock.sparkline30d} color={sparkColor} id={stock.ticker.toLowerCase()} />
         </div>
       )}
 
@@ -141,7 +141,8 @@ function StockCard({ stock }: { stock: AIStock }) {
 // ─── ETF Card ─────────────────────────────────────────────────────────────────
 
 function ETFCard({ etf }: { etf: AIETF }) {
-  const dir = direction(etf.change7d)
+  const dir = direction(etf.change30d)
+  const sparkColor = etf.change30d >= 0 ? '#4ADE80' : '#F87171'
   const tip = ETF_TIPS[etf.ticker] ?? etf.name
 
   return (
@@ -167,14 +168,21 @@ function ETFCard({ etf }: { etf: AIETF }) {
           <span className="text-sm font-mono font-semibold text-intel-text tabular-nums mt-0.5">{fmtPrice(etf.price)}</span>
         </div>
         <div className="flex flex-col">
-          <Tooltip text="Total ETF return over the past 7 trading days." width="md" position="top" align="left">
-            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">7D Change</span>
+          <Tooltip text="Total ETF return over the past 30 trading days." width="md" position="top" align="left">
+            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">30D Change</span>
           </Tooltip>
-          <span className={`text-sm font-mono font-semibold tabular-nums mt-0.5 ${etf.change7d >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
-            {fmtPct(etf.change7d)}
+          <span className={`text-sm font-mono font-semibold tabular-nums mt-0.5 ${etf.change30d >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
+            {fmtPct(etf.change30d)}
           </span>
         </div>
       </div>
+
+      {etf.sparkline30d.length > 1 && (
+        <div className="px-4 pt-3 pb-1 border-b border-intel-border">
+          <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wider block mb-1">30-day chart</span>
+          <StockSparkline data={etf.sparkline30d} color={sparkColor} id={etf.ticker.toLowerCase()} />
+        </div>
+      )}
 
       <div className="px-4 py-3 flex-1">
         <p className="text-sm text-intel-secondary leading-relaxed">{tip}</p>
@@ -272,70 +280,6 @@ function YTDChart({ items }: { items: YTDItem[] }) {
   )
 }
 
-// ─── Capex Chart ──────────────────────────────────────────────────────────────
-
-function buildCapexSummary(quarters: CapexQuarter[]): string {
-  if (!quarters.length) return ''
-  const last = quarters[quarters.length - 1]
-  const prev = quarters.length > 1 ? quarters[quarters.length - 2] : null
-  const total = last.groupA + last.groupB
-  const estNote = last.isEst ? ' (estimated)' : ''
-  let trend = ''
-  if (prev) {
-    const prevTotal = prev.groupA + prev.groupB
-    const chg = ((total - prevTotal) / prevTotal) * 100
-    if (Math.abs(chg) > 4) trend = ` That is ${chg > 0 ? 'up' : 'down'} ${Math.abs(chg).toFixed(0)}% from ${prev.quarter}.`
-  }
-  const leader = last.groupA > last.groupB ? 'Microsoft + Alphabet' : 'Meta + Amazon'
-  return `In ${last.quarter}${estNote}, Microsoft + Alphabet spent $${last.groupA.toFixed(0)}B and Meta + Amazon spent $${last.groupB.toFixed(0)}B — $${total.toFixed(0)}B combined.${trend} ${leader} are the bigger spenders right now. This level of investment means the biggest tech companies are treating AI infrastructure as a multi-year competitive race, not a short-term experiment.`
-}
-
-function CapexChart({ quarters }: { quarters: CapexQuarter[] }) {
-  if (!quarters.length) return null
-  const maxVal = Math.max(...quarters.flatMap((q) => [q.groupA, q.groupB]), 1)
-  const chartH = 90, barW = 16, barGap = 3, groupPad = 14
-  const groupW = barW * 2 + barGap + groupPad
-  const svgW = quarters.length * groupW + 20
-
-  return (
-    <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
-      <div className="px-4 py-3 border-b border-intel-border">
-        <span className="text-sm font-display font-semibold text-intel-text">AI Capex — Last 5 Quarters ($B)</span>
-      </div>
-      <div className="px-4 pt-3 pb-2 border-b border-intel-border overflow-x-auto flex-1">
-        <svg viewBox={`0 0 ${svgW} ${chartH + 34}`} className="w-full" style={{ minWidth: svgW * 1.4 }}>
-          {quarters.map((q, i) => {
-            const x = 10 + i * groupW
-            const aH = Math.max((q.groupA / maxVal) * chartH, 2)
-            const bH = Math.max((q.groupB / maxVal) * chartH, 2)
-            return (
-              <g key={q.quarter}>
-                <title>MSFT+GOOGL {q.quarter}: ${q.groupA.toFixed(1)}B</title>
-                <rect x={x} y={chartH - aH} width={barW} height={aH} fill="#C8A96E" rx="2" opacity="0.75" />
-                <text x={x + barW / 2} y={chartH - aH - 3} textAnchor="middle" fill="#C8A96E" fontSize="7">{q.groupA.toFixed(0)}</text>
-                <title>META+AMZN {q.quarter}: ${q.groupB.toFixed(1)}B</title>
-                <rect x={x + barW + barGap} y={chartH - bH} width={barW} height={bH} fill="#4ADE80" rx="2" opacity="0.6" />
-                <text x={x + barW + barGap + barW / 2} y={chartH - bH - 3} textAnchor="middle" fill="#4ADE80" fontSize="7">{q.groupB.toFixed(0)}</text>
-                <text x={x + barW + barGap / 2} y={chartH + 11} textAnchor="middle" fill="#71717A" fontSize="7.5">{q.quarter}{q.isEst ? '*' : ''}</text>
-              </g>
-            )
-          })}
-          <rect x={10} y={chartH + 20} width={7} height={5} fill="#C8A96E" rx="1" opacity="0.75" />
-          <text x={21} y={chartH + 26} fill="#C8A96E" fontSize="7.5">MSFT+GOOGL</text>
-          <rect x={90} y={chartH + 20} width={7} height={5} fill="#4ADE80" rx="1" opacity="0.6" />
-          <text x={101} y={chartH + 26} fill="#4ADE80" fontSize="7.5">META+AMZN</text>
-          {quarters.some((q) => q.isEst) && (
-            <text x={svgW - 4} y={chartH + 26} textAnchor="end" fill="#71717A" fontSize="7.5">* est.</text>
-          )}
-        </svg>
-      </div>
-      <div className="px-4 py-3">
-        <p className="text-sm text-intel-secondary leading-relaxed">{buildCapexSummary(quarters)}</p>
-      </div>
-    </div>
-  )
-}
-
 // ─── Momentum Gauge ───────────────────────────────────────────────────────────
 
 function MomentumBlock({ momentum }: { momentum: AIMomentum }) {
@@ -356,7 +300,7 @@ function MomentumBlock({ momentum }: { momentum: AIMomentum }) {
       <div className="px-4 py-4 flex flex-col lg:flex-row gap-6 border-b border-intel-border">
         <div className="flex-shrink-0 flex flex-col items-center">
           <Tooltip text="Momentum score 0–100. 0 = extreme pessimism, 100 = extreme bullishness. Based on AI sector earnings trends, analyst sentiment, and recent price action." width="lg" position="top" align="left">
-            <svg width="160" height="90" viewBox="0 0 160 90" className="cursor-help">
+            <svg width="160" height="100" viewBox="0 0 160 100" className="cursor-help">
               <defs>
                 <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#EF4444" />
@@ -452,7 +396,7 @@ export default function AISector() {
         <div className="px-6 pt-6 pb-4 border-b border-intel-border flex items-center justify-between">
           <div>
             <h2 className="font-display font-bold text-xl text-intel-text" id="ai-sector-title">AI SECTOR</h2>
-            <p className="text-sm text-intel-muted mt-0.5">AI stocks, ETFs, capex trends &amp; sector momentum</p>
+            <p className="text-sm text-intel-muted mt-0.5">AI stocks, ETFs, VCX hype gauge &amp; sector momentum</p>
           </div>
           <div className="flex items-center gap-3">
             <NextRefresh />
@@ -509,10 +453,7 @@ export default function AISector() {
 
               <VCXBlock gauge={data.vcxGauge} />
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <YTDChart items={data.ytdComparison} />
-                <CapexChart quarters={data.capexChart} />
-              </div>
+              <YTDChart items={data.ytdComparison} />
 
               <MomentumBlock momentum={data.momentum} />
             </div>

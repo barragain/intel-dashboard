@@ -185,15 +185,16 @@ export interface AIStock {
   ticker: string
   name: string
   price: number
-  change1d: number
-  sparkline7d: number[]
+  change30d: number
+  sparkline30d: number[]
 }
 
 export interface AIETF {
   ticker: string
   name: string
   price: number
-  change7d: number
+  change30d: number
+  sparkline30d: number[]
 }
 
 export interface VCXGauge {
@@ -208,13 +209,6 @@ export interface YTDItem {
   value: number
 }
 
-export interface CapexQuarter {
-  quarter: string
-  groupA: number
-  groupB: number
-  isEst?: boolean
-}
-
 export interface AIMomentum {
   score: number
   label: string
@@ -227,7 +221,6 @@ export interface AISectorData {
   etfs: AIETF[]
   vcxGauge: VCXGauge
   ytdComparison: YTDItem[]
-  capexChart: CapexQuarter[]
   momentum: AIMomentum
   updatedAt: string
 }

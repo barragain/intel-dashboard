@@ -21,7 +21,7 @@ const CONFIDENCE_CONFIG: Record<string, { tKey: 'confidenceHigh' | 'confidenceMe
 }
 
 function ParallelCard({ parallel, t }: { parallel: HistoricalParallel; t: ReturnType<typeof useLanguage>['t'] }) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border overflow-hidden">
       <button
