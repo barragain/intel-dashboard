@@ -97,32 +97,49 @@ export async function translateHistoricalData(data: HistoricalData, lang: string
   const situations = data.parallels.map((p) => p.currentSituation)
   const happened = data.parallels.map((p) => p.whatHappened)
   const implications = data.parallels.map((p) => p.personalImplication)
-  const predictions = data.predictions.map((p) => p.prediction)
+  const events = data.parallels.map((p) => p.historicalEvent)
+  const periods = data.parallels.map((p) => p.period)
+  const predTexts = data.predictions.map((p) => p.prediction)
+  const predSources = data.predictions.map((p) => p.source)
+  const predTimeframes = data.predictions.map((p) => p.timeframe)
 
   const results = await Promise.all([
     ...situations.map((t) => translateText(t, lang)),
     ...happened.map((t) => translateText(t, lang)),
     ...implications.map((t) => translateText(t, lang)),
-    ...predictions.map((t) => translateText(t, lang)),
+    ...events.map((t) => translateText(t, lang)),
+    ...periods.map((t) => translateText(t, lang)),
+    ...predTexts.map((t) => translateText(t, lang)),
+    ...predSources.map((t) => translateText(t, lang)),
+    ...predTimeframes.map((t) => translateText(t, lang)),
   ])
 
   const n = data.parallels.length
   const m = data.predictions.length
-  const tSituations = results.slice(0, n)
-  const tHappened = results.slice(n, n * 2)
-  const tImplications = results.slice(n * 2, n * 3)
-  const tPredictions = results.slice(n * 3, n * 3 + m)
+  let off = 0
+  const tSituations = results.slice(off, off += n)
+  const tHappened = results.slice(off, off += n)
+  const tImplications = results.slice(off, off += n)
+  const tEvents = results.slice(off, off += n)
+  const tPeriods = results.slice(off, off += n)
+  const tPredTexts = results.slice(off, off += m)
+  const tPredSources = results.slice(off, off += m)
+  const tPredTimeframes = results.slice(off, off += m)
 
   const parallels = data.parallels.map((p, i) => ({
     ...p,
     currentSituation: tSituations[i] ?? p.currentSituation,
     whatHappened: tHappened[i] ?? p.whatHappened,
     personalImplication: tImplications[i] ?? p.personalImplication,
+    historicalEvent: tEvents[i] ?? p.historicalEvent,
+    period: tPeriods[i] ?? p.period,
   }))
 
   const translatedPredictions = data.predictions.map((p, i) => ({
     ...p,
-    prediction: tPredictions[i] ?? p.prediction,
+    prediction: tPredTexts[i] ?? p.prediction,
+    source: tPredSources[i] ?? p.source,
+    timeframe: tPredTimeframes[i] ?? p.timeframe,
   }))
 
   return { ...data, parallels, predictions: translatedPredictions }
