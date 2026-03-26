@@ -18,7 +18,6 @@ const TTL: Record<string, number> = {
   economies: 10 * 60 * 1000,    // 10 min — live market data
   risk: 24 * 60 * 60 * 1000,    // 24 hours — AI analysis
   conflicts: 24 * 60 * 60 * 1000,
-  sentiment: 24 * 60 * 60 * 1000,
   historical: 24 * 60 * 60 * 1000,
 }
 

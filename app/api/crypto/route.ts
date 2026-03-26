@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
+import { unstable_cache } from 'next/cache'
 import { getCached, setCached } from '@/lib/cache'
 import { analyzeWithContext, parseJson } from '@/lib/gemini'
 import { fetchNews } from '@/lib/news'
+import { getAISlot } from '@/lib/aiSlot'
 import { USER_CONTEXT } from '@/lib/context'
 import type { CryptoData } from '@/lib/types'
 
@@ -52,6 +54,18 @@ function macroSignalFallback(score: number): string {
   if (score <= 74) return 'RISK-ON — appetite for growth assets, positive macro signal'
   return 'EXUBERANT — caution warranted, potential overextension'
 }
+
+// Slot-keyed cache: Gemini is called at most twice per day (9am/9pm Taiwan time).
+// Live prices (CoinGecko/fear-greed) still refresh every 5 min independently.
+const fetchCryptoAI = unstable_cache(
+  async (_slot: string) => {
+    const headlines = await fetchNews('bitcoin cryptocurrency market news')
+    const text = await analyzeWithContext(headlines.slice(0, 5), CRYPTO_PROMPT)
+    return parseJson<{ interpretation: string; macroSignal: string }>(text)
+  },
+  ['crypto-ai'],
+  { revalidate: false },
+)
 
 export async function GET() {
   const cached = getCached('crypto')
@@ -116,14 +130,12 @@ export async function GET() {
     let interpretation = buildInterpretation(fearGreedIndex, btcChange7d, totalMarketCapChange24h)
     let macroSignal = macroSignalFallback(fearGreedIndex)
 
-    // Enhance with news-grounded AI interpretation if Gemini is available
+    // Enhance with slot-cached AI interpretation (Gemini called at most twice per day)
     if (process.env.GEMINI_API_KEY) {
       try {
-        const cryptoHeadlines = await fetchNews('bitcoin cryptocurrency market news')
-        const aiText = await analyzeWithContext(cryptoHeadlines.slice(0, 5), CRYPTO_PROMPT)
-        const aiJson = parseJson<{ interpretation: string; macroSignal: string }>(aiText)
-        if (aiJson.interpretation) interpretation = aiJson.interpretation
-        if (aiJson.macroSignal) macroSignal = aiJson.macroSignal
+        const ai = await fetchCryptoAI(getAISlot())
+        if (ai.interpretation) interpretation = ai.interpretation
+        if (ai.macroSignal) macroSignal = ai.macroSignal
       } catch (err) {
         // Gemini unavailable or rate-limited — deterministic fallback stays in place
         console.warn('[crypto] Gemini analysis skipped:', err instanceof Error ? err.message : err)

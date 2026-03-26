@@ -2,7 +2,7 @@ import Header from '@/components/layout/Header'
 import RiskMeter from '@/components/sections/RiskMeter'
 import EconomyPulse from '@/components/sections/EconomyPulse'
 import ConflictTracker from '@/components/sections/ConflictTracker'
-import MarketSentiment from '@/components/sections/MarketSentiment'
+import AISector from '@/components/sections/AISector'
 import CryptoSignal from '@/components/sections/CryptoSignal'
 import HistoricalContext from '@/components/sections/HistoricalContext'
 
@@ -23,8 +23,8 @@ export default function Dashboard() {
           <CryptoSignal />
         </div>
 
-        {/* Section 4 — Market Sentiment (full width) */}
-        <MarketSentiment />
+        {/* Section 4 — AI Sector (full width) */}
+        <AISector />
 
         {/* Section 6 — Historical Context (full width) */}
         <HistoricalContext />

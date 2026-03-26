@@ -36,7 +36,6 @@ export async function GET(request: NextRequest) {
     : 'http://localhost:3000'
 
   const routes = [
-    '/api/sentiment?lang=en',
     '/api/risk?lang=en',
     '/api/conflicts?lang=en',
     '/api/historical?lang=en',

@@ -179,6 +179,59 @@ export interface HistoricalData {
   updatedAt: string
 }
 
+// ─── AI Sector ────────────────────────────────────────────────────────────────
+
+export interface AIStock {
+  ticker: string
+  name: string
+  price: number
+  change1d: number
+  sparkline7d: number[]
+}
+
+export interface AIETF {
+  ticker: string
+  name: string
+  price: number
+  change7d: number
+}
+
+export interface VCXGauge {
+  price: number
+  nav: number
+  premium: number
+  interpretation: string
+}
+
+export interface YTDItem {
+  label: string
+  value: number
+}
+
+export interface CapexQuarter {
+  quarter: string
+  groupA: number
+  groupB: number
+  isEst?: boolean
+}
+
+export interface AIMomentum {
+  score: number
+  label: string
+  summary: string
+  personal_angle: string
+}
+
+export interface AISectorData {
+  stocks: { hyperscalers: AIStock[]; infrastructure: AIStock[] }
+  etfs: AIETF[]
+  vcxGauge: VCXGauge
+  ytdComparison: YTDItem[]
+  capexChart: CapexQuarter[]
+  momentum: AIMomentum
+  updatedAt: string
+}
+
 // ─── Shared ───────────────────────────────────────────────────────────────────
 
 export interface Quote {
