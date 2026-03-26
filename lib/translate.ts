@@ -1,32 +1,37 @@
 /**
- * Free translation using the MyMemory public API.
- * No API key required. Free up to ~1000 words/day per IP.
- * Falls back to English silently on any error.
+ * Free translation via Google Translate's public endpoint.
+ * No API key required. Used for FR/ES sections so those
+ * don't need separate Gemini calls.
  *
- * Used for FR/ES in risk, conflicts, and historical routes so those
- * sections no longer require separate Gemini calls.
+ * Falls back to the original English text on any error.
  */
 
 import type { RiskData, ConflictsData, HistoricalData } from '@/lib/types'
 
-const MYMEMORY = 'https://api.mymemory.translated.world/get'
+const GT_URL = 'https://translate.googleapis.com/translate_a/single'
 
 export async function translateText(text: string, lang: string): Promise<string> {
   if (!text || lang === 'en') return text
   try {
-    const res = await fetch(`${MYMEMORY}?q=${encodeURIComponent(text)}&langpair=en|${lang}`, {
-      next: { revalidate: 0 },
-    })
+    const url = new URL(GT_URL)
+    url.searchParams.set('client', 'gtx')
+    url.searchParams.set('sl', 'en')
+    url.searchParams.set('tl', lang)
+    url.searchParams.set('dt', 't')
+    url.searchParams.set('q', text)
+
+    const res = await fetch(url.toString())
     if (!res.ok) return text
+    // Response shape: [ [ ["translated chunk", "orig", ...], ... ], null, "en", ... ]
     const json = await res.json()
-    if (json?.responseStatus === 200 && json?.responseData?.translatedText) {
-      return json.responseData.translatedText as string
-    }
-    return text
+    const translated = (json[0] as [string][]).map((chunk) => chunk[0]).join('')
+    return translated || text
   } catch {
     return text
   }
 }
+
+// ─── Route-specific helpers ───────────────────────────────────────────────────
 
 export async function translateRiskData(data: RiskData, lang: string): Promise<RiskData> {
   const details = data.drivers.map((d) => d.detail)
