@@ -388,7 +388,7 @@ export default function AISector() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { load() }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
 

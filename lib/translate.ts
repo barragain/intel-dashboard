@@ -58,12 +58,16 @@ export async function translateRiskData(data: RiskData, lang: string): Promise<R
 }
 
 export async function translateConflictsData(data: ConflictsData, lang: string): Promise<ConflictsData> {
+  const names = data.conflicts.map((c) => c.name)
+  const locations = data.conflicts.map((c) => c.location)
   const relevances = data.conflicts.map((c) => c.relevance)
   const impacts = data.conflicts.map((c) => c.keyImpact)
   const details = data.conflicts.map((c) => c.details)
 
   const results = await Promise.all([
     translateText(data.overallAssessment, lang),
+    ...names.map((t) => translateText(t, lang)),
+    ...locations.map((t) => translateText(t, lang)),
     ...relevances.map((t) => translateText(t, lang)),
     ...impacts.map((t) => translateText(t, lang)),
     ...details.map((t) => translateText(t, lang)),
@@ -71,12 +75,16 @@ export async function translateConflictsData(data: ConflictsData, lang: string):
 
   const overallAssessment = results[0]
   const n = data.conflicts.length
-  const tRelevances = results.slice(1, 1 + n)
-  const tImpacts = results.slice(1 + n, 1 + n * 2)
-  const tDetails = results.slice(1 + n * 2)
+  const tNames = results.slice(1, 1 + n)
+  const tLocations = results.slice(1 + n, 1 + n * 2)
+  const tRelevances = results.slice(1 + n * 2, 1 + n * 3)
+  const tImpacts = results.slice(1 + n * 3, 1 + n * 4)
+  const tDetails = results.slice(1 + n * 4)
 
   const conflicts = data.conflicts.map((c, i) => ({
     ...c,
+    name: tNames[i] ?? c.name,
+    location: tLocations[i] ?? c.location,
     relevance: tRelevances[i] ?? c.relevance,
     keyImpact: tImpacts[i] ?? c.keyImpact,
     details: tDetails[i] ?? c.details,
