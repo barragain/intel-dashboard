@@ -7,6 +7,7 @@ import type { NewsHeadline } from '@/lib/news'
 import { getCached, setCached } from '@/lib/cache'
 import { getLang } from '@/lib/lang'
 import { getAISlot } from '@/lib/aiSlot'
+import { translateConflictsData } from '@/lib/translate'
 import type { ConflictsData } from '@/lib/types'
 
 // Search grounding DISABLED — context comes from pre-fetched news headlines.
@@ -65,7 +66,7 @@ function enrichHeadlines(
   })
 }
 
-async function generateConflictsData(lang: string): Promise<ConflictsData> {
+async function generateConflictsData(): Promise<ConflictsData> {
   const [tw, trade, mideast, ru] = await Promise.all([
     fetchNews('taiwan strait china military'),
     fetchNews('us china trade tariffs technology'),
@@ -80,7 +81,7 @@ async function generateConflictsData(lang: string): Promise<ConflictsData> {
     ...ru.slice(0, 2),
   ]
   const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
-  const text = await analyzeWithContext(headlines, prompt, lang)
+  const text = await analyzeWithContext(headlines, prompt)
   const parsed = parseJson<Omit<ConflictsData, 'updatedAt'>>(text)
   // Enrich conflict headlines with real URLs from fetchNews results
   const enriched = {
@@ -94,9 +95,9 @@ async function generateConflictsData(lang: string): Promise<ConflictsData> {
 }
 
 // EN only: keyed by slot, warmed by the cron job at each slot rollover.
-// FR/ES are never stored here — they use the in-memory cache below.
+// FR/ES use the cached EN data translated via MyMemory (free, no Gemini cost).
 const fetchConflictsEN = unstable_cache(
-  (_slot: string) => generateConflictsData('en'),
+  (_slot: string) => generateConflictsData(),
   ['conflicts-data'],
   { revalidate: false },
 )
@@ -113,13 +114,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(await fetchConflictsEN(getAISlot()))
     }
 
-    // FR/ES: on-demand only — generated when a user requests that language,
-    // cached in the in-memory store (24h TTL via the 'conflicts' key prefix).
+    // FR/ES: translate the cached EN data using MyMemory (free, no Gemini cost).
     const cacheKey = `conflicts_${lang}`
     const cached = getCached(cacheKey)
     if (cached) return NextResponse.json(cached)
 
-    const data = await generateConflictsData(lang)
+    const enData = await fetchConflictsEN(getAISlot())
+    const data = await translateConflictsData(enData, lang)
     setCached(cacheKey, data)
     return NextResponse.json(data)
   } catch (err) {

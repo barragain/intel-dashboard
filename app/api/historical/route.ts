@@ -5,6 +5,7 @@ import { searchAndAnalyze, parseJson } from '@/lib/gemini'
 import { getCached, setCached } from '@/lib/cache'
 import { getLang } from '@/lib/lang'
 import { getAISlot } from '@/lib/aiSlot'
+import { translateHistoricalData } from '@/lib/translate'
 import type { HistoricalData } from '@/lib/types'
 
 // Search grounding ENABLED — Historical Context and Analyst/Expert Voices sections
@@ -56,17 +57,17 @@ Include 3 historical parallels — choose whichever are most relevant to right n
 Include 2–3 real expert quotes from economists or institutional analysts found via search — exact words only.
 Include 2–3 real news article headlines with publication and date.`
 
-async function generateHistoricalData(lang: string): Promise<HistoricalData> {
+async function generateHistoricalData(): Promise<HistoricalData> {
   const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
-  const text = await searchAndAnalyze(prompt, lang)
+  const text = await searchAndAnalyze(prompt)
   const parsed = parseJson<Omit<HistoricalData, 'updatedAt'>>(text)
   return { ...parsed, updatedAt: new Date().toISOString() } as HistoricalData
 }
 
 // EN only: keyed by slot, warmed by the cron job at each slot rollover.
-// FR/ES are never stored here — they use the in-memory cache below.
+// FR/ES use the cached EN data translated via MyMemory (free, no Gemini cost).
 const fetchHistoricalEN = unstable_cache(
-  (_slot: string) => generateHistoricalData('en'),
+  (_slot: string) => generateHistoricalData(),
   ['historical-data'],
   { revalidate: false },
 )
@@ -83,13 +84,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(await fetchHistoricalEN(getAISlot()))
     }
 
-    // FR/ES: on-demand only — generated when a user requests that language,
-    // cached in the in-memory store (24h TTL via the 'historical' key prefix).
+    // FR/ES: translate the cached EN data using MyMemory (free, no Gemini cost).
     const cacheKey = `historical_${lang}`
     const cached = getCached(cacheKey)
     if (cached) return NextResponse.json(cached)
 
-    const data = await generateHistoricalData(lang)
+    const enData = await fetchHistoricalEN(getAISlot())
+    const data = await translateHistoricalData(enData, lang)
     setCached(cacheKey, data)
     return NextResponse.json(data)
   } catch (err) {

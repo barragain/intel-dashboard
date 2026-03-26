@@ -287,7 +287,7 @@ function MomentumBlock({ momentum }: { momentum: AIMomentum }) {
   const score = Math.max(0, Math.min(100, momentum.score))
   const rad = ((180 - score * 1.8) * Math.PI) / 180
   const nx = cx + nl * Math.cos(rad), ny = cy - nl * Math.sin(rad)
-  const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 0 ${cx + r} ${cy}`
+  const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`
   const scoreColor = score >= 70 ? '#22C55E' : score >= 40 ? '#F59E0B' : '#EF4444'
 
   return (

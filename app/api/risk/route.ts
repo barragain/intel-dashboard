@@ -6,6 +6,7 @@ import { fetchNews } from '@/lib/news'
 import { getCached, setCached } from '@/lib/cache'
 import { getLang } from '@/lib/lang'
 import { getAISlot } from '@/lib/aiSlot'
+import { translateRiskData } from '@/lib/translate'
 import type { RiskData } from '@/lib/types'
 
 // Search grounding DISABLED — context comes from pre-fetched news headlines.
@@ -49,7 +50,7 @@ Include exactly 5 drivers: Taiwan Strait, Ad Spend, Tech Sector, France/EU, Mark
 Include 2–3 real expert quotes from the headlines provided — exact words only, not paraphrased.
 Include 2–3 real news article headlines with publication and date from the context provided.`
 
-async function generateRiskData(lang: string): Promise<RiskData> {
+async function generateRiskData(): Promise<RiskData> {
   const [tech, eu, fear, tw, adspend] = await Promise.all([
     fetchNews('tech sector semiconductor earnings AI'),
     fetchNews('france eu economy market'),
@@ -65,15 +66,15 @@ async function generateRiskData(lang: string): Promise<RiskData> {
     ...adspend.slice(0, 1),
   ]
   const prompt = PROMPT_TEMPLATE.replace('{{DATE}}', new Date().toDateString())
-  const text = await analyzeWithContext(headlines, prompt, lang)
+  const text = await analyzeWithContext(headlines, prompt)
   const parsed = parseJson<Omit<RiskData, 'updatedAt'>>(text)
   return { ...parsed, updatedAt: new Date().toISOString() } as RiskData
 }
 
 // EN only: keyed by slot, warmed by the cron job at each slot rollover.
-// FR/ES are never stored here — they use the in-memory cache below.
+// FR/ES use the cached EN data translated via MyMemory (free, no Gemini cost).
 const fetchRiskEN = unstable_cache(
-  (_slot: string) => generateRiskData('en'),
+  (_slot: string) => generateRiskData(),
   ['risk-data'],
   { revalidate: false },
 )
@@ -90,13 +91,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(await fetchRiskEN(getAISlot()))
     }
 
-    // FR/ES: on-demand only — generated when a user requests that language,
-    // cached in the in-memory store (24h TTL via the 'risk' key prefix).
+    // FR/ES: translate the cached EN data using MyMemory (free, no Gemini cost).
     const cacheKey = `risk_${lang}`
     const cached = getCached(cacheKey)
     if (cached) return NextResponse.json(cached)
 
-    const data = await generateRiskData(lang)
+    const enData = await fetchRiskEN(getAISlot())
+    const data = await translateRiskData(enData, lang)
     setCached(cacheKey, data)
     return NextResponse.json(data)
   } catch (err) {
