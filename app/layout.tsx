@@ -21,9 +21,25 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 })
 
+// AFTER
 export const metadata: Metadata = {
-  title: 'INTEL — Personal Financial Intelligence',
-  description: 'Real-time personal financial intelligence dashboard',
+  title: "INTELDASH — Personal World View Dashboard",
+  description: "One dashboard to track everything that matters to you — markets, geopolitics, crypto, and global risk, filtered through your life.",
+  metadataBase: new URL("https://intel-dashboard-snowy.vercel.app"),
+  openGraph: {
+    title: "INTELDASH — Personal World View Dashboard",
+    description: "One dashboard to track everything that matters to you — markets, geopolitics, crypto, and global risk, filtered through your life.",
+    url: "https://intel-dashboard-snowy.vercel.app",
+    siteName: "INTELDASH",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "INTELDASH Dashboard Preview" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "INTELDASH — Personal World View Dashboard",
+    description: "One dashboard to track everything that matters to you.",
+    images: ["/og-image.png"],
+  },
 }
 
 export const viewport = {

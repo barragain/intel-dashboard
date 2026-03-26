@@ -11,7 +11,13 @@
       "Bash(git push:*)",
       "Bash(npm uninstall:*)",
       "Bash(printf '# Required for AI-powered sections \\(Risk Meter, Conflicts, Sentiment, Historical Context\\)\\\\n# Get your key at https://aistudio.google.com/app/apikey\\\\nGEMINI_API_KEY=your_key_here\\\\n')",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(find C:/Users/barra/projects/intel-dashboard -not -path */node_modules/* -name *.tsx -o -not -path */node_modules/* -name *.ts)",
+      "Bash(npm run:*)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "claude-flow"
+  ]
 }
