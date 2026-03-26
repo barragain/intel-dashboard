@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { fmtTimestamp } from '@/lib/utils'
-import { AlertTriangle, RefreshCw, KeyRound, Cpu } from 'lucide-react'
+import { useState, useCallback, useEffect } from 'react'
+import { AlertTriangle, RefreshCw, KeyRound } from 'lucide-react'
+import NextRefresh from '@/components/ui/NextRefresh'
 import type { AISectorData, AIStock, AIETF, VCXGauge, YTDItem, CapexQuarter, AIMomentum } from '@/lib/types'
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
@@ -14,13 +14,13 @@ function fmtPrice(n: number): string {
     : '$' + n.toFixed(2)
 }
 
-function fmtPct(n: number, showSign = true): string {
-  const sign = showSign && n >= 0 ? '+' : ''
+function fmtPct(n: number): string {
+  const sign = n >= 0 ? '+' : ''
   return `${sign}${n.toFixed(2)}%`
 }
 
 function changeColor(n: number): string {
-  return n >= 0 ? 'text-risk-stable' : 'text-trend-down'
+  return n >= 0 ? 'text-trend-up' : 'text-trend-down'
 }
 
 // ─── Sparkline ───────────────────────────────────────────────────────────────
@@ -33,9 +33,11 @@ function Sparkline({ data, positive }: { data: number[]; positive: boolean }) {
   const pts = data
     .map((v, i) => `${((i / (data.length - 1)) * W).toFixed(1)},${(H - ((v - min) / range) * H).toFixed(1)}`)
     .join(' ')
+  // Use trend.up / trend.down to match the design system
+  const stroke = positive ? '#4ADE80' : '#F87171'
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
-      <polyline points={pts} fill="none" stroke={positive ? '#22C55E' : '#EF4444'} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points={pts} fill="none" stroke={stroke} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   )
 }
@@ -64,7 +66,6 @@ function StockCard({ stock }: { stock: AIStock }) {
 // ─── ETF Card ─────────────────────────────────────────────────────────────────
 
 function ETFCard({ etf }: { etf: AIETF }) {
-  const pos = etf.change7d >= 0
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border p-3">
       <div className="flex items-center justify-between mb-1">
@@ -83,6 +84,7 @@ function ETFCard({ etf }: { etf: AIETF }) {
 
 function VCXBlock({ gauge }: { gauge: VCXGauge }) {
   const fillPct = Math.min(Math.max(gauge.premium, 0) / 1500, 1) * 100
+  // risk.stable / risk.watch / risk.worried to match design system
   const fillColor = gauge.premium < 200 ? '#22C55E' : gauge.premium < 500 ? '#F59E0B' : '#EF4444'
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border p-4">
@@ -130,14 +132,17 @@ function YTDChart({ items }: { items: YTDItem[] }) {
     <div className="space-y-2.5">
       {items.map((item) => {
         const pos = item.value >= 0
-        const barPct = (Math.abs(item.value) / maxAbs) * 100
         return (
           <div key={item.label} className="flex items-center gap-3">
             <span className="text-xs font-mono text-intel-muted w-32 flex-shrink-0 truncate">{item.label}</span>
             <div className="flex-1 h-5 bg-intel-bg rounded overflow-hidden border border-intel-border/50">
               <div
                 className="h-full rounded transition-all duration-700"
-                style={{ width: `${barPct}%`, backgroundColor: pos ? '#22C55E' : '#EF4444', opacity: 0.85 }}
+                style={{
+                  width: `${(Math.abs(item.value) / maxAbs) * 100}%`,
+                  backgroundColor: pos ? '#4ADE80' : '#F87171',
+                  opacity: 0.8,
+                }}
               />
             </div>
             <span className={`text-xs font-mono font-bold tabular-nums w-14 text-right ${changeColor(item.value)}`}>
@@ -169,20 +174,22 @@ function CapexChart({ quarters }: { quarters: CapexQuarter[] }) {
           const bH = Math.max((q.groupB / maxVal) * chartH, 2)
           return (
             <g key={q.quarter}>
-              <rect x={x} y={chartH - aH} width={barW} height={aH} fill="#3B82F6" rx="2" opacity="0.85" />
-              <text x={x + barW / 2} y={chartH - aH - 4} textAnchor="middle" fill="#93C5FD" fontSize="7.5">{q.groupA.toFixed(0)}</text>
-              <rect x={x + barW + barGap} y={chartH - bH} width={barW} height={bH} fill="#22C55E" rx="2" opacity="0.85" />
-              <text x={x + barW + barGap + barW / 2} y={chartH - bH - 4} textAnchor="middle" fill="#86EFAC" fontSize="7.5">{q.groupB.toFixed(0)}</text>
+              {/* Group A — intel-gold tint for Microsoft+Alphabet */}
+              <rect x={x} y={chartH - aH} width={barW} height={aH} fill="#C8A96E" rx="2" opacity="0.75" />
+              <text x={x + barW / 2} y={chartH - aH - 4} textAnchor="middle" fill="#C8A96E" fontSize="7.5">{q.groupA.toFixed(0)}</text>
+              {/* Group B — trend-up tint for Meta+Amazon */}
+              <rect x={x + barW + barGap} y={chartH - bH} width={barW} height={bH} fill="#4ADE80" rx="2" opacity="0.6" />
+              <text x={x + barW + barGap + barW / 2} y={chartH - bH - 4} textAnchor="middle" fill="#4ADE80" fontSize="7.5">{q.groupB.toFixed(0)}</text>
               <text x={x + barW + barGap / 2} y={chartH + 12} textAnchor="middle" fill="#71717A" fontSize="8">
                 {q.quarter}{q.isEst ? '*' : ''}
               </text>
             </g>
           )
         })}
-        <rect x={12} y={chartH + 22} width={8} height={6} fill="#3B82F6" rx="1" />
-        <text x={24} y={chartH + 28} fill="#93C5FD" fontSize="8">MSFT+GOOGL ($B)</text>
-        <rect x={100} y={chartH + 22} width={8} height={6} fill="#22C55E" rx="1" />
-        <text x={112} y={chartH + 28} fill="#86EFAC" fontSize="8">META+AMZN ($B)</text>
+        <rect x={12} y={chartH + 22} width={8} height={6} fill="#C8A96E" rx="1" opacity="0.75" />
+        <text x={24} y={chartH + 28} fill="#C8A96E" fontSize="8">MSFT+GOOGL ($B)</text>
+        <rect x={104} y={chartH + 22} width={8} height={6} fill="#4ADE80" rx="1" opacity="0.6" />
+        <text x={116} y={chartH + 28} fill="#4ADE80" fontSize="8">META+AMZN ($B)</text>
         {quarters.some((q) => q.isEst) && (
           <text x={svgW - 4} y={chartH + 28} textAnchor="end" fill="#71717A" fontSize="8">* est.</text>
         )}
@@ -195,18 +202,16 @@ function CapexChart({ quarters }: { quarters: CapexQuarter[] }) {
 
 function MomentumBlock({ momentum }: { momentum: AIMomentum }) {
   const cx = 80, cy = 76, r = 58, needleLen = 46
-  const clampedScore = Math.max(0, Math.min(100, momentum.score))
-  const angleRad = ((180 - clampedScore * 1.8) * Math.PI) / 180
+  const score = Math.max(0, Math.min(100, momentum.score))
+  const angleRad = ((180 - score * 1.8) * Math.PI) / 180
   const nx = cx + needleLen * Math.cos(angleRad)
   const ny = cy - needleLen * Math.sin(angleRad)
   const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 0 ${cx + r} ${cy}`
-
-  const scoreColor =
-    clampedScore >= 70 ? '#22C55E' : clampedScore >= 40 ? '#F59E0B' : '#EF4444'
+  const scoreColor = score >= 70 ? '#22C55E' : score >= 40 ? '#F59E0B' : '#EF4444'
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
-      {/* Gauge SVG */}
+      {/* Gauge */}
       <div className="flex-shrink-0 flex flex-col items-center">
         <svg width="160" height="90" viewBox="0 0 160 90">
           <defs>
@@ -218,9 +223,9 @@ function MomentumBlock({ momentum }: { momentum: AIMomentum }) {
           </defs>
           <path d={arcPath} stroke="#27272A" strokeWidth="10" fill="none" strokeLinecap="round" />
           <path d={arcPath} stroke="url(#gaugeGrad)" strokeWidth="8" fill="none" strokeLinecap="round" />
-          <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="white" strokeWidth="2" strokeLinecap="round" />
-          <circle cx={cx} cy={cy} r="4" fill="white" />
-          <text x={cx} y={cy + 16} textAnchor="middle" fill={scoreColor} fontSize="14" fontFamily="monospace" fontWeight="bold">{clampedScore}</text>
+          <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="#F4F4F5" strokeWidth="2" strokeLinecap="round" />
+          <circle cx={cx} cy={cy} r="4" fill="#F4F4F5" />
+          <text x={cx} y={cy + 16} textAnchor="middle" fill={scoreColor} fontSize="14" fontFamily="monospace" fontWeight="bold">{score}</text>
           <text x={cx - r + 2} y={cy + 14} fill="#EF4444" fontSize="8" fontFamily="monospace">0</text>
           <text x={cx + r - 10} y={cy + 14} fill="#22C55E" fontSize="8" fontFamily="monospace">100</text>
         </svg>
@@ -233,8 +238,10 @@ function MomentumBlock({ momentum }: { momentum: AIMomentum }) {
           <p className="text-sm text-intel-secondary leading-relaxed">{momentum.summary}</p>
         )}
         {momentum.personal_angle && (
-          <div className="border-l-2 border-blue-500 pl-3">
-            <div className="text-[11px] font-mono text-blue-400 uppercase tracking-wider mb-1">WHAT THIS MEANS FOR YOU</div>
+          <div className="bg-intel-elevated rounded-lg border border-intel-gold/20 px-4 py-3">
+            <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider block mb-1.5">
+              WHAT THIS MEANS FOR YOU
+            </span>
             <p className="text-sm text-intel-secondary leading-relaxed">{momentum.personal_angle}</p>
           </div>
         )}
@@ -249,131 +256,96 @@ function LoadSkeleton() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 rounded-lg shimmer" />)}
+        {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 rounded-lg shimmer" aria-hidden="true" />)}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 rounded-lg shimmer" />)}
+        {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 rounded-lg shimmer" aria-hidden="true" />)}
       </div>
       <div className="grid grid-cols-3 gap-3">
-        {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 rounded-lg shimmer" />)}
+        {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 rounded-lg shimmer" aria-hidden="true" />)}
       </div>
-      <div className="h-24 rounded-lg shimmer" />
+      <div className="h-24 rounded-lg shimmer" aria-hidden="true" />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="h-32 rounded-lg shimmer" />
-        <div className="h-32 rounded-lg shimmer" />
+        <div className="h-32 rounded-lg shimmer" aria-hidden="true" />
+        <div className="h-32 rounded-lg shimmer" aria-hidden="true" />
       </div>
-      <div className="h-36 rounded-lg shimmer" />
+      <div className="h-36 rounded-lg shimmer" aria-hidden="true" />
     </div>
   )
 }
 
 // ─── Main Section ─────────────────────────────────────────────────────────────
 
-type LoadState = 'idle' | 'loading' | 'loaded' | 'error'
-
 export default function AISector() {
-  const [state, setState] = useState<LoadState>('idle')
   const [data, setData] = useState<AISectorData | null>(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [needsKey, setNeedsKey] = useState(false)
+  const [needsApiKey, setNeedsApiKey] = useState(false)
 
   const load = useCallback(async () => {
-    setState('loading')
+    setLoading(true)
     setError(null)
-    setNeedsKey(false)
+    setNeedsApiKey(false)
     try {
       const res = await fetch('/api/ai-sector')
       const json = await res.json()
       if (!res.ok) {
-        if (json.needsApiKey) setNeedsKey(true)
-        setError(json.error ?? 'Failed to load')
-        setState('error')
+        if (json.needsApiKey) { setNeedsApiKey(true); setError('Gemini API key required') }
+        else if (json.rateLimited) { setError('Rate limited — try again later') }
+        else setError(json.error ?? 'Failed to load')
         return
       }
       setData(json as AISectorData)
-      setState('loaded')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load')
-      setState('error')
+    } finally {
+      setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    load()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section aria-labelledby="ai-sector-title">
       <div className="bg-intel-surface border border-intel-border rounded-xl overflow-hidden">
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-intel-border flex items-center justify-between gap-4">
+        {/* Header — matches the same pattern as all other sections */}
+        <div className="px-6 pt-6 pb-4 border-b border-intel-border flex items-center justify-between">
           <div>
             <h2 className="font-display font-bold text-xl text-intel-text" id="ai-sector-title">
               AI SECTOR
             </h2>
-            <p className="text-sm text-intel-muted mt-0.5">
-              AI stocks, ETFs, capex trends &amp; sector momentum
-            </p>
+            <p className="text-sm text-intel-muted mt-0.5">AI stocks, ETFs, capex trends &amp; sector momentum</p>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {state === 'idle' && (
-              <button
-                onClick={load}
-                className="flex items-center gap-2 text-sm font-mono text-intel-gold border border-intel-gold/40 px-4 py-1.5 rounded hover:bg-intel-gold/10 transition-colors"
-              >
-                <Cpu size={13} /> LOAD AI SECTOR
-              </button>
-            )}
-            {state === 'loaded' && data && (
-              <>
-                <span className="text-[13px] font-mono text-intel-dim hidden sm:block">
-                  {fmtTimestamp(data.updatedAt)}
-                </span>
-                <button
-                  onClick={load}
-                  className="flex items-center gap-1.5 text-[13px] font-mono text-intel-gold border border-intel-gold/30 px-2.5 py-1 rounded hover:bg-intel-gold/10 transition-colors"
-                >
-                  <RefreshCw size={11} /> Refresh
-                </button>
-              </>
+          <div className="flex items-center gap-3">
+            <NextRefresh />
+            {data && (
+              <span className="text-[13px] font-mono text-intel-dim" title={new Date(data.updatedAt).toLocaleString()}>
+                {new Date(data.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </span>
             )}
           </div>
         </div>
 
         <div className="p-6">
-          {/* Idle state */}
-          {state === 'idle' && (
-            <div className="flex flex-col items-center py-12 gap-4 text-center">
-              <Cpu size={32} className="text-intel-gold opacity-50" />
-              <div>
-                <p className="text-sm text-intel-text font-medium mb-1">AI sector data not loaded</p>
-                <p className="text-xs text-intel-muted">Fetches live stock prices + Gemini analysis. Cached 24 hours.</p>
-              </div>
-              <button
-                onClick={load}
-                className="flex items-center gap-2 text-sm font-mono text-intel-gold border border-intel-gold/40 px-5 py-2 rounded hover:bg-intel-gold/10 transition-colors"
-              >
-                <Cpu size={14} /> LOAD AI SECTOR
-              </button>
-            </div>
-          )}
-
           {/* Loading */}
-          {state === 'loading' && <LoadSkeleton />}
+          {loading && <LoadSkeleton />}
 
           {/* Error */}
-          {state === 'error' && (
-            <div className="flex flex-col items-center py-10 gap-3 text-center">
-              {needsKey ? (
+          {!loading && error && (
+            <div className="flex flex-col items-center py-10 gap-3">
+              {needsApiKey ? (
                 <>
                   <KeyRound size={20} className="text-intel-gold" />
                   <p className="text-sm font-medium text-intel-text">Gemini API key required</p>
-                  <p className="text-xs text-intel-muted max-w-sm">Set GEMINI_API_KEY in your environment variables.</p>
+                  <p className="text-sm text-intel-muted max-w-sm">Set GEMINI_API_KEY in your environment variables.</p>
                 </>
               ) : (
                 <>
                   <AlertTriangle size={18} className="text-risk-worried" />
                   <p className="text-sm text-intel-muted">{error}</p>
-                  <button
-                    onClick={load}
-                    className="flex items-center gap-2 text-sm font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors"
-                  >
+                  <button onClick={load} className="flex items-center gap-2 text-sm font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors">
                     <RefreshCw size={12} /> Retry
                   </button>
                 </>
@@ -382,7 +354,7 @@ export default function AISector() {
           )}
 
           {/* Loaded */}
-          {state === 'loaded' && data && (
+          {!loading && data && (
             <div className="space-y-8 animate-in">
 
               {/* Block 1 — AI Stocks */}
@@ -411,7 +383,7 @@ export default function AISector() {
                 <VCXBlock gauge={data.vcxGauge} />
               </div>
 
-              {/* Blocks 4 + 5 — YTD vs Market & Capex (side by side on lg) */}
+              {/* Blocks 4 + 5 — YTD vs Market & Capex */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] mb-3">AI Sector vs Market YTD</h3>
