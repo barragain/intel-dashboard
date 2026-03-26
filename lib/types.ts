@@ -184,6 +184,7 @@ export interface HistoricalData {
 export interface AIStock {
   ticker: string
   name: string
+  description: string
   price: number
   change30d: number
   sparkline30d: number[]
@@ -192,6 +193,7 @@ export interface AIStock {
 export interface AIETF {
   ticker: string
   name: string
+  description: string
   price: number
   change30d: number
   sparkline30d: number[]

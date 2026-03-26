@@ -144,14 +144,31 @@ export async function translateCryptoData(data: CryptoData, lang: string): Promi
 }
 
 export async function translateAISectorData(data: AISectorData, lang: string): Promise<AISectorData> {
-  const [summary, personal_angle, label, interpretation] = await Promise.all([
+  const allStocks = [...data.stocks.hyperscalers, ...data.stocks.infrastructure]
+  const nH = data.stocks.hyperscalers.length
+  const nI = data.stocks.infrastructure.length
+
+  const results = await Promise.all([
     translateText(data.momentum.summary, lang),
     translateText(data.momentum.personal_angle, lang),
     translateText(data.momentum.label, lang),
     translateText(data.vcxGauge.interpretation, lang),
+    ...allStocks.map((s) => translateText(s.description, lang)),
+    ...data.etfs.map((e) => translateText(e.description, lang)),
   ])
+
+  const [summary, personal_angle, label, interpretation] = results
+  const stockDescs = results.slice(4, 4 + nH + nI)
+  const etfDescs = results.slice(4 + nH + nI)
+
+  const hyperscalers = data.stocks.hyperscalers.map((s, i) => ({ ...s, description: stockDescs[i] ?? s.description }))
+  const infrastructure = data.stocks.infrastructure.map((s, i) => ({ ...s, description: stockDescs[nH + i] ?? s.description }))
+  const etfs = data.etfs.map((e, i) => ({ ...e, description: etfDescs[i] ?? e.description }))
+
   return {
     ...data,
+    stocks: { hyperscalers, infrastructure },
+    etfs,
     momentum: { ...data.momentum, summary, personal_angle, label },
     vcxGauge: { ...data.vcxGauge, interpretation },
   }

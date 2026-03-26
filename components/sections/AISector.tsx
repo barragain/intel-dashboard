@@ -16,27 +16,11 @@ const STATUS_COLORS = {
   stable:       'text-intel-muted border-intel-border',
   deteriorating:'text-trend-down border-risk-worried',
 }
-const DIR_LABEL = { improving: 'RISING', stable: 'FLAT', deteriorating: 'FALLING' } as const
+function getDirLabel(dir: 'improving' | 'stable' | 'deteriorating', t: ReturnType<typeof useLanguage>['t']): string {
+  return dir === 'improving' ? t.aiRising : dir === 'deteriorating' ? t.aiFalling : t.aiFlat
+}
 
 // ─── Tooltip text ─────────────────────────────────────────────────────────────
-
-const COMPANY_TIPS: Record<string, string> = {
-  MSFT: 'Microsoft is one of the largest AI investors. Azure cloud and Copilot AI products drive most of its growth. Spending $14B+ per quarter building AI data centers.',
-  GOOGL: 'Alphabet runs Search, YouTube, and Google Cloud. Gemini AI is their main product. One of the biggest buyers of AI chips and data center capacity globally.',
-  META: 'Meta owns Facebook, Instagram, and WhatsApp. Revenue is 97% advertising — AI improves ad targeting. Also spending heavily on open-source Llama models.',
-  ORCL: 'Oracle runs enterprise databases and cloud infrastructure. Winning large AI training contracts, with hyperscalers and NVIDIA renting Oracle cloud capacity.',
-  NVDA: 'NVIDIA makes the GPUs that power almost all AI training and inference. Every hyperscaler spends billions on NVIDIA chips per quarter. No close competitor yet.',
-  AVGO: "Broadcom makes networking chips and custom AI accelerators (Google's TPUs). Second-biggest AI chip beneficiary after NVIDIA across data center infrastructure.",
-  MU: 'Micron makes DRAM and flash memory. High-bandwidth memory (HBM) for AI chips is its fastest-growing segment — NVIDIA H100 and B200 both use Micron HBM.',
-  TSM: "TSMC makes virtually all the world's most advanced chips — NVIDIA H100, Apple M-series, AMD GPUs. A direct proxy for global AI chip demand and tech health.",
-  VRT: 'Vertiv makes power and cooling systems for data centers. AI chips run very hot and need enormous power — NVIDIA actively recommends Vertiv products.',
-}
-
-const ETF_TIPS: Record<string, string> = {
-  BOTZ: 'Tracks companies in robotics and AI automation, including industrial robots, autonomous vehicles, and factory automation. More industrial, less software.',
-  AIQ: 'Tracks companies developing and using AI — cloud providers, chip makers, software platforms. Broad AI exposure across the value chain.',
-  ARKQ: 'Cathie Wood\'s ARK ETF focused on autonomous technology and robotics. Higher risk and reward — heavier in smaller, emerging companies than BOTZ or AIQ.',
-}
 
 const YTD_TIPS: Record<string, string> = {
   'AI Index (AIQ)': 'Year-to-date return for AIQ ETF — used as a proxy for the AI sector\'s performance since January 1st of this year.',
@@ -88,10 +72,10 @@ function StockSparkline({ data, color, id }: { data: number[]; color: string; id
 
 // ─── Stock Card ───────────────────────────────────────────────────────────────
 
-function StockCard({ stock }: { stock: AIStock }) {
+function StockCard({ stock, t }: { stock: AIStock; t: ReturnType<typeof useLanguage>['t'] }) {
   const dir = direction(stock.change30d)
   const sparkColor = stock.change30d >= 0 ? '#4ADE80' : '#F87171'
-  const tip = COMPANY_TIPS[stock.ticker] ?? stock.name
+  const tip = stock.description || stock.name
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
@@ -102,7 +86,7 @@ function StockCard({ stock }: { stock: AIStock }) {
             <span className="text-[12px] font-sans text-intel-muted truncate">{stock.name}</span>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-            <span className={`text-[12px] font-mono uppercase border rounded px-1.5 py-0.5 ${STATUS_COLORS[dir]}`}>{DIR_LABEL[dir]}</span>
+            <span className={`text-[12px] font-mono uppercase border rounded px-1.5 py-0.5 ${STATUS_COLORS[dir]}`}>{getDirLabel(dir, t)}</span>
             <TrendArrow direction={dir} size={13} />
           </div>
         </div>
@@ -110,15 +94,11 @@ function StockCard({ stock }: { stock: AIStock }) {
 
       <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2 border-b border-intel-border">
         <div className="flex flex-col">
-          <Tooltip text="Current market price at last trade." width="sm" position="top" align="left">
-            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">Price</span>
-          </Tooltip>
+          <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide">{t.aiPrice}</span>
           <span className="text-sm font-mono font-semibold text-intel-text tabular-nums mt-0.5">{fmtPrice(stock.price)}</span>
         </div>
         <div className="flex flex-col">
-          <Tooltip text="Price change over the past 30 trading days." width="md" position="top" align="left">
-            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">30D Change</span>
-          </Tooltip>
+          <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide">{t.ai30dChange}</span>
           <span className={`text-sm font-mono font-semibold tabular-nums mt-0.5 ${stock.change30d >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
             {fmtPct(stock.change30d)}
           </span>
@@ -127,7 +107,7 @@ function StockCard({ stock }: { stock: AIStock }) {
 
       {stock.sparkline30d.length > 1 && (
         <div className="px-4 pt-3 pb-1 border-b border-intel-border">
-          <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wider block mb-1">30-day chart</span>
+          <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wider block mb-1">{t.ai30dayChart}</span>
           <StockSparkline data={stock.sparkline30d} color={sparkColor} id={stock.ticker.toLowerCase()} />
         </div>
       )}
@@ -141,10 +121,10 @@ function StockCard({ stock }: { stock: AIStock }) {
 
 // ─── ETF Card ─────────────────────────────────────────────────────────────────
 
-function ETFCard({ etf }: { etf: AIETF }) {
+function ETFCard({ etf, t }: { etf: AIETF; t: ReturnType<typeof useLanguage>['t'] }) {
   const dir = direction(etf.change30d)
   const sparkColor = etf.change30d >= 0 ? '#4ADE80' : '#F87171'
-  const tip = ETF_TIPS[etf.ticker] ?? etf.name
+  const tip = etf.description || etf.name
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
@@ -155,7 +135,7 @@ function ETFCard({ etf }: { etf: AIETF }) {
             <span className="text-[12px] font-sans text-intel-muted truncate hidden sm:block">{etf.name}</span>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className={`text-[12px] font-mono uppercase border rounded px-1.5 py-0.5 ${STATUS_COLORS[dir]}`}>{DIR_LABEL[dir]}</span>
+            <span className={`text-[12px] font-mono uppercase border rounded px-1.5 py-0.5 ${STATUS_COLORS[dir]}`}>{getDirLabel(dir, t)}</span>
             <TrendArrow direction={dir} size={13} />
           </div>
         </div>
@@ -163,15 +143,11 @@ function ETFCard({ etf }: { etf: AIETF }) {
 
       <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2 border-b border-intel-border">
         <div className="flex flex-col">
-          <Tooltip text="Current ETF market price." width="sm" position="top" align="left">
-            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">Price</span>
-          </Tooltip>
+          <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide">{t.aiPrice}</span>
           <span className="text-sm font-mono font-semibold text-intel-text tabular-nums mt-0.5">{fmtPrice(etf.price)}</span>
         </div>
         <div className="flex flex-col">
-          <Tooltip text="Total ETF return over the past 30 trading days." width="md" position="top" align="left">
-            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">30D Change</span>
-          </Tooltip>
+          <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide">{t.ai30dChange}</span>
           <span className={`text-sm font-mono font-semibold tabular-nums mt-0.5 ${etf.change30d >= 0 ? 'text-trend-up' : 'text-trend-down'}`}>
             {fmtPct(etf.change30d)}
           </span>
@@ -180,7 +156,7 @@ function ETFCard({ etf }: { etf: AIETF }) {
 
       {etf.sparkline30d.length > 1 && (
         <div className="px-4 pt-3 pb-1 border-b border-intel-border">
-          <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wider block mb-1">30-day chart</span>
+          <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wider block mb-1">{t.ai30dayChart}</span>
           <StockSparkline data={etf.sparkline30d} color={sparkColor} id={etf.ticker.toLowerCase()} />
         </div>
       )}
@@ -194,15 +170,15 @@ function ETFCard({ etf }: { etf: AIETF }) {
 
 // ─── VCX Hype Gauge ───────────────────────────────────────────────────────────
 
-function VCXBlock({ gauge }: { gauge: VCXGauge }) {
+function VCXBlock({ gauge, t }: { gauge: VCXGauge; t: ReturnType<typeof useLanguage>['t'] }) {
   const fillPct = Math.min(Math.max(gauge.premium, 0) / 1500, 1) * 100
   const fillColor = gauge.premium < 200 ? '#22C55E' : gauge.premium < 500 ? '#F59E0B' : '#EF4444'
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
       <div className="px-4 py-3 border-b border-intel-border flex items-center justify-between">
-        <span className="text-sm font-display font-semibold text-intel-text">VCX — AI Hype Gauge</span>
-        <span className="text-[13px] font-mono text-intel-muted">Fundrise Innovation Fund</span>
+        <span className="text-sm font-display font-semibold text-intel-text">{t.aiVcxTitle}</span>
+        <span className="text-[13px] font-mono text-intel-muted">{t.aiVcxFund}</span>
       </div>
 
       <div className="px-4 py-4 border-b border-intel-border">
@@ -212,7 +188,7 @@ function VCXBlock({ gauge }: { gauge: VCXGauge }) {
               {gauge.premium > 0 ? gauge.premium.toFixed(0) : '—'}%
             </span>
           </Tooltip>
-          <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wider">premium to NAV</span>
+          <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wider">{t.aiPremiumNav}</span>
         </div>
         <div className="h-3 bg-intel-bg rounded-full border border-intel-border overflow-hidden mb-1.5">
           <div className="h-full rounded-full transition-all duration-700" style={{ width: `${fillPct}%`, backgroundColor: fillColor }} />
@@ -224,24 +200,20 @@ function VCXBlock({ gauge }: { gauge: VCXGauge }) {
 
       <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2 border-b border-intel-border">
         <div className="flex flex-col">
-          <Tooltip text="Current market price of VCX shares on the NYSE." width="md" position="top" align="left">
-            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">Market Price</span>
-          </Tooltip>
+          <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide">{t.aiMarketPrice}</span>
           <span className="text-sm font-mono font-semibold text-intel-text tabular-nums mt-0.5">{fmtPrice(gauge.price)}</span>
         </div>
         <div className="flex flex-col">
-          <Tooltip text="Most recently published NAV — the estimated value of the fund's actual holdings (OpenAI, Anthropic, SpaceX, Databricks) per share." width="lg" position="top" align="left">
-            <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">Last NAV</span>
-          </Tooltip>
+          <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide">{t.aiLastNav}</span>
           <span className="text-sm font-mono font-semibold text-intel-text tabular-nums mt-0.5">{gauge.nav > 0 ? fmtPrice(gauge.nav) : '—'}</span>
         </div>
       </div>
 
       <div className="px-4 py-3">
         <p className="text-sm text-intel-secondary leading-relaxed">
-          {gauge.interpretation || 'VCX holds pre-IPO stakes in OpenAI, Anthropic, SpaceX, and Databricks. The gap between market price and NAV shows how much investors are willing to pay above the fund\'s stated value — a direct measure of AI market hype.'}
+          {gauge.interpretation || t.aiVcxDefaultDesc}
         </p>
-        <p className="text-[11px] text-intel-dim mt-2 italic">Sentiment indicator only. Not investment advice.</p>
+        <p className="text-[11px] text-intel-dim mt-2 italic">{t.aiSentimentDisclaimer}</p>
       </div>
     </div>
   )
@@ -249,12 +221,12 @@ function VCXBlock({ gauge }: { gauge: VCXGauge }) {
 
 // ─── YTD Chart ────────────────────────────────────────────────────────────────
 
-function YTDChart({ items }: { items: YTDItem[] }) {
+function YTDChart({ items, t }: { items: YTDItem[]; t: ReturnType<typeof useLanguage>['t'] }) {
   const maxAbs = Math.max(...items.map((i) => Math.abs(i.value)), 0.1)
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
       <div className="px-4 py-3 border-b border-intel-border">
-        <span className="text-sm font-display font-semibold text-intel-text">AI Sector vs Market — YTD</span>
+        <span className="text-sm font-display font-semibold text-intel-text">{t.aiYtdTitle}</span>
       </div>
       <div className="px-4 py-4 space-y-3 flex-1 border-b border-intel-border">
         {items.map((item) => {
@@ -273,9 +245,7 @@ function YTDChart({ items }: { items: YTDItem[] }) {
         })}
       </div>
       <div className="px-4 py-3">
-        <p className="text-sm text-intel-secondary leading-relaxed">
-          When the AI index runs far ahead of the S&P 500 and MSCI World, it means investors are paying a premium for AI exposure. That gap can shrink fast if earnings disappoint.
-        </p>
+        <p className="text-sm text-intel-secondary leading-relaxed">{t.aiYtdDescription}</p>
       </div>
     </div>
   )
@@ -283,7 +253,7 @@ function YTDChart({ items }: { items: YTDItem[] }) {
 
 // ─── Momentum Gauge ───────────────────────────────────────────────────────────
 
-function MomentumBlock({ momentum }: { momentum: AIMomentum }) {
+function MomentumBlock({ momentum, t }: { momentum: AIMomentum; t: ReturnType<typeof useLanguage>['t'] }) {
   const cx = 80, cy = 76, r = 58, nl = 46
   const score = Math.max(0, Math.min(100, momentum.score))
   const rad = ((180 - score * 1.8) * Math.PI) / 180
@@ -294,7 +264,7 @@ function MomentumBlock({ momentum }: { momentum: AIMomentum }) {
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
       <div className="px-4 py-3 border-b border-intel-border flex items-center justify-between">
-        <span className="text-sm font-display font-semibold text-intel-text">Sector Momentum</span>
+        <span className="text-sm font-display font-semibold text-intel-text">{t.aiMomentumTitle}</span>
         <span className="text-[13px] font-mono text-intel-gold">{momentum.label}</span>
       </div>
 
@@ -327,7 +297,7 @@ function MomentumBlock({ momentum }: { momentum: AIMomentum }) {
       {momentum.personal_angle && (
         <div className="px-4 py-3">
           <div className="bg-intel-bg rounded-lg border border-intel-gold/20 px-4 py-3">
-            <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider block mb-1.5">WHAT THIS MEANS FOR YOU</span>
+            <span className="text-[13px] font-mono text-intel-gold uppercase tracking-wider block mb-1.5">{t.aiWhatMeansYou}</span>
             <p className="text-sm text-intel-secondary leading-relaxed">{momentum.personal_angle}</p>
           </div>
         </div>
@@ -363,7 +333,7 @@ function LoadSkeleton() {
 // ─── Main Section ─────────────────────────────────────────────────────────────
 
 export default function AISector() {
-  const { language } = useLanguage()
+  const { language, t } = useLanguage()
   const [data, setData] = useState<AISectorData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -377,14 +347,14 @@ export default function AISector() {
       const res = await fetch(`/api/ai-sector?lang=${language}`)
       const json = await res.json()
       if (!res.ok) {
-        if (json.needsApiKey) { setNeedsApiKey(true); setError('Gemini API key required') }
-        else if (json.rateLimited) { setError('Rate limited — try again later') }
-        else setError(json.error ?? 'Failed to load')
+        if (json.needsApiKey) { setNeedsApiKey(true); setError(t.noApiKey) }
+        else if (json.rateLimited) { setError(t.rateLimited) }
+        else setError(json.error ?? t.error)
         return
       }
       setData(json as AISectorData)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load')
+      setError(e instanceof Error ? e.message : t.error)
     } finally {
       setLoading(false)
     }
@@ -397,8 +367,8 @@ export default function AISector() {
       <div className="bg-intel-surface border border-intel-border rounded-xl overflow-hidden">
         <div className="px-6 pt-6 pb-4 border-b border-intel-border flex items-center justify-between">
           <div>
-            <h2 className="font-display font-bold text-xl text-intel-text" id="ai-sector-title">AI SECTOR</h2>
-            <p className="text-sm text-intel-muted mt-0.5">AI stocks, ETFs, VCX hype gauge &amp; sector momentum</p>
+            <h2 className="font-display font-bold text-xl text-intel-text" id="ai-sector-title">{t.aiSectorTitle}</h2>
+            <p className="text-sm text-intel-muted mt-0.5">{t.aiSectorSubtitle}</p>
           </div>
           <div className="flex items-center gap-3">
             <NextRefresh />
@@ -418,15 +388,15 @@ export default function AISector() {
               {needsApiKey ? (
                 <>
                   <KeyRound size={20} className="text-intel-gold" />
-                  <p className="text-sm font-medium text-intel-text">Gemini API key required</p>
-                  <p className="text-sm text-intel-muted max-w-sm">Set GEMINI_API_KEY in your environment variables.</p>
+                  <p className="text-sm font-medium text-intel-text">{t.noApiKey}</p>
+                  <p className="text-sm text-intel-muted max-w-sm">{t.noApiKeyDetail}</p>
                 </>
               ) : (
                 <>
                   <AlertTriangle size={18} className="text-risk-worried" />
                   <p className="text-sm text-intel-muted">{error}</p>
                   <button onClick={load} className="flex items-center gap-2 text-sm font-mono text-intel-gold border border-intel-gold/30 px-3 py-1.5 rounded hover:bg-intel-gold/10 transition-colors">
-                    <RefreshCw size={12} /> Retry
+                    <RefreshCw size={12} /> {t.retry}
                   </button>
                 </>
               )}
@@ -436,28 +406,28 @@ export default function AISector() {
           {!loading && data && (
             <div className="space-y-4 animate-in">
               <div className="space-y-4">
-                <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em]">Hyperscalers</h3>
+                <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em]">{t.aiHyperscalers}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {data.stocks.hyperscalers.map((s) => <StockCard key={s.ticker} stock={s} />)}
+                  {data.stocks.hyperscalers.map((s) => <StockCard key={s.ticker} stock={s} t={t} />)}
                 </div>
-                <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] pt-1">Infrastructure</h3>
+                <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em] pt-1">{t.aiInfrastructure}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                  {data.stocks.infrastructure.map((s) => <StockCard key={s.ticker} stock={s} />)}
+                  {data.stocks.infrastructure.map((s) => <StockCard key={s.ticker} stock={s} t={t} />)}
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em]">AI ETFs</h3>
+                <h3 className="text-[13px] font-mono text-intel-muted uppercase tracking-[0.2em]">{t.aiEtfs}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {data.etfs.map((e) => <ETFCard key={e.ticker} etf={e} />)}
+                  {data.etfs.map((e) => <ETFCard key={e.ticker} etf={e} t={t} />)}
                 </div>
               </div>
 
-              <VCXBlock gauge={data.vcxGauge} />
+              <VCXBlock gauge={data.vcxGauge} t={t} />
 
-              <YTDChart items={data.ytdComparison} />
+              <YTDChart items={data.ytdComparison} t={t} />
 
-              <MomentumBlock momentum={data.momentum} />
+              <MomentumBlock momentum={data.momentum} t={t} />
             </div>
           )}
         </div>

@@ -19,10 +19,28 @@ const STOCK_NAMES: Record<string, string> = {
   NVDA: 'NVIDIA', AVGO: 'Broadcom', MU: 'Micron', TSM: 'TSMC', VRT: 'Vertiv',
 }
 
+const STOCK_DESCRIPTIONS: Record<string, string> = {
+  MSFT: 'Microsoft is one of the largest AI investors. Azure cloud and Copilot AI products drive most of its growth. Spending $14B+ per quarter building AI data centers.',
+  GOOGL: 'Alphabet runs Search, YouTube, and Google Cloud. Gemini AI is their main product. One of the biggest buyers of AI chips and data center capacity globally.',
+  META: 'Meta owns Facebook, Instagram, and WhatsApp. Revenue is 97% advertising — AI improves ad targeting. Also spending heavily on open-source Llama models.',
+  ORCL: 'Oracle runs enterprise databases and cloud infrastructure. Winning large AI training contracts, with hyperscalers and NVIDIA renting Oracle cloud capacity.',
+  NVDA: 'NVIDIA makes the GPUs that power almost all AI training and inference. Every hyperscaler spends billions on NVIDIA chips per quarter. No close competitor yet.',
+  AVGO: "Broadcom makes networking chips and custom AI accelerators (Google's TPUs). Second-biggest AI chip beneficiary after NVIDIA across data center infrastructure.",
+  MU: 'Micron makes DRAM and flash memory. High-bandwidth memory (HBM) for AI chips is its fastest-growing segment — NVIDIA H100 and B200 both use Micron HBM.',
+  TSM: "TSMC makes virtually all the world's most advanced chips — NVIDIA H100, Apple M-series, AMD GPUs. A direct proxy for global AI chip demand and tech health.",
+  VRT: 'Vertiv makes power and cooling systems for data centers. AI chips run very hot and need enormous power — NVIDIA actively recommends Vertiv products.',
+}
+
 const ETF_NAMES: Record<string, string> = {
   BOTZ: 'Global X Robotics & AI ETF',
   AIQ: 'Global X Artificial Intelligence ETF',
   ARKQ: 'ARK Autonomous Technology & Robotics ETF',
+}
+
+const ETF_DESCRIPTIONS: Record<string, string> = {
+  BOTZ: 'Tracks companies in robotics and AI automation, including industrial robots, autonomous vehicles, and factory automation. More industrial, less software.',
+  AIQ: 'Tracks companies developing and using AI — cloud providers, chip makers, software platforms. Broad AI exposure across the value chain.',
+  ARKQ: "Cathie Wood's ARK ETF focused on autonomous technology and robotics. Higher risk and reward — heavier in smaller, emerging companies than BOTZ or AIQ.",
 }
 
 interface YFData {
@@ -90,17 +108,17 @@ async function generateAISectorData(): Promise<AISectorData> {
 
   const hyperscalers: AIStock[] = ['MSFT', 'GOOGL', 'META', 'ORCL'].map((ticker, i) => {
     const d = stockResults[i]
-    return { ticker, name: STOCK_NAMES[ticker], price: d?.price ?? 0, change30d: d?.change30d ?? 0, sparkline30d: d?.sparkline ?? [] }
+    return { ticker, name: STOCK_NAMES[ticker], description: STOCK_DESCRIPTIONS[ticker] ?? '', price: d?.price ?? 0, change30d: d?.change30d ?? 0, sparkline30d: d?.sparkline ?? [] }
   })
 
   const infrastructure: AIStock[] = ['NVDA', 'AVGO', 'MU', 'TSM', 'VRT'].map((ticker, i) => {
     const d = stockResults[i + 4]
-    return { ticker, name: STOCK_NAMES[ticker], price: d?.price ?? 0, change30d: d?.change30d ?? 0, sparkline30d: d?.sparkline ?? [] }
+    return { ticker, name: STOCK_NAMES[ticker], description: STOCK_DESCRIPTIONS[ticker] ?? '', price: d?.price ?? 0, change30d: d?.change30d ?? 0, sparkline30d: d?.sparkline ?? [] }
   })
 
   const etfs: AIETF[] = etfSymbols.map((ticker, i) => {
     const d = etfResults[i]
-    return { ticker, name: ETF_NAMES[ticker], price: d?.price ?? 0, change30d: d?.change30d ?? 0, sparkline30d: d?.sparkline ?? [] }
+    return { ticker, name: ETF_NAMES[ticker], description: ETF_DESCRIPTIONS[ticker] ?? '', price: d?.price ?? 0, change30d: d?.change30d ?? 0, sparkline30d: d?.sparkline ?? [] }
   })
 
   const prompt = PROMPT.replace('{{DATE}}', new Date().toDateString())
