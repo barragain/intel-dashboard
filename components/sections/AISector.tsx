@@ -3,11 +3,11 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useLanguage } from '@/lib/i18n'
 import { AlertTriangle, RefreshCw, KeyRound } from 'lucide-react'
-import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts'
 import NextRefresh from '@/components/ui/NextRefresh'
 import Tooltip from '@/components/ui/Tooltip'
 import TrendArrow from '@/components/ui/TrendArrow'
-import type { AISectorData, AIStock, AIETF, VCXGauge, YTDItem, AIMomentum } from '@/lib/types'
+import type { AISectorData, AIStock, AIETF, VCXGauge, AIMomentum } from '@/lib/types'
 
 // ─── Style maps (identical to EconomyPulse) ───────────────────────────────────
 
@@ -18,15 +18,6 @@ const STATUS_COLORS = {
 }
 function getDirLabel(dir: 'improving' | 'stable' | 'deteriorating', t: ReturnType<typeof useLanguage>['t']): string {
   return dir === 'improving' ? t.aiRising : dir === 'deteriorating' ? t.aiFalling : t.aiFlat
-}
-
-// ─── Tooltip text ─────────────────────────────────────────────────────────────
-
-const YTD_TIPS: Record<string, string> = {
-  'AI Index (AIQ)': 'Year-to-date return for AIQ ETF — used as a proxy for the AI sector\'s performance since January 1st of this year.',
-  'S&P 500': 'The S&P 500 tracks the 500 biggest US companies. It is the global benchmark for equity market health.',
-  'Nasdaq': 'The Nasdaq is heavier in tech and growth stocks. More sensitive to interest rates and AI expectations than the broader S&P 500.',
-  'MSCI World': 'MSCI World covers large and mid-cap stocks across 23 developed countries. A benchmark for global diversified equity performance.',
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
@@ -44,21 +35,41 @@ function direction(c: number): 'improving' | 'stable' | 'deteriorating' {
 
 function StockSparkline({ data, color, id }: { data: number[]; color: string; id: string }) {
   if (data.length < 2) return null
-  const pts = data.map((price) => ({ price }))
+  const today = new Date()
+  const pts = data.map((price, i) => ({
+    price,
+    date: new Date(today.getTime() - (data.length - 1 - i) * 86400000)
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  }))
   return (
-    <ResponsiveContainer width="100%" height={48}>
-      <AreaChart data={pts} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={64}>
+      <AreaChart data={pts} margin={{ top: 2, right: 0, left: -28, bottom: 0 }}>
         <defs>
           <linearGradient id={`spark-${id}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={color} stopOpacity={0.3} />
             <stop offset="95%" stopColor={color} stopOpacity={0.0} />
           </linearGradient>
         </defs>
+        <XAxis
+          dataKey="date"
+          tick={{ fontSize: 9, fill: '#6b6351', fontFamily: 'monospace' }}
+          tickLine={false}
+          axisLine={false}
+          interval={Math.floor(pts.length / 4)}
+        />
+        <YAxis
+          tick={{ fontSize: 9, fill: '#6b6351', fontFamily: 'monospace' }}
+          tickLine={false}
+          axisLine={false}
+          domain={['auto', 'auto']}
+          tickFormatter={(v) => `${v.toFixed(0)}`}
+        />
         <RechartsTooltip
-          content={({ active, payload }: any) => {
+          content={({ active, payload, label }: any) => {
             if (!active || !payload?.length) return null
             return (
               <div className="bg-intel-elevated border border-intel-border rounded px-2 py-1 text-[10px] font-mono">
+                <div className="text-intel-muted">{label}</div>
                 <div style={{ color }} className="font-bold">{fmtPrice(payload[0].value)}</div>
               </div>
             )
@@ -74,7 +85,7 @@ function StockSparkline({ data, color, id }: { data: number[]; color: string; id
 
 function StockCard({ stock, t }: { stock: AIStock; t: ReturnType<typeof useLanguage>['t'] }) {
   const dir = direction(stock.change30d)
-  const sparkColor = stock.change30d >= 0 ? '#4ADE80' : '#F87171'
+  const sparkColor = stock.change30d >= 0 ? '#778c70' : '#cd5c5c'
   const tip = stock.description || stock.name
 
   return (
@@ -123,7 +134,7 @@ function StockCard({ stock, t }: { stock: AIStock; t: ReturnType<typeof useLangu
 
 function ETFCard({ etf, t }: { etf: AIETF; t: ReturnType<typeof useLanguage>['t'] }) {
   const dir = direction(etf.change30d)
-  const sparkColor = etf.change30d >= 0 ? '#4ADE80' : '#F87171'
+  const sparkColor = etf.change30d >= 0 ? '#778c70' : '#cd5c5c'
   const tip = etf.description || etf.name
 
   return (
@@ -172,7 +183,7 @@ function ETFCard({ etf, t }: { etf: AIETF; t: ReturnType<typeof useLanguage>['t'
 
 function VCXBlock({ gauge, t }: { gauge: VCXGauge; t: ReturnType<typeof useLanguage>['t'] }) {
   const fillPct = Math.min(Math.max(gauge.premium, 0) / 1500, 1) * 100
-  const fillColor = gauge.premium < 200 ? '#22C55E' : gauge.premium < 500 ? '#F59E0B' : '#EF4444'
+  const fillColor = gauge.premium < 200 ? '#778c70' : gauge.premium < 500 ? '#f0ad4e' : '#cd5c5c'
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
@@ -219,38 +230,6 @@ function VCXBlock({ gauge, t }: { gauge: VCXGauge; t: ReturnType<typeof useLangu
   )
 }
 
-// ─── YTD Chart ────────────────────────────────────────────────────────────────
-
-function YTDChart({ items, t }: { items: YTDItem[]; t: ReturnType<typeof useLanguage>['t'] }) {
-  const maxAbs = Math.max(...items.map((i) => Math.abs(i.value)), 0.1)
-  return (
-    <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
-      <div className="px-4 py-3 border-b border-intel-border">
-        <span className="text-sm font-display font-semibold text-intel-text">{t.aiYtdTitle}</span>
-      </div>
-      <div className="px-4 py-4 space-y-3 flex-1 border-b border-intel-border">
-        {items.map((item) => {
-          const pos = item.value >= 0
-          return (
-            <div key={item.label} className="flex items-center gap-3">
-              <Tooltip text={YTD_TIPS[item.label] ?? item.label} width="md" position="top" align="left">
-                <span className="text-[13px] font-mono text-intel-muted w-32 flex-shrink-0 truncate underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">{item.label}</span>
-              </Tooltip>
-              <div className="flex-1 h-5 bg-intel-bg rounded overflow-hidden border border-intel-border/50">
-                <div className="h-full rounded transition-all duration-700" style={{ width: `${(Math.abs(item.value) / maxAbs) * 100}%`, backgroundColor: pos ? '#4ADE80' : '#F87171', opacity: 0.8 }} />
-              </div>
-              <span className={`text-[13px] font-mono font-semibold tabular-nums w-14 text-right ${pos ? 'text-trend-up' : 'text-trend-down'}`}>{fmtPct(item.value)}</span>
-            </div>
-          )
-        })}
-      </div>
-      <div className="px-4 py-3">
-        <p className="text-sm text-intel-secondary leading-relaxed">{t.aiYtdDescription}</p>
-      </div>
-    </div>
-  )
-}
-
 // ─── Momentum Gauge ───────────────────────────────────────────────────────────
 
 function MomentumBlock({ momentum, t }: { momentum: AIMomentum; t: ReturnType<typeof useLanguage>['t'] }) {
@@ -259,7 +238,7 @@ function MomentumBlock({ momentum, t }: { momentum: AIMomentum; t: ReturnType<ty
   const rad = ((180 - score * 1.8) * Math.PI) / 180
   const nx = cx + nl * Math.cos(rad), ny = cy - nl * Math.sin(rad)
   const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`
-  const scoreColor = score >= 70 ? '#22C55E' : score >= 40 ? '#F59E0B' : '#EF4444'
+  const scoreColor = score >= 70 ? '#778c70' : score >= 40 ? '#f0ad4e' : '#cd5c5c'
 
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
@@ -274,18 +253,18 @@ function MomentumBlock({ momentum, t }: { momentum: AIMomentum; t: ReturnType<ty
             <svg width="160" height="100" viewBox="0 0 160 100" className="cursor-help">
               <defs>
                 <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#EF4444" />
-                  <stop offset="50%" stopColor="#F59E0B" />
-                  <stop offset="100%" stopColor="#22C55E" />
+                  <stop offset="0%" stopColor="#cd5c5c" />
+                  <stop offset="50%" stopColor="#f0ad4e" />
+                  <stop offset="100%" stopColor="#778c70" />
                 </linearGradient>
               </defs>
-              <path d={arc} stroke="#27272A" strokeWidth="10" fill="none" strokeLinecap="round" />
+              <path d={arc} stroke="#bab19b" strokeWidth="10" fill="none" strokeLinecap="round" />
               <path d={arc} stroke="url(#gaugeGrad)" strokeWidth="8" fill="none" strokeLinecap="round" />
-              <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="#F4F4F5" strokeWidth="2" strokeLinecap="round" />
-              <circle cx={cx} cy={cy} r="4" fill="#F4F4F5" />
+              <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="#373222" strokeWidth="2" strokeLinecap="round" />
+              <circle cx={cx} cy={cy} r="4" fill="#373222" />
               <text x={cx} y={cy + 16} textAnchor="middle" fill={scoreColor} fontSize="14" fontFamily="monospace" fontWeight="bold">{score}</text>
-              <text x={cx - r + 2} y={cy + 14} fill="#EF4444" fontSize="8" fontFamily="monospace">0</text>
-              <text x={cx + r - 10} y={cy + 14} fill="#22C55E" fontSize="8" fontFamily="monospace">100</text>
+              <text x={cx - r + 2} y={cy + 14} fill="#cd5c5c" fontSize="8" fontFamily="monospace">0</text>
+              <text x={cx + r - 10} y={cy + 14} fill="#778c70" fontSize="8" fontFamily="monospace">100</text>
             </svg>
           </Tooltip>
         </div>
@@ -424,8 +403,6 @@ export default function AISector() {
               </div>
 
               <VCXBlock gauge={data.vcxGauge} t={t} />
-
-              <YTDChart items={data.ytdComparison} t={t} />
 
               <MomentumBlock momentum={data.momentum} t={t} />
             </div>

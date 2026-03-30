@@ -24,11 +24,11 @@ const jetbrainsMono = JetBrains_Mono({
 // AFTER
 export const metadata: Metadata = {
   title: "INTELDASH — Personal World View Dashboard",
-  description: "One dashboard to track everything that matters to you — markets, geopolitics, crypto, and global risk, filtered through your life.",
+  description: "One dashboard to track everything that matters to you — markets and geopolitics. Filtered through your life.",
   metadataBase: new URL("https://intel-dashboard-snowy.vercel.app"),
   openGraph: {
     title: "INTELDASH — Personal World View Dashboard",
-    description: "One dashboard to track everything that matters to you — markets, geopolitics, crypto, and global risk, filtered through your life.",
+    description: "One dashboard to track everything that matters to you — markets and geopolitics. Filtered through your life.",
     url: "https://intel-dashboard-snowy.vercel.app",
     siteName: "INTELDASH",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "INTELDASH Dashboard Preview" }],
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "INTELDASH — Personal World View Dashboard",
-    description: "One dashboard to track everything that matters to you.",
+    description: "One dashboard to track everything that matters to you — markets and geopolitics. Filtered through your life.",
     images: ["/og-image.png"],
   },
 }

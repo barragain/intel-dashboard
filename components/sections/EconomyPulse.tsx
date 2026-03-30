@@ -73,19 +73,33 @@ function firstSentence(text: string): string {
   return m ? m[0] : text
 }
 
-/** Tiny inline sparkline used inside Global card per-indicator */
+/** Inline sparkline used inside Global card per-indicator — matches country card style */
 function MiniSparkline({ data, color, id }: { data: { price: number; date: string }[]; color: string; id: string }) {
   if (!data || data.length < 3) return null
   const gradId = `mini-${id}`
   return (
-    <ResponsiveContainer width="100%" height={40}>
-      <AreaChart data={data} margin={{ top: 1, right: 0, left: 0, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={64}>
+      <AreaChart data={data} margin={{ top: 2, right: 0, left: -28, bottom: 0 }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={color} stopOpacity={0.25} />
             <stop offset="95%" stopColor={color} stopOpacity={0.0} />
           </linearGradient>
         </defs>
+        <XAxis
+          dataKey="date"
+          tick={{ fontSize: 9, fill: '#6b6351', fontFamily: 'monospace' }}
+          tickLine={false}
+          axisLine={false}
+          interval={Math.floor(data.length / 4)}
+        />
+        <YAxis
+          tick={{ fontSize: 9, fill: '#6b6351', fontFamily: 'monospace' }}
+          tickLine={false}
+          axisLine={false}
+          domain={['auto', 'auto']}
+          tickFormatter={(v) => v.toFixed(1)}
+        />
         <RechartsTooltip
           content={({ active, payload, label }: any) => {
             if (!active || !payload?.length) return null
@@ -114,7 +128,7 @@ function MiniSparkline({ data, color, id }: { data: { price: number; date: strin
 // Uses explicit sparklineGreen flag set in the route (bypasses 0.05% deadband).
 // true = green, false = red, undefined = green (fallback)
 function sparklineColor(green: boolean | undefined): string {
-  return green === false ? '#EF4444' : '#22C55E'
+  return green === false ? '#cd5c5c' : '#778c70'
 }
 
 /** Global card — wide layout with 6 indicators each showing a mini sparkline */
@@ -126,12 +140,12 @@ function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
 
   // Static per-indicator colors for global macro charts
   const INDICATOR_COLORS: Record<string, string> = {
-    'VIX':         '#EF4444', // red — fear index
-    'DXY':         '#C8A96E', // gold — dollar
-    'Gold (oz)':   '#F59E0B', // amber
-    'Silver (oz)': '#94A3B8', // slate
-    'Oil WTI':     '#60A5FA', // blue
-    'Brent Crude': '#818CF8', // indigo
+    'VIX':         '#cd5c5c', // primary — fear index
+    'DXY':         '#cd5c5c', // primary — dollar
+    'Gold (oz)':   '#f0ad4e', // tertiary — amber
+    'Silver (oz)': '#6b6351', // ink-soft — slate
+    'Oil WTI':     '#d2691e', // seed — burnt orange
+    'Brent Crude': '#778c70', // secondary — green
   }
 
   return (
@@ -261,13 +275,13 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
               </defs>
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 9, fill: '#6B7280', fontFamily: 'monospace' }}
+                tick={{ fontSize: 9, fill: '#6b6351', fontFamily: 'monospace' }}
                 tickLine={false}
                 axisLine={false}
                 interval={Math.floor(card.sparkline.length / 4)}
               />
               <YAxis
-                tick={{ fontSize: 9, fill: '#6B7280', fontFamily: 'monospace' }}
+                tick={{ fontSize: 9, fill: '#6b6351', fontFamily: 'monospace' }}
                 tickLine={false}
                 axisLine={false}
                 domain={['auto', 'auto']}

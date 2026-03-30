@@ -41,13 +41,13 @@ function ConflictCard({ conflict, updatedAt, t }: { conflict: Conflict; updatedA
       {/* Hover headline preview — shown above the row */}
       {firstHeadline && hovered && !expanded && (
         <div className="absolute bottom-full left-0 right-0 mb-2 z-50 pointer-events-none">
-          <div className="mx-1 px-3 py-2 bg-[#111114] border border-[#27272A] rounded-lg shadow-xl shadow-black/40">
+          <div className="mx-1 px-3 py-2 bg-intel-elevated border border-intel-border rounded-lg shadow-xl shadow-intel-border/40">
             <div className="flex items-center gap-1.5 mb-1">
               <Newspaper size={11} className="text-intel-gold flex-shrink-0" />
               <span className="text-[11px] font-mono text-intel-gold uppercase tracking-wider">{t.latestHeadline}</span>
             </div>
-            <p className="text-[13px] text-zinc-300 leading-relaxed">{firstHeadline.text}</p>
-            <span className="absolute top-full left-6 border-[5px] border-transparent border-t-[#27272A]" aria-hidden="true" />
+            <p className="text-[13px] text-intel-secondary leading-relaxed">{firstHeadline.text}</p>
+            <span className="absolute top-full left-6 border-[5px] border-transparent border-t-intel-border" aria-hidden="true" />
           </div>
         </div>
       )}

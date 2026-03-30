@@ -14,15 +14,22 @@ import type { RiskData } from '@/lib/types'
 
 const PROMPT_TEMPLATE = `You are a financial intelligence analyst helping people understand whether global conditions warrant concern right now. Today: {{DATE}}.
 
-Focus areas: Taiwan Strait (military activity, political developments), global oil prices and what is driving them, the VIX fear index, US dollar strength (DXY), ad spending trends in Asia, semiconductor and tech sector health, France and EU economy.
+Focus areas: Taiwan Strait (military activity, political developments), global oil prices and what is driving them, the VIX fear index, US dollar strength (DXY), ad spending trends in Asia and globally, semiconductor and tech sector health, France and EU economy.
 
 WRITING RULES — follow these strictly:
 - Write for someone who does NOT read financial news — a smart adult but not a finance expert. Use simple everyday words.
 - Banned words and phrases: geopolitical headwinds, macroeconomic uncertainty, risk-off sentiment, yield curve dynamics, hawkish, dovish, liquidity concerns, market volatility regime, escalation dynamics, systemic risk, headwinds, tailwinds, normalize, inflection point, de-risking, elevated uncertainty, remain cautious, sector rotation, price action.
 - Be specific and use facts from the headlines provided. "China sent warships near Taiwan this week" not "geopolitical risks remain elevated."
-- The whyItMatters field must explain WHY this specific thing matters to someone in Taiwan working in tech/media — how it could affect their job, salary, savings, or cost of living. Use facts from the news, NOT generic statements.
+- The whyItMatters field must explain WHY this specific thing matters to someone in Taiwan working in video/photo production for brands — how it could affect their project pipeline, client budgets, job security, savings, or cost of living. Use facts from the news, NOT generic statements.
 - Never write something like "Rising X often leads to Y" — that is a generic textbook statement. Say what is actually happening right now based on the headlines.
 - Short sentences. One idea per sentence.
+
+SPECIAL RULES FOR THE AD SPEND DRIVER:
+- The user works at a video production agency in Taiwan that creates content for brand clients. When brand ad budgets shrink, they get fewer production briefs.
+- Be specific: name actual numbers or companies. Use recent data from Meta/Google/WPP/Publicis quarterly results or forecasts if mentioned in the headlines.
+- Say what is actually happening: "Meta's Q1 ad revenue grew X% but warned about tariff impact on small-business advertisers" not "ad spending might decrease due to uncertainty."
+- Explain what specific conditions — tariffs, recession fears, brand confidence, platform changes — are affecting marketing budgets right now in Asia-Pacific.
+- Never say "the war" causes ad spend changes without being specific about the mechanism (e.g., "brands are pausing campaigns in markets affected by US-China tariffs, which reduces production briefs for agencies in Taiwan").
 
 Return ONLY this JSON:
 {
@@ -34,7 +41,7 @@ Return ONLY this JSON:
       "name": "<max 20 chars>",
       "impact": "positive"|"negative"|"neutral",
       "detail": "<one plain-English sentence about what is happening with this specific thing today — be specific, name the actual event or number>",
-      "whyItMatters": "<2 plain-English sentences: why this driver matters to investors and workers in Taiwan and Europe right now, with specific reference to job markets, savings, or cost of living. No jargon.>"
+      "whyItMatters": "<2 plain-English sentences: why this driver matters to investors and workers in Taiwan and Europe right now, with specific reference to job markets, client budgets, savings, or cost of living. No jargon.>"
     }
   ],
   "quotes": [
@@ -56,7 +63,7 @@ async function generateRiskData(): Promise<RiskData> {
     fetchNews('france eu economy market'),
     fetchNews('global market fear volatility VIX'),
     fetchNews('taiwan strait security'),
-    fetchNews('global advertising spending digital'),
+    fetchNews('digital advertising spending Meta Google WPP brands Asia budget'),
   ])
   const headlines = [
     ...tech.slice(0, 2),

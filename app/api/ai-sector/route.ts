@@ -77,9 +77,16 @@ const PROMPT = `Today is {{DATE}}.
 
 Search the web for:
 1. The most recently published NAV (net asset value) per share for VCX (Fundrise Innovation Fund, NYSE: VCX). Exact dollar figure from official sources.
-2. Year-to-date performance (%) as of today: AIQ ETF (AI sector proxy), S&P 500 index, Nasdaq Composite, MSCI World index.
-3. Current AI sector momentum: score 0-100 (100=extreme bull), one short label phrase, 2-3 sentence market summary, 2-3 sentence personal angle for someone at a video/photo production agency in Taiwan whose partner works in PR for Asus across multiple Asian markets.
-4. One blunt sentence about what VCX's current premium above NAV signals about AI market sentiment. If trading 1000%+ above NAV, say that plainly.
+2. Current AI sector momentum: score 0-100 (100=extreme bull), one short label phrase, 2-3 sentence market summary, 2-3 sentence personal angle (see rules below).
+3. One blunt sentence about what VCX's current premium above NAV signals about AI market sentiment. If trading 1000%+ above NAV, say that plainly.
+
+PERSONAL ANGLE RULES:
+- The user works at TTC, a video/photo production agency in Taiwan that creates content for tech and consumer brands.
+- His partner works in PR for Asus across multiple Asian markets — so Asus product launches, marketing campaigns, and stock performance are directly relevant.
+- Be specific: if AI chip stocks are surging, say what that means for Asus's AI PC/laptop product line and whether PR/marketing budgets for those products are likely to grow or shrink.
+- If AI companies are cutting costs, say whether that affects the kind of content briefs TTC might receive from tech clients.
+- Use what you found in the search. Do not invent. If nothing specific is known, say what the current AI sentiment suggests about tech brand spending.
+- Never use jargon. Short sentences.
 
 Return ONLY valid JSON — no prose, no markdown fences:
 {

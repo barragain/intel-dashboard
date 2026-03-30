@@ -31,11 +31,11 @@ function getFgConfig(score: number) {
 interface SparkPoint { value: number; timestamp: number }
 
 function fgFillColor(value: number): string {
-  if (value <= 24) return '#EF4444'
-  if (value <= 44) return '#F87171'
-  if (value <= 55) return '#F59E0B'
-  if (value <= 74) return '#4ADE80'
-  return '#22C55E'
+  if (value <= 24) return '#cd5c5c'
+  if (value <= 44) return '#cd5c5c'
+  if (value <= 55) return '#f0ad4e'
+  if (value <= 74) return '#778c70'
+  return '#778c70'
 }
 
 function FearGreedSparkline({ history, label }: { history: SparkPoint[]; label: string }) {
@@ -67,21 +67,21 @@ function FearGreedSparkline({ history, label }: { history: SparkPoint[]; label: 
         <AreaChart data={data} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="fgGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
-              <stop offset="50%" stopColor="#F59E0B" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#EF4444" stopOpacity={0.05} />
+              <stop offset="5%" stopColor="#778c70" stopOpacity={0.3} />
+              <stop offset="50%" stopColor="#f0ad4e" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="#cd5c5c" stopOpacity={0.05} />
             </linearGradient>
           </defs>
           <XAxis
             dataKey="date"
-            tick={{ fontSize: 10, fill: '#6B7280', fontFamily: 'monospace' }}
+            tick={{ fontSize: 10, fill: '#6b6351', fontFamily: 'monospace' }}
             tickLine={false}
             axisLine={false}
             interval={6}
           />
           <YAxis
             domain={[0, 100]}
-            tick={{ fontSize: 10, fill: '#6B7280', fontFamily: 'monospace' }}
+            tick={{ fontSize: 10, fill: '#6b6351', fontFamily: 'monospace' }}
             tickLine={false}
             axisLine={false}
             ticks={[0, 25, 50, 75, 100]}
@@ -91,11 +91,11 @@ function FearGreedSparkline({ history, label }: { history: SparkPoint[]; label: 
           <Area
             type="monotone"
             dataKey="value"
-            stroke="#C8A96E"
+            stroke="#cd5c5c"
             strokeWidth={1.5}
             fill="url(#fgGradient)"
             dot={false}
-            activeDot={{ r: 3, fill: '#C8A96E', stroke: '#09090B', strokeWidth: 2 }}
+            activeDot={{ r: 3, fill: '#cd5c5c', stroke: '#fdf5e6', strokeWidth: 2 }}
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -181,7 +181,7 @@ export default function CryptoSignal() {
               {/* Crypto assets */}
               <div className="grid grid-cols-2 gap-3">
                 {data.assets.map((asset) => {
-                  const color = asset.priceChange7d >= 0 ? '#22C55E' : '#EF4444'
+                  const color = asset.priceChange7d >= 0 ? '#778c70' : '#cd5c5c'
                   const sparkData = asset.sparkline
                     ? asset.sparkline.filter(Boolean).map((v, i) => ({ v, i }))
                     : null

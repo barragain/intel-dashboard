@@ -23,11 +23,11 @@ async function fetchYF(symbol: string): Promise<{ price: number; change: number;
     const json = await res.json()
     const meta = json?.chart?.result?.[0]?.meta
     if (!meta) return null
-    return {
-      price: meta.regularMarketPrice ?? 0,
-      change: meta.regularMarketPrice - meta.previousClose,
-      changePercent: ((meta.regularMarketPrice - meta.previousClose) / meta.previousClose) * 100,
-    }
+    const price = meta.regularMarketPrice ?? 0
+    const prevClose = meta.previousClose ?? 0
+    const change = prevClose ? price - prevClose : 0
+    const changePercent = prevClose ? ((price - prevClose) / prevClose) * 100 : 0
+    return { price, change, changePercent }
   } catch {
     return null
   }

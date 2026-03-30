@@ -19,8 +19,10 @@ const CRYPTO_PROMPT = `Given this user context: ${USER_CONTEXT}
 
 Write in plain, simple English — as if explaining to someone who does not read finance news every day. Avoid jargon completely.
 
+IMPORTANT: Do NOT link crypto prices to TTC's production business. TTC earns revenue from brand clients commissioning video and photo content — that is driven by advertising budgets and brand confidence, NOT by crypto prices. Crypto is only relevant here as a savings/investment signal about how much risk investors are willing to take broadly.
+
 Return ONLY this JSON:
-{"interpretation":"2 short sentences: what crypto markets are doing right now and what that means for this user in practical terms.","macroSignal":"short signal phrase, e.g. RISK-OFF or CAUTIOUS or RISK-ON"}`
+{"interpretation":"2 short plain sentences: (1) what the current fear/greed reading says about how willing investors are to take risk right now — use the actual score and label, (2) what this broad risk appetite means for someone who holds crypto as a small part of their savings, and whether now feels like a cautious or confident moment in markets generally.","macroSignal":"short signal phrase, e.g. RISK-OFF or CAUTIOUS or RISK-ON"}`
 
 function fearGreedLabel(score: number): string {
   if (score <= 24) return 'Extreme Fear'

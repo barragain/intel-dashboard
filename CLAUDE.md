@@ -10,6 +10,7 @@
 - Never continuously check status after spawning a swarm — wait for results
 - ALWAYS read a file before editing it
 - NEVER commit secrets, credentials, or .env files
+- **ALWAYS git add + commit + push after finishing any task** — user deploys to Vercel and needs changes live immediately
 
 ## File Organization
 
