@@ -169,26 +169,24 @@ function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
       {/* Indicators grid — 3 or 6 columns, each with mini sparkline */}
       <div className="px-4 py-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-3">
         {card.indicators.map((ind, i) => {
-          const color = INDICATOR_COLORS[ind.label] ?? '#C8A96E'
+          const color = INDICATOR_COLORS[ind.label] ?? '#cd5c5c'
           return (
-            <div key={i} className="flex flex-col">
+            <div key={i} className="flex flex-col min-w-0 overflow-hidden">
               {metricTips[ind.label] ? (
                 <Tooltip text={metricTips[ind.label]} width="md" position="top" align="left">
-                  <span className="text-[12px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">
+                  <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help truncate block">
                     {ind.label}
                   </span>
                 </Tooltip>
               ) : (
-                <span className="text-[12px] font-mono text-intel-muted uppercase tracking-wide">{ind.label}</span>
+                <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wide truncate">{ind.label}</span>
               )}
-              <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="text-sm font-mono font-semibold text-intel-text tabular-nums">{ind.value}</span>
-                {ind.change && ind.change !== 'N/A' && (
-                  <span className={`text-[12px] font-mono ${CHANGE_COLORS[ind.changeType ?? 'neutral']}`}>
-                    {ind.change}
-                  </span>
-                )}
-              </div>
+              <span className="text-sm font-mono font-semibold text-intel-text tabular-nums mt-0.5 truncate">{ind.value}</span>
+              {ind.change && ind.change !== 'N/A' && (
+                <span className={`text-[11px] font-mono ${CHANGE_COLORS[ind.changeType ?? 'neutral']}`}>
+                  {ind.change} 30d
+                </span>
+              )}
               {ind.sparkline && ind.sparkline.length > 3 && (
                 <div className="mt-1">
                   <MiniSparkline data={ind.sparkline} color={color} id={`global-${i}`} />
@@ -233,28 +231,26 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
         </div>
       </Tooltip>
 
-      <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2 border-b border-intel-border">
+      <div className="px-4 py-3 grid grid-cols-2 gap-x-3 gap-y-2 border-b border-intel-border">
         {card.indicators.map((ind, i) => (
-          <div key={i} className="flex flex-col">
+          <div key={i} className="flex flex-col min-w-0 overflow-hidden">
             {metricTips[ind.label] ? (
               <Tooltip text={metricTips[ind.label]} width="md" position="top" align="left">
-                <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help">
+                <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help truncate block">
                   {ind.label}
                 </span>
               </Tooltip>
             ) : (
-              <span className="text-[13px] font-mono text-intel-muted uppercase tracking-wide">{ind.label}</span>
+              <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wide truncate">{ind.label}</span>
             )}
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-sm font-mono font-semibold text-intel-text tabular-nums">
-                {ind.value}
+            <span className="text-sm font-mono font-semibold text-intel-text tabular-nums mt-0.5 truncate">
+              {ind.value}
+            </span>
+            {ind.change && ind.change !== 'N/A' && (
+              <span className={`text-[11px] font-mono ${CHANGE_COLORS[ind.changeType ?? 'neutral']}`}>
+                {ind.change} 30d
               </span>
-              {ind.change && ind.change !== 'N/A' && (
-                <span className={`text-[13px] font-mono ${CHANGE_COLORS[ind.changeType ?? 'neutral']}`}>
-                  {ind.change}
-                </span>
-              )}
-            </div>
+            )}
           </div>
         ))}
       </div>

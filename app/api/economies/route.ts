@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     spx, vix, dxy, gold, oil, brent, silver,
     taiex, twd, cac, eur, pyg, ndx, sox, asus,
     spxSpark, vixSpark, dxySpark, goldSpark, oilSpark, brentSpark, silverSpark,
-    taiexSpark, cacSpark, pygSpark, ndxSpark, asusSpark,
+    taiexSpark, twdSpark, cacSpark, eurSpark, pygSpark, ndxSpark, soxSpark, asusSpark,
   ] = await Promise.all([
     // Prices
     fetchYF('^GSPC'),
@@ -141,11 +141,23 @@ export async function GET(request: NextRequest) {
     fetchYFSparkline('BZ=F'),
     fetchYFSparkline('SI=F'),
     fetchYFSparkline('^TWII'),
+    fetchYFSparkline('TWD=X'),
     fetchYFSparkline('^FCHI'),
+    fetchYFSparkline('EURUSD=X'),
     fetchYFSparkline('PYG=X'),
     fetchYFSparkline('^NDX'),
+    fetchYFSparkline('^SOX'),
     fetchYFSparkline('2357.TW'),
   ])
+
+  /** Compute % change over the sparkline window (first close → last close). */
+  function pctChange30d(spark: { price: number; date: string }[] | null | undefined): number | null {
+    if (!spark || spark.length < 2) return null
+    const first = spark[0].price
+    const last = spark[spark.length - 1].price
+    if (!first) return null
+    return ((last - first) / first) * 100
+  }
 
   const economies: EconomyCard[] = [
     // 1. Global — macro indicators with per-indicator sparklines
@@ -156,13 +168,16 @@ export async function GET(request: NextRequest) {
         priceFmt: (p: number) => string,
         spark: typeof vixSpark,
         invertChange = false,
-      ): EconomyIndicator => ({
-        label,
-        value: data ? priceFmt(data.price) : 'N/A',
-        change: (data && isFinite(data.changePercent)) ? fmtPct(data.changePercent) : undefined,
-        changeType: data ? changeType(invertChange ? -data.changePercent : data.changePercent) : 'neutral',
-        sparkline: spark ?? undefined,
-      })
+      ): EconomyIndicator => {
+        const chg = pctChange30d(spark)
+        return {
+          label,
+          value: data ? priceFmt(data.price) : 'N/A',
+          change: chg !== null ? fmtPct(chg) : undefined,
+          changeType: chg !== null ? changeType(invertChange ? -chg : chg) : 'neutral',
+          sparkline: spark ?? undefined,
+        }
+      }
 
       const indicators: EconomyIndicator[] = [
         ind('VIX', vix, (p) => fmt(p), vixSpark, true),
@@ -191,12 +206,15 @@ export async function GET(request: NextRequest) {
 
     // 2. United States
     (() => {
+      const spx30d = pctChange30d(spxSpark)
+      const vix30d = pctChange30d(vixSpark)
+      const oil30d = pctChange30d(oilSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'S&P 500', value: spx ? fmt(spx.price, 0) : 'N/A', change: (spx && isFinite(spx.changePercent)) ? fmtPct(spx.changePercent) : undefined, changeType: changeType(spx?.changePercent) },
-        { label: 'VIX', value: vix ? fmt(vix.price) : 'N/A', change: (vix && isFinite(vix.changePercent)) ? fmtPct(vix.changePercent) : undefined, changeType: 'neutral' },
-        { label: 'Oil WTI', value: oil ? `$${fmt(oil.price)}` : 'N/A', change: (oil && isFinite(oil.changePercent)) ? fmtPct(oil.changePercent) : undefined, changeType: changeType(oil?.changePercent) },
+        { label: 'S&P 500', value: spx ? fmt(spx.price, 0) : 'N/A', change: spx30d !== null ? fmtPct(spx30d) : undefined, changeType: changeType(spx30d ?? undefined) },
+        { label: 'VIX', value: vix ? fmt(vix.price) : 'N/A', change: vix30d !== null ? fmtPct(vix30d) : undefined, changeType: 'neutral' },
+        { label: 'Oil WTI', value: oil ? `$${fmt(oil.price)}` : 'N/A', change: oil30d !== null ? fmtPct(oil30d) : undefined, changeType: changeType(oil30d ?? undefined) },
       ]
-      const dir = directionFromPct(spx?.changePercent)
+      const dir = directionFromPct(spx30d ?? undefined)
       return {
         id: 'us',
         name: 'United States',
@@ -206,17 +224,19 @@ export async function GET(request: NextRequest) {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: spxSpark ?? undefined,
-        sparklineGreen: (spx?.changePercent ?? 0) >= 0,
+        sparklineGreen: (spx30d ?? 0) >= 0,
       }
     })(),
 
     // 3. Taiwan
     (() => {
+      const taiex30d = pctChange30d(taiexSpark)
+      const twd30d = pctChange30d(twdSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'TAIEX', value: taiex ? fmt(taiex.price, 0) : 'N/A', change: (taiex && isFinite(taiex.changePercent)) ? fmtPct(taiex.changePercent) : undefined, changeType: changeType(taiex?.changePercent) },
-        { label: 'TWD/USD', value: twd ? fmt(twd.price) : 'N/A', change: (twd && isFinite(twd.changePercent)) ? fmtPct(twd.changePercent) : undefined, changeType: changeType(-(twd?.changePercent ?? 0)) },
+        { label: 'TAIEX', value: taiex ? fmt(taiex.price, 0) : 'N/A', change: taiex30d !== null ? fmtPct(taiex30d) : undefined, changeType: changeType(taiex30d ?? undefined) },
+        { label: 'TWD/USD', value: twd ? fmt(twd.price) : 'N/A', change: twd30d !== null ? fmtPct(-(twd30d)) : undefined, changeType: changeType(twd30d !== null ? -(twd30d) : undefined) },
       ]
-      const dir = directionFromPct(taiex?.changePercent)
+      const dir = directionFromPct(taiex30d ?? undefined)
       return {
         id: 'taiwan',
         name: 'Taiwan',
@@ -226,17 +246,19 @@ export async function GET(request: NextRequest) {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: taiexSpark ?? undefined,
-        sparklineGreen: (taiex?.changePercent ?? 0) >= 0,
+        sparklineGreen: (taiex30d ?? 0) >= 0,
       }
     })(),
 
     // 4. France
     (() => {
+      const cac30d = pctChange30d(cacSpark)
+      const eur30d = pctChange30d(eurSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'CAC 40', value: cac ? fmt(cac.price, 0) : 'N/A', change: (cac && isFinite(cac.changePercent)) ? fmtPct(cac.changePercent) : undefined, changeType: changeType(cac?.changePercent) },
-        { label: 'EUR/USD', value: eur ? fmt(eur.price, 4) : 'N/A', change: (eur && isFinite(eur.changePercent)) ? fmtPct(eur.changePercent) : undefined, changeType: changeType(eur?.changePercent) },
+        { label: 'CAC 40', value: cac ? fmt(cac.price, 0) : 'N/A', change: cac30d !== null ? fmtPct(cac30d) : undefined, changeType: changeType(cac30d ?? undefined) },
+        { label: 'EUR/USD', value: eur ? fmt(eur.price, 4) : 'N/A', change: eur30d !== null ? fmtPct(eur30d) : undefined, changeType: changeType(eur30d ?? undefined) },
       ]
-      const dir = directionFromPct(cac?.changePercent)
+      const dir = directionFromPct(cac30d ?? undefined)
       return {
         id: 'france',
         name: 'France',
@@ -246,14 +268,15 @@ export async function GET(request: NextRequest) {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: cacSpark ?? undefined,
-        sparklineGreen: (cac?.changePercent ?? 0) >= 0,
+        sparklineGreen: (cac30d ?? 0) >= 0,
       }
     })(),
 
     // 5. Paraguay
     (() => {
+      const pyg30d = pctChange30d(pygSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'PYG/USD', value: pyg ? fmt(pyg.price, 0) : 'N/A', change: (pyg && isFinite(pyg.changePercent)) ? fmtPct(pyg.changePercent) : undefined, changeType: changeType(-(pyg?.changePercent ?? 0)) },
+        { label: 'PYG/USD', value: pyg ? fmt(pyg.price, 0) : 'N/A', change: pyg30d !== null ? fmtPct(-(pyg30d)) : undefined, changeType: changeType(pyg30d !== null ? -(pyg30d) : undefined) },
       ]
       return {
         id: 'paraguay',
@@ -261,22 +284,24 @@ export async function GET(request: NextRequest) {
         emoji: '🇵🇾',
         indicators,
         summary: `Paraguay's guaraní is at ${pyg ? fmt(pyg.price, 0) : 'N/A'} per US dollar. Paraguay's economy is mostly based on farming exports like soy and beef, plus electricity from its giant Itaipú dam. Inflation is usually manageable. It is a smaller economy with limited live market data, but it is generally stable.`,
-        direction: directionFromPct(-(pyg?.changePercent ?? 0)), // invert: dollar up = bad for guaraní
-        status: statusFromDirection(directionFromPct(-(pyg?.changePercent ?? 0))),
+        direction: directionFromPct(pyg30d !== null ? -(pyg30d) : undefined),
+        status: statusFromDirection(directionFromPct(pyg30d !== null ? -(pyg30d) : undefined)),
         sparkline: pygSpark ?? undefined,
-        sparklineGreen: (pyg?.changePercent ?? 0) <= 0, // inverted: dollar down = green for Paraguay
+        sparklineGreen: (pyg30d ?? 0) <= 0, // inverted: dollar down = green for Paraguay
       }
     })(),
 
     // 6. Tech Sector
     (() => {
+      const ndx30d = pctChange30d(ndxSpark)
+      const sox30d = pctChange30d(soxSpark)
+      const vix30d = pctChange30d(vixSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'Nasdaq 100', value: ndx ? fmt(ndx.price, 0) : 'N/A', change: (ndx && isFinite(ndx.changePercent)) ? fmtPct(ndx.changePercent) : undefined, changeType: changeType(ndx?.changePercent) },
-        { label: 'SOX (Semis)', value: sox ? fmt(sox.price, 0) : 'N/A', change: (sox && isFinite(sox.changePercent)) ? fmtPct(sox.changePercent) : undefined, changeType: changeType(sox?.changePercent) },
-        { label: 'VIX', value: vix ? fmt(vix.price) : 'N/A', change: (vix && isFinite(vix.changePercent)) ? fmtPct(vix.changePercent) : undefined, changeType: vix ? changeType(-vix.changePercent) : 'neutral' },
+        { label: 'Nasdaq 100', value: ndx ? fmt(ndx.price, 0) : 'N/A', change: ndx30d !== null ? fmtPct(ndx30d) : undefined, changeType: changeType(ndx30d ?? undefined) },
+        { label: 'SOX (Semis)', value: sox ? fmt(sox.price, 0) : 'N/A', change: sox30d !== null ? fmtPct(sox30d) : undefined, changeType: changeType(sox30d ?? undefined) },
+        { label: 'VIX', value: vix ? fmt(vix.price) : 'N/A', change: vix30d !== null ? fmtPct(vix30d) : undefined, changeType: vix30d !== null ? changeType(-vix30d) : 'neutral' },
       ]
-      const lead = ndx ?? sox
-      const dir = directionFromPct(lead?.changePercent)
+      const dir = directionFromPct(ndx30d ?? sox30d ?? undefined)
       return {
         id: 'tech',
         name: 'Tech Sector',
@@ -286,7 +311,7 @@ export async function GET(request: NextRequest) {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: ndxSpark ?? undefined,
-        sparklineGreen: ((ndx ?? sox)?.changePercent ?? 0) >= 0,
+        sparklineGreen: (ndx30d ?? sox30d ?? 0) >= 0,
       }
     })(),
 
@@ -297,11 +322,13 @@ export async function GET(request: NextRequest) {
       const asusSparkUsd = asusSpark && twdRate
         ? asusSpark.map((d) => ({ ...d, price: d.price / twdRate }))
         : asusSpark ?? null
+      const asus30d = pctChange30d(asusSpark)
+      const twd30d = pctChange30d(twdSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'ASUS (2357.TW)', value: asusUsd ? `$${fmt(asusUsd.price, 2)}` : 'N/A', change: (asus && isFinite(asus.changePercent)) ? fmtPct(asus.changePercent) : undefined, changeType: changeType(asus?.changePercent) },
-        { label: 'TWD/USD', value: twd ? fmt(twd.price) : 'N/A', change: (twd && isFinite(twd.changePercent)) ? fmtPct(twd.changePercent) : undefined, changeType: changeType(-(twd?.changePercent ?? 0)) },
+        { label: 'ASUS (2357.TW)', value: asusUsd ? `$${fmt(asusUsd.price, 2)}` : 'N/A', change: asus30d !== null ? fmtPct(asus30d) : undefined, changeType: changeType(asus30d ?? undefined) },
+        { label: 'TWD/USD', value: twd ? fmt(twd.price) : 'N/A', change: twd30d !== null ? fmtPct(-(twd30d)) : undefined, changeType: changeType(twd30d !== null ? -(twd30d) : undefined) },
       ]
-      const dir = directionFromPct(asus?.changePercent)
+      const dir = directionFromPct(asus30d ?? undefined)
       return {
         id: 'asus',
         name: 'ASUS',
@@ -311,7 +338,7 @@ export async function GET(request: NextRequest) {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: asusSparkUsd ?? undefined,
-        sparklineGreen: (asus?.changePercent ?? 0) >= 0,
+        sparklineGreen: (asus30d ?? 0) >= 0,
       }
     })(),
   ]

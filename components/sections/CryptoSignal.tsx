@@ -87,7 +87,7 @@ function FearGreedSparkline({ history, label }: { history: SparkPoint[]; label: 
             ticks={[0, 25, 50, 75, 100]}
           />
           <Tooltip content={<CustomTooltip />} />
-          <ReferenceLine y={50} stroke="#27272A" strokeDasharray="3 3" />
+          <ReferenceLine y={50} stroke="#bab19b" strokeDasharray="3 3" />
           <Area
             type="monotone"
             dataKey="value"
@@ -182,8 +182,15 @@ export default function CryptoSignal() {
               <div className="grid grid-cols-2 gap-3">
                 {data.assets.map((asset) => {
                   const color = asset.priceChange7d >= 0 ? '#778c70' : '#cd5c5c'
-                  const sparkData = asset.sparkline
-                    ? asset.sparkline.filter(Boolean).map((v, i) => ({ v, i }))
+                  const rawSpark = asset.sparkline ? asset.sparkline.filter(Boolean) : null
+                  const now = Date.now()
+                  const sparkData = rawSpark
+                    ? rawSpark.map((v, i) => ({
+                        v,
+                        i,
+                        date: new Date(now - (rawSpark.length - 1 - i) * 3600000)
+                          .toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                      }))
                     : null
                   return (
                     <div key={asset.id} className="bg-intel-elevated rounded-lg border border-intel-border p-3">
@@ -204,14 +211,28 @@ export default function CryptoSignal() {
                       </div>
                       {sparkData && sparkData.length > 4 && (
                         <div className="mt-2 -mx-1">
-                          <ResponsiveContainer width="100%" height={44}>
-                            <AreaChart data={sparkData} margin={{ top: 2, right: 2, left: 2, bottom: 0 }}>
+                          <ResponsiveContainer width="100%" height={64}>
+                            <AreaChart data={sparkData} margin={{ top: 2, right: 0, left: -28, bottom: 0 }}>
                               <defs>
                                 <linearGradient id={`spark-${asset.id}`} x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor={color} stopOpacity={0.25} />
                                   <stop offset="95%" stopColor={color} stopOpacity={0.0} />
                                 </linearGradient>
                               </defs>
+                              <XAxis
+                                dataKey="date"
+                                tick={{ fontSize: 9, fill: '#6b6351', fontFamily: 'monospace' }}
+                                tickLine={false}
+                                axisLine={false}
+                                interval={Math.floor(sparkData.length / 4)}
+                              />
+                              <YAxis
+                                tick={{ fontSize: 9, fill: '#6b6351', fontFamily: 'monospace' }}
+                                tickLine={false}
+                                axisLine={false}
+                                domain={['auto', 'auto']}
+                                tickFormatter={(v) => fmtPrice(v)}
+                              />
                               <Area
                                 type="monotone"
                                 dataKey="v"
@@ -222,10 +243,11 @@ export default function CryptoSignal() {
                                 isAnimationActive={false}
                               />
                               <Tooltip
-                                content={({ active, payload }: any) => {
+                                content={({ active, payload, label }: any) => {
                                   if (!active || !payload?.length) return null
                                   return (
                                     <div className="bg-intel-elevated border border-intel-border rounded px-2 py-1 text-[11px] font-mono">
+                                      <div className="text-intel-muted">{label}</div>
                                       <div style={{ color }}>{fmtPrice(payload[0].value)}</div>
                                     </div>
                                   )
@@ -233,7 +255,6 @@ export default function CryptoSignal() {
                               />
                             </AreaChart>
                           </ResponsiveContainer>
-                          <span className="text-[10px] font-mono text-intel-dim block text-right">7-day price</span>
                         </div>
                       )}
                     </div>
