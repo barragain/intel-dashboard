@@ -69,6 +69,7 @@ function fmt(n: number | null | undefined, decimals = 2): string {
 
 function fmtPct(n: number | null | undefined): string {
   if (n == null || isNaN(n)) return 'N/A'
+  if (Math.abs(n) < 0.005) return 'N/A' // suppress +0.00% / -0.00%
   const sign = n >= 0 ? '+' : ''
   return `${sign}${n.toFixed(2)}%`
 }
@@ -224,7 +225,7 @@ export async function GET(request: NextRequest) {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: spxSpark ?? undefined,
-        sparklineGreen: (spx30d ?? 0) >= 0,
+        sparklineGreen: (spx?.changePercent ?? 0) >= 0,
       }
     })(),
 
@@ -246,7 +247,7 @@ export async function GET(request: NextRequest) {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: taiexSpark ?? undefined,
-        sparklineGreen: (taiex30d ?? 0) >= 0,
+        sparklineGreen: (taiex?.changePercent ?? 0) >= 0,
       }
     })(),
 
@@ -268,7 +269,7 @@ export async function GET(request: NextRequest) {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: cacSpark ?? undefined,
-        sparklineGreen: (cac30d ?? 0) >= 0,
+        sparklineGreen: (cac?.changePercent ?? 0) >= 0,
       }
     })(),
 
@@ -296,7 +297,7 @@ export async function GET(request: NextRequest) {
         direction: directionFromPct(pyg30d !== null ? -(pyg30d) : undefined),
         status: statusFromDirection(directionFromPct(pyg30d !== null ? -(pyg30d) : undefined)),
         sparkline: pygSpark ?? undefined,
-        sparklineGreen: (pyg30d ?? 0) <= 0, // inverted: dollar down = green for Paraguay
+        sparklineGreen: (pyg?.changePercent ?? 0) <= 0, // inverted: PYG/USD rate down = guaraní stronger = green
       }
     })(),
 
@@ -320,7 +321,7 @@ export async function GET(request: NextRequest) {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: ndxSpark ?? undefined,
-        sparklineGreen: (ndx30d ?? sox30d ?? 0) >= 0,
+        sparklineGreen: (ndx?.changePercent ?? sox?.changePercent ?? 0) >= 0,
       }
     })(),
 
@@ -347,7 +348,7 @@ export async function GET(request: NextRequest) {
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: asusSparkUsd ?? undefined,
-        sparklineGreen: (asus30d ?? 0) >= 0,
+        sparklineGreen: (asus?.changePercent ?? 0) >= 0,
       }
     })(),
   ]

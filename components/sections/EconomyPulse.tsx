@@ -220,12 +220,12 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
   return (
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
       <Tooltip text={cardTip} width="lg" position="bottom" align="left" display="block">
-        <div className="w-full px-4 py-3 border-b border-intel-border flex items-center justify-between cursor-default hover:bg-intel-elevated/60 transition-colors rounded-t-lg">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="w-full px-4 pt-3 pb-2.5 border-b border-intel-border flex flex-col gap-1.5 cursor-default hover:bg-intel-elevated/60 transition-colors rounded-t-lg">
+          <div className="flex items-center gap-2">
             <FlagIcon id={card.id} />
-            <span className="text-sm font-display font-semibold text-intel-text truncate">{card.name}</span>
+            <span className="text-sm font-display font-semibold text-intel-text">{card.name}</span>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          <div className="flex items-center gap-2">
             <span className={`text-[13px] font-mono uppercase border rounded px-1.5 py-0.5 ${statusColor}`}>
               {dirLabel}
             </span>
