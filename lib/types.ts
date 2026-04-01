@@ -29,6 +29,7 @@ export interface EconomyIndicator {
   value: string
   change?: string
   changeType?: 'positive' | 'negative' | 'neutral'
+  changeLabel?: string // e.g. '24h' or '30d'
   sparkline?: { price: number; date: string }[] // per-indicator mini chart
 }
 
@@ -169,6 +170,7 @@ export interface ExpertPrediction {
   timeframe: string
   sentiment: PredictionSentiment
   confidence: ConfidenceLevel
+  dateStated?: string // exact date the expert/institution made this statement
 }
 
 export interface HistoricalData {

@@ -83,9 +83,16 @@ function PredictionCard({ prediction, t }: { prediction: ExpertPrediction; t: Re
         </div>
       </div>
       <p className="text-sm text-intel-secondary leading-relaxed mb-2">{prediction.prediction}</p>
-      <div className="flex items-center gap-1.5 text-intel-muted">
-        <Clock size={10} />
-        <span className="text-[13px] font-mono">{prediction.timeframe}</span>
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-1.5 text-intel-muted">
+          <Clock size={10} />
+          <span className="text-[13px] font-mono">{prediction.timeframe}</span>
+        </div>
+        {prediction.dateStated && (
+          <span className="text-[11px] font-mono text-intel-dim border border-intel-border/50 rounded px-1.5 py-0.5">
+            stated {prediction.dateStated}
+          </span>
+        )}
       </div>
     </div>
   )

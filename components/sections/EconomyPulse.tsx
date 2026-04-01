@@ -53,18 +53,21 @@ type T = ReturnType<typeof useLanguage>['t']
 
 function getMetricTips(t: T): Record<string, string> {
   return {
-    'VIX':          t.metricVIX,
-    'DXY':          t.metricDXY,
-    'S&P 500':      t.metricSP500,
-    'Gold (oz)':    t.metricGold,
-    'Oil WTI':      t.metricOilWTI,
-    'TAIEX':        t.metricTAIEX,
-    'TWD/USD':      t.metricTWDUSD,
-    'CAC 40':       t.metricCAC40,
-    'EUR/USD':      t.metricEURUSD,
-    'PYG/USD':      t.metricPYGUSD,
-    'Silver (oz)':  'Silver price per troy ounce. Like gold, silver is a safe-haven asset — it rises when investors are nervous and falls when confidence returns.',
-    'Brent Crude':  'Brent Crude is the global oil benchmark (priced in US dollars per barrel). It affects fuel costs, airline tickets, shipping, and consumer prices worldwide.',
+    'VIX':            t.metricVIX,
+    'DXY':            t.metricDXY,
+    'S&P 500':        t.metricSP500,
+    'Gold (oz)':      t.metricGold,
+    'Oil WTI':        t.metricOilWTI,
+    'TAIEX':          t.metricTAIEX,
+    'TWD/USD':        t.metricTWDUSD,
+    'CAC 40':         t.metricCAC40,
+    'EUR/USD':        t.metricEURUSD,
+    'PYG/USD':        t.metricPYGUSD,
+    'Silver (oz)':    'Silver price per troy ounce. Like gold, silver is a safe-haven asset — it rises when investors are nervous and falls when confidence returns.',
+    'Brent Crude':    'Brent Crude is the global oil benchmark (priced in US dollars per barrel). It affects fuel costs, airline tickets, shipping, and consumer prices worldwide.',
+    'Nasdaq 100':     'Index of the 100 largest non-financial companies on the Nasdaq exchange — dominated by US tech giants like Apple, Microsoft, Nvidia, and Amazon. A proxy for global tech sentiment.',
+    'SOX (Semis)':    'Philadelphia Semiconductor Index — tracks the biggest chip makers (Nvidia, TSMC, ASML, Intel). Chips power AI, phones, and everything digital, so this index leads broader tech moves.',
+    'ASUS (2357.TW)': 'ASUS stock price on the Taiwan Stock Exchange (TSE: 2357), converted to USD. ASUS makes laptops, gaming hardware, and AI servers. Rising demand for AI infrastructure directly benefits ASUS server business.',
   }
 }
 
@@ -153,11 +156,11 @@ function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
       {/* Header */}
       <Tooltip text={firstSentence(card.summary)} width="lg" position="bottom" align="left" display="block">
         <div className="w-full px-4 py-3 border-b border-intel-border flex items-center justify-between cursor-default hover:bg-intel-elevated/60 transition-colors rounded-t-lg">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <FlagIcon id={card.id} />
-            <span className="text-sm font-display font-semibold text-intel-text">{card.name}</span>
+            <span className="text-sm font-display font-semibold text-intel-text truncate">{card.name}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
             <span className={`text-[13px] font-mono uppercase border rounded px-1.5 py-0.5 ${statusColor}`}>
               {dirLabel}
             </span>
@@ -171,7 +174,7 @@ function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
         {card.indicators.map((ind, i) => {
           const color = INDICATOR_COLORS[ind.label] ?? '#cd5c5c'
           return (
-            <div key={i} className="flex flex-col min-w-0 overflow-hidden">
+            <div key={i} className="flex flex-col min-w-0">
               {metricTips[ind.label] ? (
                 <Tooltip text={metricTips[ind.label]} width="md" position="top" align="left">
                   <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help truncate block">
@@ -184,7 +187,7 @@ function GlobalCard({ card, t }: { card: EconomyCard; t: T }) {
               <span className="text-sm font-mono font-semibold text-intel-text tabular-nums mt-0.5 truncate">{ind.value}</span>
               {ind.change && ind.change !== 'N/A' && (
                 <span className={`text-[11px] font-mono ${CHANGE_COLORS[ind.changeType ?? 'neutral']}`}>
-                  {ind.change} 30d
+                  {ind.change} {ind.changeLabel ?? '30d'}
                 </span>
               )}
               {ind.sparkline && ind.sparkline.length > 3 && (
@@ -218,11 +221,11 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
     <div className="bg-intel-elevated rounded-lg border border-intel-border flex flex-col">
       <Tooltip text={cardTip} width="lg" position="bottom" align="left" display="block">
         <div className="w-full px-4 py-3 border-b border-intel-border flex items-center justify-between cursor-default hover:bg-intel-elevated/60 transition-colors rounded-t-lg">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <FlagIcon id={card.id} />
-            <span className="text-sm font-display font-semibold text-intel-text">{card.name}</span>
+            <span className="text-sm font-display font-semibold text-intel-text truncate">{card.name}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
             <span className={`text-[13px] font-mono uppercase border rounded px-1.5 py-0.5 ${statusColor}`}>
               {dirLabel}
             </span>
@@ -233,7 +236,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
 
       <div className="px-4 py-3 grid grid-cols-2 gap-x-3 gap-y-2 border-b border-intel-border">
         {card.indicators.map((ind, i) => (
-          <div key={i} className="flex flex-col min-w-0 overflow-hidden">
+          <div key={i} className="flex flex-col min-w-0">
             {metricTips[ind.label] ? (
               <Tooltip text={metricTips[ind.label]} width="md" position="top" align="left">
                 <span className="text-[11px] font-mono text-intel-muted uppercase tracking-wide underline decoration-dotted decoration-intel-dim underline-offset-2 cursor-help truncate block">
@@ -248,7 +251,7 @@ function EconomyCardComponent({ card, t }: { card: EconomyCard; t: T }) {
             </span>
             {ind.change && ind.change !== 'N/A' && (
               <span className={`text-[11px] font-mono ${CHANGE_COLORS[ind.changeType ?? 'neutral']}`}>
-                {ind.change} 30d
+                {ind.change} {ind.changeLabel ?? '30d'}
               </span>
             )}
           </div>

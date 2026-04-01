@@ -40,7 +40,8 @@ Return ONLY this JSON:
     {
       "source": "<institution or analyst name>",
       "prediction": "<2 plain sentences: what they actually think will happen and why — quote specific numbers or timeframes if they gave them>",
-      "timeframe": "<specific timeframe, e.g. end of 2025 or Q2 2026>",
+      "timeframe": "<specific horizon of the prediction, e.g. end of 2026 or Q3 2026>",
+      "dateStated": "<exact date this statement was made, e.g. March 15, 2026 — use the actual date found in the search result>",
       "sentiment": "optimistic"|"pessimistic"|"neutral",
       "confidence": "high"|"medium"|"low"
     }
@@ -53,7 +54,7 @@ Return ONLY this JSON:
   ]
 }
 
-Include 3 historical parallels — choose whichever are most relevant to right now from: 2008 financial crisis, 2020 COVID crash, 1970s oil shocks, 1997 Asian financial crisis, 1996 Taiwan Strait crisis. Include 5-6 predictions from real institutions (IMF, Goldman Sachs, JP Morgan, World Bank, Morgan Stanley, Banco Central del Paraguay) — use their most recent public statements found via search. For the Banco Central del Paraguay entry, include their current monetary policy stance, recent interest rate decisions, and their outlook on inflation or the Paraguayan guaraní.
+Include 3 historical parallels — choose whichever are most relevant to right now from: 2008 financial crisis, 2020 COVID crash, 1970s oil shocks, 1997 Asian financial crisis, 1996 Taiwan Strait crisis. Include 5-6 predictions from real institutions (IMF, Goldman Sachs, JP Morgan, World Bank, Morgan Stanley, Banco Central del Paraguay) — use ONLY their most recent public statements from 2026 found via search. Reject any statement from 2025 or earlier if a more recent one exists. Always include the exact date the statement was made. For the Banco Central del Paraguay entry, include their current monetary policy stance, recent interest rate decisions, and their outlook on inflation or the Paraguayan guaraní.
 Include 2–3 real expert quotes from economists or institutional analysts found via search — exact words only.
 Include 2–3 real news article headlines with publication and date.`
 

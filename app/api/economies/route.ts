@@ -210,9 +210,9 @@ export async function GET(request: NextRequest) {
       const vix30d = pctChange30d(vixSpark)
       const oil30d = pctChange30d(oilSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'S&P 500', value: spx ? fmt(spx.price, 0) : 'N/A', change: spx30d !== null ? fmtPct(spx30d) : undefined, changeType: changeType(spx30d ?? undefined) },
-        { label: 'VIX', value: vix ? fmt(vix.price) : 'N/A', change: vix30d !== null ? fmtPct(vix30d) : undefined, changeType: 'neutral' },
-        { label: 'Oil WTI', value: oil ? `$${fmt(oil.price)}` : 'N/A', change: oil30d !== null ? fmtPct(oil30d) : undefined, changeType: changeType(oil30d ?? undefined) },
+        { label: 'S&P 500', value: spx ? fmt(spx.price, 0) : 'N/A', change: spx ? fmtPct(spx.changePercent) : undefined, changeType: changeType(spx?.changePercent), changeLabel: '24h' },
+        { label: 'VIX', value: vix ? fmt(vix.price) : 'N/A', change: vix ? fmtPct(vix.changePercent) : undefined, changeType: 'neutral', changeLabel: '24h' },
+        { label: 'Oil WTI', value: oil ? `$${fmt(oil.price)}` : 'N/A', change: oil ? fmtPct(oil.changePercent) : undefined, changeType: changeType(oil?.changePercent), changeLabel: '24h' },
       ]
       const dir = directionFromPct(spx30d ?? undefined)
       return {
@@ -233,8 +233,8 @@ export async function GET(request: NextRequest) {
       const taiex30d = pctChange30d(taiexSpark)
       const twd30d = pctChange30d(twdSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'TAIEX', value: taiex ? fmt(taiex.price, 0) : 'N/A', change: taiex30d !== null ? fmtPct(taiex30d) : undefined, changeType: changeType(taiex30d ?? undefined) },
-        { label: 'TWD/USD', value: twd ? fmt(twd.price) : 'N/A', change: twd30d !== null ? fmtPct(-(twd30d)) : undefined, changeType: changeType(twd30d !== null ? -(twd30d) : undefined) },
+        { label: 'TAIEX', value: taiex ? fmt(taiex.price, 0) : 'N/A', change: taiex ? fmtPct(taiex.changePercent) : undefined, changeType: changeType(taiex?.changePercent), changeLabel: '24h' },
+        { label: 'TWD/USD', value: twd ? fmt(twd.price) : 'N/A', change: twd ? fmtPct(-(twd.changePercent)) : undefined, changeType: changeType(twd ? -(twd.changePercent) : undefined), changeLabel: '24h' },
       ]
       const dir = directionFromPct(taiex30d ?? undefined)
       return {
@@ -255,8 +255,8 @@ export async function GET(request: NextRequest) {
       const cac30d = pctChange30d(cacSpark)
       const eur30d = pctChange30d(eurSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'CAC 40', value: cac ? fmt(cac.price, 0) : 'N/A', change: cac30d !== null ? fmtPct(cac30d) : undefined, changeType: changeType(cac30d ?? undefined) },
-        { label: 'EUR/USD', value: eur ? fmt(eur.price, 4) : 'N/A', change: eur30d !== null ? fmtPct(eur30d) : undefined, changeType: changeType(eur30d ?? undefined) },
+        { label: 'CAC 40', value: cac ? fmt(cac.price, 0) : 'N/A', change: cac ? fmtPct(cac.changePercent) : undefined, changeType: changeType(cac?.changePercent), changeLabel: '24h' },
+        { label: 'EUR/USD', value: eur ? fmt(eur.price, 4) : 'N/A', change: eur ? fmtPct(eur.changePercent) : undefined, changeType: changeType(eur?.changePercent), changeLabel: '24h' },
       ]
       const dir = directionFromPct(cac30d ?? undefined)
       return {
@@ -276,7 +276,7 @@ export async function GET(request: NextRequest) {
     (() => {
       const pyg30d = pctChange30d(pygSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'PYG/USD', value: pyg ? fmt(pyg.price, 0) : 'N/A', change: pyg30d !== null ? fmtPct(-(pyg30d)) : undefined, changeType: changeType(pyg30d !== null ? -(pyg30d) : undefined) },
+        { label: 'PYG/USD', value: pyg ? fmt(pyg.price, 0) : 'N/A', change: pyg ? fmtPct(-(pyg.changePercent)) : undefined, changeType: changeType(pyg ? -(pyg.changePercent) : undefined), changeLabel: '24h' },
       ]
       return {
         id: 'paraguay',
@@ -297,9 +297,9 @@ export async function GET(request: NextRequest) {
       const sox30d = pctChange30d(soxSpark)
       const vix30d = pctChange30d(vixSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'Nasdaq 100', value: ndx ? fmt(ndx.price, 0) : 'N/A', change: ndx30d !== null ? fmtPct(ndx30d) : undefined, changeType: changeType(ndx30d ?? undefined) },
-        { label: 'SOX (Semis)', value: sox ? fmt(sox.price, 0) : 'N/A', change: sox30d !== null ? fmtPct(sox30d) : undefined, changeType: changeType(sox30d ?? undefined) },
-        { label: 'VIX', value: vix ? fmt(vix.price) : 'N/A', change: vix30d !== null ? fmtPct(vix30d) : undefined, changeType: vix30d !== null ? changeType(-vix30d) : 'neutral' },
+        { label: 'Nasdaq 100', value: ndx ? fmt(ndx.price, 0) : 'N/A', change: ndx ? fmtPct(ndx.changePercent) : undefined, changeType: changeType(ndx?.changePercent), changeLabel: '24h' },
+        { label: 'SOX (Semis)', value: sox ? fmt(sox.price, 0) : 'N/A', change: sox ? fmtPct(sox.changePercent) : undefined, changeType: changeType(sox?.changePercent), changeLabel: '24h' },
+        { label: 'VIX', value: vix ? fmt(vix.price) : 'N/A', change: vix ? fmtPct(vix.changePercent) : undefined, changeType: 'neutral', changeLabel: '24h' },
       ]
       const dir = directionFromPct(ndx30d ?? sox30d ?? undefined)
       return {
@@ -325,8 +325,8 @@ export async function GET(request: NextRequest) {
       const asus30d = pctChange30d(asusSpark)
       const twd30d = pctChange30d(twdSpark)
       const indicators: EconomyIndicator[] = [
-        { label: 'ASUS (2357.TW)', value: asusUsd ? `$${fmt(asusUsd.price, 2)}` : 'N/A', change: asus30d !== null ? fmtPct(asus30d) : undefined, changeType: changeType(asus30d ?? undefined) },
-        { label: 'TWD/USD', value: twd ? fmt(twd.price) : 'N/A', change: twd30d !== null ? fmtPct(-(twd30d)) : undefined, changeType: changeType(twd30d !== null ? -(twd30d) : undefined) },
+        { label: 'ASUS (2357.TW)', value: asusUsd ? `$${fmt(asusUsd.price, 2)}` : 'N/A', change: asus ? fmtPct(asus.changePercent) : undefined, changeType: changeType(asus?.changePercent), changeLabel: '24h' },
+        { label: 'TWD/USD', value: twd ? fmt(twd.price) : 'N/A', change: twd ? fmtPct(-(twd.changePercent)) : undefined, changeType: changeType(twd ? -(twd.changePercent) : undefined), changeLabel: '24h' },
       ]
       const dir = directionFromPct(asus30d ?? undefined)
       return {
