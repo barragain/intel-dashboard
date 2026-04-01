@@ -24,6 +24,8 @@ WRITING RULES — follow these strictly:
 - Be specific and use facts from the headlines provided. "China sent warships near Taiwan this week" not "geopolitical risks remain elevated."
 - The whyItMatters field must be personal and specific — not generic. Use the persona above to explain what it means in real life.
 - Never write something like "Rising X often leads to Y" — that is a generic textbook statement. Say what is actually happening right now based on the headlines.
+- STRICT RELEVANCE RULE: Each driver must be about its assigned topic (stock/bond markets, oil, chips, ad spend, Taiwan security, French economy). Do NOT import celebrity lawsuits, political scandals, or general societal trends unless they have a direct, measurable, immediate effect on stock prices, ad budgets, or chip supply chains. If a headline is not directly market-relevant, ignore it.
+- The `detail` field is shown as a standalone sentence next to the risk level. It must make sense on its own and tell the reader something specific and useful — not vague speculation.
 - Short sentences. One idea per sentence.
 
 HOW TO WRITE whyItMatters FOR EACH DRIVER:
@@ -52,7 +54,7 @@ Return ONLY this JSON:
     {
       "name": "<max 20 chars>",
       "impact": "positive"|"negative"|"neutral",
-      "detail": "<one plain-English sentence about what is happening with this specific thing today — be specific, name the actual event or number>",
+      "detail": "<one plain-English sentence about what is happening with this specific driver today — MUST include a specific number, company name, index level, or concrete policy action. NEVER use celebrity news, lawsuits by public figures, or vague societal trends. BAD: 'Prince Harry supports lawsuits against big tech.' GOOD: 'Nvidia stock fell 4% as US-China chip export restrictions tightened.' BAD: 'This could create legal problems for companies.' GOOD: 'The VIX hit 22, signalling rising fear about Fed rate decisions next week.'>",
       "whyItMatters": "<2 plain-English sentences: specific personal impact using the persona above — how it affects the production pipeline, Barbara's family in France, the move to France, ASUS income, or Taiwan safety. No jargon. No generic statements.>"
     }
   ],
