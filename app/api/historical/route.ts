@@ -33,7 +33,7 @@ Return ONLY this JSON:
       "historicalEvent": "<event name>",
       "period": "<year or range>",
       "whatHappened": "<2 sentences: what actually happened to markets, jobs, and prices back then — be specific with numbers and timeframes>",
-      "personalImplication": "<1-2 sentences: what this history lesson means for investors in Asian markets and Europe, and for people in tech or media industries>"
+      "personalImplication": "<1-2 sentences: what this history lesson means for someone who: (a) runs a video/photo production agency in Taiwan where brand ad budget cuts shrink the work pipeline, (b) has a French partner whose family lives in France and they plan to move there, (c) tracks ASUS stock as part of household income. Be specific — say what they should watch or do differently based on this parallel.>"
     }
   ],
   "predictions": [

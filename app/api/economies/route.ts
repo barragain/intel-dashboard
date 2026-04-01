@@ -264,7 +264,7 @@ export async function GET(request: NextRequest) {
         name: 'France',
         emoji: '🇫🇷',
         indicators,
-        summary: `France's main stock index (CAC 40) is at ${cac ? fmt(cac.price, 0) : 'N/A'}, ${cac ? (cac.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(cac.changePercent).toFixed(1) + '% today' : 'data unavailable'}. The euro is at ${eur ? fmt(eur.price, 4) : 'N/A'} per US dollar — ${(eur?.changePercent ?? 0) >= 0 ? 'holding steady as the European Central Bank takes a careful approach to cutting interest rates' : 'under some pressure as different EU countries have different economic situations'}. Defense and infrastructure spending across Europe is growing and supporting some French companies.`,
+        summary: `France's main stock index (CAC 40) is at ${cac ? fmt(cac.price, 0) : 'N/A'}, ${cac ? (cac.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(cac.changePercent).toFixed(1) + '% today' : 'data unavailable'}. The euro is at ${eur ? fmt(eur.price, 4) : 'N/A'} per US dollar — ${(eur?.changePercent ?? 0) >= 0 ? 'holding steady, which means buying power in France is stable' : 'slightly weaker, which can push up import prices in France'}. France is relevant beyond just markets — Barbara's family lives there and it is a likely future home, so French inflation, cost of living, and economic stability are real planning signals.`,
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: cacSpark ?? undefined,
@@ -278,12 +278,21 @@ export async function GET(request: NextRequest) {
       const indicators: EconomyIndicator[] = [
         { label: 'PYG/USD', value: pyg ? fmt(pyg.price, 0) : 'N/A', change: pyg ? fmtPct(-(pyg.changePercent)) : undefined, changeType: changeType(pyg ? -(pyg.changePercent) : undefined), changeLabel: '24h' },
       ]
+      // PYG/USD rate going UP means guaraní WEAKENED (more guaraníes per dollar)
+      // PYG/USD rate going DOWN means guaraní STRENGTHENED (fewer guaraníes per dollar)
+      const pygPct = pyg?.changePercent ?? 0
+      const pygMoved = Math.abs(pygPct) >= 0.05
+      const pygDir = pygMoved
+        ? (pygPct > 0
+          ? `weakened slightly today — it now takes more guaraníes to buy one dollar (+${Math.abs(pygPct).toFixed(2)}%)`
+          : `strengthened slightly today — fewer guaraníes per dollar (${Math.abs(pygPct).toFixed(2)}% gain)`)
+        : 'held steady against the US dollar today'
       return {
         id: 'paraguay',
         name: 'Paraguay',
         emoji: '🇵🇾',
         indicators,
-        summary: `Paraguay's guaraní is at ${pyg ? fmt(pyg.price, 0) : 'N/A'} per US dollar. Paraguay's economy is mostly based on farming exports like soy and beef, plus electricity from its giant Itaipú dam. Inflation is usually manageable. It is a smaller economy with limited live market data, but it is generally stable.`,
+        summary: `The Paraguayan guaraní is at ${pyg ? fmt(pyg.price, 0) : 'N/A'} per US dollar — it ${pygDir}. Paraguay's economy runs on farm exports (soy, beef, corn) and hydroelectric power from the Itaipú dam. When the US dollar gets stronger globally, the guaraní usually weakens, making imports more expensive for families there. The economy is small but stable, with low public debt and manageable inflation by regional standards.`,
         direction: directionFromPct(pyg30d !== null ? -(pyg30d) : undefined),
         status: statusFromDirection(directionFromPct(pyg30d !== null ? -(pyg30d) : undefined)),
         sparkline: pygSpark ?? undefined,

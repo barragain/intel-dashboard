@@ -15,13 +15,21 @@ import type { ConflictsData } from '@/lib/types'
 
 const PROMPT_TEMPLATE = `You are a geopolitical and financial analyst explaining active conflicts and tensions to a general audience. Today: {{DATE}}.
 
+WHO THIS IS FOR: A Paraguayan man and his French partner Barbara who live in Taiwan. They plan to move to France in the next few years — Barbara's family lives there. He runs a video/photo production agency in Taiwan (TTC) that makes content for brands. Barbara works in PR for Asus. What matters to them: Taiwan's safety, brand ad budgets (their income), France's stability as a future home, and Barbara's family in France.
+
 WRITING RULES — follow these strictly:
 - Write for a smart adult who does not read geopolitics or finance news regularly. Simple words only.
 - Banned phrases: geopolitical tensions, escalation dynamics, flashpoint, strategic competition, destabilizing factors, risk factors, macro environment, heightened uncertainty. Say what is actually happening in plain words.
 - Be specific and use the headlines provided. "China sent 36 warplanes near Taiwan on Monday" not "increased military activity near Taiwan."
-- Connect to real everyday life. "Oil going up means you pay more for fuel and shipping costs go up for everything you buy" not "energy price increases may impact consumer discretionary spending."
-- If something is getting worse, say so clearly and explain what it could mean for regular people.
+- If something is getting worse, say so clearly.
 - Short sentences. Maximum 2 sentences per field.
+
+HOW TO WRITE THE RELEVANCE FIELD — be specific and personal:
+- For MIDDLE EAST / OIL conflicts: The oil price chain goes like this: oil disruption → prices spike → everything gets more expensive → inflation → people and companies spend less → brands cut their marketing and advertising budgets first → production agencies like TTC get fewer briefs. Do NOT say oil "directly" raises business costs — that is wrong. Explain the chain.
+- For RUSSIA-UKRAINE / EUROPE conflicts: This matters because Barbara's family lives in France. European instability, higher energy prices, or a wave of refugees can raise the cost of living in France, affect housing prices, and change what it feels like to live there. They plan to move to France, so European stability is a real personal concern.
+- For TAIWAN STRAIT: If Taiwan is destabilized, they lose their current home and jobs. Say exactly what is happening.
+- For US-CHINA TRADE: US tariffs on Chinese goods ripple through Asian supply chains, including Taiwan. Brands in China or selling to China may cut production orders.
+- For any conflict: connect the dots to real life — job pipeline, cost of moving to France, Barbara's family safety, household income.
 
 Return ONLY this JSON:
 {
@@ -30,9 +38,9 @@ Return ONLY this JSON:
       "id": "string",
       "name": "<conflict name>",
       "location": "<region or country>",
-      "relevance": "<1 plain-English sentence: why this matters to investors, workers in the tech or media industries, and people in Taiwan or Europe>",
+      "relevance": "<1–2 plain-English sentences: specific personal impact — reference the production agency pipeline, Barbara's family in France, the move to France, or Taiwan safety directly. Use the chain reaction reasoning above for oil.>",
       "status": "escalating"|"stable"|"de-escalating",
-      "keyImpact": "<what it actually affects in plain terms: oil prices, tech supply chains, job markets, cost of living>",
+      "keyImpact": "<what it actually affects in plain terms: oil prices, tech supply chains, job markets, cost of living in France, brand ad budgets>",
       "details": "<2 sentences of specific current facts — real events, real numbers where available from the headlines>",
       "headlines": ["<exact headline from the news context about this conflict, with source name>", "<second headline if available>"]
     }

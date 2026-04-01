@@ -181,7 +181,7 @@ const translations = {
     metricTWDUSD: 'How many Taiwanese dollars equal one US dollar. A higher number means the TWD is weaker vs the dollar.',
     metricCAC40: "France's top 40 companies by market cap. Rises and falls with the French and broader EU economy.",
     metricEURUSD: 'How many US dollars one euro buys. Higher = stronger euro. Relevant for anyone earning or spending in European markets.',
-    metricPYGUSD: "How many Paraguayan guaraníes equal one US dollar. Tracks Paraguay's currency stability.",
+    metricPYGUSD: "How many Paraguayan guaraníes equal one US dollar. When this number goes UP, the guaraní weakened (worse for families in Paraguay — imports cost more). When it goes DOWN, the guaraní strengthened. A stable number around 7,000–8,000 is normal.",
   },
 
   fr: {
@@ -360,7 +360,7 @@ const translations = {
     metricTWDUSD: "Combien de dollars taïwanais valent un dollar américain. Un nombre plus élevé signifie que le TWD est plus faible.",
     metricCAC40: "Les 40 premières entreprises françaises par capitalisation boursière. Suit l'économie française et européenne.",
     metricEURUSD: "Combien de dollars américains achète un euro. Plus élevé = euro plus fort. Pertinent pour ceux qui gagnent ou dépensent en euros.",
-    metricPYGUSD: "Combien de guaranis paraguayens valent un dollar américain. Suit la stabilité monétaire du Paraguay.",
+    metricPYGUSD: "Combien de guaranis paraguayens valent un dollar américain. Si ce chiffre monte, le guaraní s'affaiblit (les importations coûtent plus cher). S'il baisse, le guaraní se renforce. Un niveau stable entre 7 000 et 8 000 est normal.",
   },
 
   es: {
@@ -539,7 +539,7 @@ const translations = {
     metricTWDUSD: 'Cuántos dólares taiwaneses equivalen a un dólar estadounidense. Un número mayor significa que el TWD está más débil.',
     metricCAC40: 'Las 40 mayores empresas de Francia por capitalización. Sube y baja con la economía francesa y de la UE.',
     metricEURUSD: 'Cuántos dólares estadounidenses compra un euro. Mayor = euro más fuerte. Relevante para quienes ganan o gastan en mercados europeos.',
-    metricPYGUSD: 'Cuántos guaraníes paraguayos equivalen a un dólar estadounidense. Refleja la estabilidad monetaria de Paraguay.',
+    metricPYGUSD: 'Cuántos guaraníes paraguayos equivalen a un dólar estadounidense. Si este número sube, el guaraní se debilitó (las importaciones se encarecen). Si baja, el guaraní se fortaleció. Un nivel estable entre 7.000 y 8.000 es normal.',
   },
 } as const
 
