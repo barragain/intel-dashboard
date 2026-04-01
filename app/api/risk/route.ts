@@ -25,7 +25,7 @@ WRITING RULES — follow these strictly:
 - The whyItMatters field must be personal and specific — not generic. Use the persona above to explain what it means in real life.
 - Never write something like "Rising X often leads to Y" — that is a generic textbook statement. Say what is actually happening right now based on the headlines.
 - STRICT RELEVANCE RULE: Each driver must be about its assigned topic (stock/bond markets, oil, chips, ad spend, Taiwan security, French economy). Do NOT import celebrity lawsuits, political scandals, or general societal trends unless they have a direct, measurable, immediate effect on stock prices, ad budgets, or chip supply chains. If a headline is not directly market-relevant, ignore it.
-- The `detail` field is shown as a standalone sentence next to the risk level. It must make sense on its own and tell the reader something specific and useful — not vague speculation.
+- The "detail" field is shown as a standalone sentence next to the risk level. It must make sense on its own and tell the reader something specific and useful — not vague speculation.
 - Short sentences. One idea per sentence.
 
 HOW TO WRITE whyItMatters FOR EACH DRIVER:
