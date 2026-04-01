@@ -74,6 +74,13 @@ function fmtPct(n: number | null | undefined): string {
   return `${sign}${n.toFixed(2)}%`
 }
 
+/** "up 1.23%" / "down 0.45%" / "roughly flat" — used in summary sentences */
+function fmtDayChange(pct: number): string {
+  if (Math.abs(pct) < 0.005) return 'roughly flat'
+  const dir = pct >= 0 ? 'up' : 'down'
+  return `${dir} ${Math.abs(pct).toFixed(2)}%`
+}
+
 function changeType(n: number | undefined): 'positive' | 'negative' | 'neutral' {
   if (!n || Math.abs(n) < 0.05) return 'neutral'
   return n > 0 ? 'positive' : 'negative'
@@ -243,7 +250,7 @@ export async function GET(request: NextRequest) {
         name: 'Taiwan',
         emoji: '🇹🇼',
         indicators,
-        summary: `Taiwan's stock market (TAIEX) is ${taiex ? (taiex.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(taiex.changePercent).toFixed(1) + '%' : 'data unavailable'} today. The Taiwan dollar is at ${twd ? fmt(twd.price) : 'N/A'} per US dollar — ${(twd?.changePercent ?? 0) > 0 ? 'it got weaker, which can help companies that export goods but also shows money leaving the country' : 'it held steady or got stronger, a sign of confidence in the region'}. Taiwan makes a huge share of the world's computer chips, so its market often moves with global tech demand.`,
+        summary: `Taiwan's stock market (TAIEX) is ${taiex ? fmtDayChange(taiex.changePercent) : 'data unavailable'} today. The Taiwan dollar is at ${twd ? fmt(twd.price) : 'N/A'} per US dollar — ${(twd?.changePercent ?? 0) > 0 ? 'it got weaker, which can help companies that export goods but also shows money leaving the country' : 'it held steady or got stronger, a sign of confidence in the region'}. Taiwan makes a huge share of the world's computer chips, so its market often moves with global tech demand.`,
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: taiexSpark ?? undefined,
@@ -265,7 +272,7 @@ export async function GET(request: NextRequest) {
         name: 'France',
         emoji: '🇫🇷',
         indicators,
-        summary: `France's main stock index (CAC 40) is at ${cac ? fmt(cac.price, 0) : 'N/A'}, ${cac ? (cac.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(cac.changePercent).toFixed(1) + '% today' : 'data unavailable'}. The euro is at ${eur ? fmt(eur.price, 4) : 'N/A'} per US dollar — ${(eur?.changePercent ?? 0) >= 0 ? 'holding steady, which means buying power in France is stable' : 'slightly weaker, which can push up import prices in France'}. France is relevant beyond just markets — Barbara's family lives there and it is a likely future home, so French inflation, cost of living, and economic stability are real planning signals.`,
+        summary: `France's main stock index (CAC 40) is at ${cac ? fmt(cac.price, 0) : 'N/A'}, ${cac ? fmtDayChange(cac.changePercent) + ' today' : 'data unavailable'}. The euro is at ${eur ? fmt(eur.price, 4) : 'N/A'} per US dollar — ${(eur?.changePercent ?? 0) >= 0 ? 'holding steady, which means buying power in France is stable' : 'slightly weaker, which can push up import prices in France'}. France is relevant beyond just markets — Barbara's family lives there and it is a likely future home, so French inflation, cost of living, and economic stability are real planning signals.`,
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: cacSpark ?? undefined,
@@ -317,7 +324,7 @@ export async function GET(request: NextRequest) {
         name: 'Tech Sector',
         emoji: '💻',
         indicators,
-        summary: `The Nasdaq 100 (big US tech stocks) is ${ndx ? (ndx.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(ndx.changePercent).toFixed(1) + '%' : 'data unavailable'} today. ${(sox?.changePercent ?? 0) >= 0 ? 'Chip companies are doing well' : 'Chip companies are under pressure'} — the semiconductor index (SOX) is at ${sox ? fmt(sox.price, 0) : 'N/A'}, which shows demand for chips from AI and cloud services. Tech stocks tend to fall when interest rates go up, so the US central bank's decisions matter a lot here.`,
+        summary: `The Nasdaq 100 (big US tech stocks) is ${ndx ? fmtDayChange(ndx.changePercent) : 'data unavailable'} today. ${(sox?.changePercent ?? 0) >= 0 ? 'Chip companies are doing well' : 'Chip companies are under pressure'} — the semiconductor index (SOX) is at ${sox ? fmt(sox.price, 0) : 'N/A'}, which shows demand for chips from AI and cloud services. Tech stocks tend to fall when interest rates go up, so the US central bank's decisions matter a lot here.`,
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: ndxSpark ?? undefined,
@@ -344,7 +351,7 @@ export async function GET(request: NextRequest) {
         name: 'ASUS',
         emoji: '🖥️',
         indicators,
-        summary: `ASUS (2357.TW) is at $${asusUsd ? fmt(asusUsd.price, 2) : 'N/A'} USD, ${asus ? (asus.changePercent >= 0 ? 'up' : 'down') + ' ' + Math.abs(asus.changePercent).toFixed(1) + '% today' : 'data unavailable'}. ASUS makes laptops, gaming gear, PC parts, and servers. The server and AI hardware part of the business is growing the fastest right now. The Taiwan dollar is at ${twd ? fmt(twd.price) : 'N/A'} per USD — when the TWD weakens, ASUS earns more in local currency on its US-dollar sales, which is good for profit margins.`,
+        summary: `ASUS (2357.TW) is at $${asusUsd ? fmt(asusUsd.price, 2) : 'N/A'} USD, ${asus ? fmtDayChange(asus.changePercent) + ' today' : 'data unavailable'}. ASUS makes laptops, gaming gear, PC parts, and servers. The server and AI hardware part of the business is growing the fastest right now. The Taiwan dollar is at ${twd ? fmt(twd.price) : 'N/A'} per USD — when the TWD weakens, ASUS earns more in local currency on its US-dollar sales, which is good for profit margins.`,
         direction: dir,
         status: statusFromDirection(dir),
         sparkline: asusSparkUsd ?? undefined,
